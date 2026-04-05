@@ -1,0 +1,403 @@
+/* ── Reset ─────────────────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #fff8f0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  direction: rtl;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Game container ─────────────────────────────────────────────────────── */
+.game {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 16px 24px;
+  max-width: 520px;
+  margin: 0 auto;
+  direction: rtl;
+}
+
+/* ── HUD ──────────────────────────────────────────────────────────────── */
+.hud {
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.hud-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.progress-indicator {
+  font-size: clamp(13px, 3.5vw, 17px);
+  font-weight: 800;
+  color: #666;
+  min-width: 44px;
+}
+
+.star-row {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  justify-content: center;
+}
+
+.star-pip {
+  font-size: clamp(16px, 4vw, 22px);
+  opacity: 0.2;
+  transition: opacity 0.3s;
+}
+
+.star-pip.filled {
+  opacity: 1;
+  animation: starPop 0.3s ease;
+}
+
+.hud-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.sound-btn {
+  background: #f0e8df;
+  border: 2px solid #ddd0c0;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Exit button — larger and more visible for autism/anxious children */
+.exit-btn {
+  background: #ffe0b2;
+  border: 2px solid #ffb74d;
+  border-radius: 50%;
+  width: 48px;
+  height: 48px;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  font-weight: 700;
+}
+
+.sound-btn:active,
+.exit-btn:active {
+  transform: scale(0.88);
+}
+
+.balloon-row {
+  text-align: center;
+  font-size: clamp(24px, 6vw, 34px);
+  margin-top: 4px;
+  animation: popIn 0.4s ease;
+}
+
+/* ── Scene area ─────────────────────────────────────────────────────────── */
+.scene-area {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 8px 0 4px;
+  min-height: 160px;
+  max-height: 220px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #f5efe8;
+}
+
+.scene-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 20px;
+  display: block;
+}
+
+/* Emoji fallback when video is missing */
+.scene-strip {
+  font-size: clamp(52px, 14vw, 76px);
+  letter-spacing: 6px;
+  text-align: center;
+  line-height: 1.2;
+  padding: 20px 0;
+}
+
+/* ── Situation text ─────────────────────────────────────────────────────── */
+.situation-text {
+  font-size: clamp(18px, 5vw, 28px);
+  font-weight: 700;
+  color: #2d2d2d;
+  text-align: center;
+  margin: 10px 12px 4px;
+  line-height: 1.4;
+  direction: rtl;
+}
+
+.prompt {
+  font-size: clamp(16px, 4vw, 22px);
+  font-weight: 600;
+  color: #888;
+  margin: 4px 0 12px;
+  text-align: center;
+}
+
+/* ── Options ──────────────────────────────────────────────────────────── */
+.options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.option-btn {
+  width: 100%;
+  min-height: 80px;
+  background: #f5efe8;
+  border: 3px solid #ddd0c0;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  cursor: pointer;
+  text-align: right;
+  direction: rtl;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.option-btn:active {
+  transform: scale(0.97);
+}
+
+.option-emoji {
+  font-size: clamp(28px, 7vw, 38px);
+  flex-shrink: 0;
+}
+
+.option-text {
+  font-size: clamp(15px, 4vw, 20px);
+  font-weight: 600;
+  color: #2d2d2d;
+  line-height: 1.35;
+  flex: 1;
+}
+
+/* Correct tap — green */
+.option-btn.chosen-best {
+  border-color: #4caf50;
+  background: #e8f5e9;
+  animation: correctPop 0.4s ease;
+}
+
+/* Not-ideal tap — warm orange (never red) */
+.option-btn.chosen-not-good {
+  border-color: #ffb74d;
+  background: #fff3e0;
+  animation: gentlePulse 0.6s ease 2;
+}
+
+/* Idle hint OR reveal-correct after wrong tap */
+/* 3 cycles max — infinite pulsing is a known sensory trigger for autism */
+.option-btn.hint-glow {
+  border-color: #81c784;
+  background: #f1f8e9;
+  animation: hintPulse 1s ease 3;
+}
+
+/* ── Lesson bar ─────────────────────────────────────────────────────────── */
+.lesson-bar {
+  width: 100%;
+  border-radius: 16px;
+  padding: 12px 16px;
+  font-size: clamp(15px, 3.8vw, 19px);
+  font-weight: 700;
+  text-align: center;
+  margin-top: 10px;
+  direction: rtl;
+  animation: popIn 0.3s ease;
+}
+
+.lesson-success {
+  background: #e8f5e9;
+  border: 2px solid #81c784;
+  color: #2e7d32;
+}
+
+.lesson-hint {
+  background: #e3f2fd;
+  border: 2px solid #90caf9;
+  color: #1565c0;
+}
+
+/* ── Start screen ─────────────────────────────────────────────────────── */
+.start-screen {
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.start-emoji {
+  font-size: 80px;
+  animation: popIn 0.5s ease;
+}
+
+.start-title {
+  font-size: clamp(38px, 10vw, 60px);
+  font-weight: 900;
+  color: #e65100;
+}
+
+.start-subtitle {
+  font-size: clamp(16px, 4vw, 22px);
+  color: #666;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+.model-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #f5efe8;
+  border-radius: 18px;
+  padding: 16px 20px;
+  width: 100%;
+  max-width: 340px;
+}
+
+.model-step {
+  font-size: clamp(16px, 4vw, 20px);
+  font-weight: 600;
+  color: #4a3728;
+  text-align: right;
+  direction: rtl;
+}
+
+.start-btn {
+  padding: 18px 52px;
+  font-size: clamp(20px, 5vw, 26px);
+  font-weight: 800;
+  background: #ff7043;
+  color: white;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(255, 112, 67, 0.45);
+  transition: transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.start-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── End screen ───────────────────────────────────────────────────────── */
+.end-screen {
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.end-trophy {
+  font-size: 96px;
+  animation: popIn 0.6s ease;
+}
+
+.end-title {
+  font-size: clamp(40px, 11vw, 64px);
+  font-weight: 900;
+  color: #ff9800;
+}
+
+.end-subtitle {
+  font-size: clamp(18px, 4.5vw, 24px);
+  font-weight: 600;
+  color: #666;
+}
+
+.end-stars {
+  font-size: clamp(24px, 6vw, 36px);
+  letter-spacing: 2px;
+}
+
+.end-balloons {
+  font-size: clamp(36px, 9vw, 52px);
+  letter-spacing: 4px;
+  animation: popIn 0.5s ease;
+}
+
+.play-again-btn {
+  margin-top: 8px;
+  padding: 18px 48px;
+  font-size: clamp(20px, 5vw, 26px);
+  font-weight: 800;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 48px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+  transition: transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.play-again-btn:active {
+  transform: scale(0.95);
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────── */
+@keyframes popIn {
+  0%   { transform: scale(0.5); opacity: 0; }
+  80%  { transform: scale(1.12); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes starPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+@keyframes correctPop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+@keyframes gentlePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255, 183, 77, 0.55); }
+  70%  { box-shadow: 0 0 0 12px rgba(255, 183, 77, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 183, 77, 0); }
+}
+
+@keyframes hintPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(129, 199, 132, 0.65); }
+  70%  { box-shadow: 0 0 0 14px rgba(129, 199, 132, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(129, 199, 132, 0); }
+}
