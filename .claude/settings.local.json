@@ -2,6 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npx create-react-app:*)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Avi\\.claude"
     ]
   }
 }

@@ -81,7 +81,7 @@ export default function App() {
       speak('Correct!', soundOn);
       setTimeout(() => {
         setPairIndex(i => i + 1);
-      }, 1500);
+      }, 700);
     } else {
       setHighlight(bigSide);
       speak('This one is bigger', soundOn);

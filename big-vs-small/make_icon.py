@@ -1,20 +1,18 @@
 from PIL import Image, ImageDraw, ImageFont
 import os
 
-def make_icon(size, path):
+def make_icon(size, path, transparent_bg=False):
     img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
 
-    # Rounded rect background — sky blue
-    margin = int(size * 0.05)
-    radius = int(size * 0.22)
-    draw.rounded_rectangle([margin, margin, size - margin, size - margin],
-                            radius=radius, fill=(100, 200, 255, 255))
+    if not transparent_bg:
+        margin = int(size * 0.05)
+        radius = int(size * 0.22)
+        draw.rounded_rectangle([margin, margin, size - margin, size - margin],
+                                radius=radius, fill=(100, 200, 255, 255))
 
-    # Draw elephant emoji as text
     font_size = int(size * 0.62)
     try:
-        # Windows emoji font
         font = ImageFont.truetype("C:/Windows/Fonts/seguiemj.ttf", font_size)
     except:
         font = ImageFont.load_default()
@@ -33,7 +31,8 @@ def make_icon(size, path):
 
 android_base = "c:/Claude projects/Kids word/big-vs-small/android/app/src/main/res"
 
-sizes = {
+# Standard launcher icons (used on older Android + fallback)
+standard_sizes = {
     "mipmap-mdpi/ic_launcher.png": 48,
     "mipmap-hdpi/ic_launcher.png": 72,
     "mipmap-xhdpi/ic_launcher.png": 96,
@@ -46,7 +45,19 @@ sizes = {
     "mipmap-xxxhdpi/ic_launcher_round.png": 192,
 }
 
-for rel_path, size in sizes.items():
-    make_icon(size, f"{android_base}/{rel_path}")
+# Adaptive icon foreground (Android 8+ — transparent background, elephant centered)
+foreground_sizes = {
+    "mipmap-mdpi/ic_launcher_foreground.png": 48,
+    "mipmap-hdpi/ic_launcher_foreground.png": 72,
+    "mipmap-xhdpi/ic_launcher_foreground.png": 96,
+    "mipmap-xxhdpi/ic_launcher_foreground.png": 144,
+    "mipmap-xxxhdpi/ic_launcher_foreground.png": 192,
+}
+
+for rel_path, size in standard_sizes.items():
+    make_icon(size, f"{android_base}/{rel_path}", transparent_bg=False)
+
+for rel_path, size in foreground_sizes.items():
+    make_icon(size, f"{android_base}/{rel_path}", transparent_bg=True)
 
 print("All icons generated!")
