@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
+import { Capacitor } from '@capacitor/core';
 
 const PAIRS = [
   { big: { emoji: '🐘', name: 'Elephant' }, small: { emoji: '🐭', name: 'Mouse' } },
@@ -14,12 +15,33 @@ const PAIRS = [
   { big: { emoji: '🦏', name: 'Rhino' }, small: { emoji: '🐝', name: 'Bee' } },
 ];
 
+const isAndroid = Capacitor.getPlatform() === 'android';
+
 function speak(text, enabled) {
   if (!enabled) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.85;
-  window.speechSynthesis.speak(u);
+  if (!window.speechSynthesis) return;
+  // Cancel any ongoing speech — wrapped because it throws on some Android WebViews
+  try { window.speechSynthesis.cancel(); } catch (e) {}
+  // On Android, cancel() is async; a small delay prevents silent failures
+  const delay = isAndroid ? 60 : 0;
+  setTimeout(() => {
+    try {
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.85;
+      u.lang = 'en-US'; // Required for Samsung TTS to select a voice
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }, delay);
+}
+
+// Call once from a user-gesture to unlock Android WebView's TTS engine
+function unlockTTS() {
+  if (!window.speechSynthesis) return;
+  try {
+    const u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0;
+    window.speechSynthesis.speak(u);
+  } catch (e) {}
 }
 
 function randomSides() {
@@ -34,6 +56,7 @@ export default function App() {
   const [highlight, setHighlight] = useState(null);
   const [locked, setLocked] = useState(false);
   const [soundOn, setSoundOn] = useState(false);
+  const soundOnRef = useRef(false); // ref so useEffect always reads current value
   const [sides] = useState(randomSides);
   const idleTimer = useRef(null);
 
@@ -43,6 +66,9 @@ export default function App() {
   const bigSide = sides[safeIndex];
   const left = bigSide === 'left' ? pairData.big : pairData.small;
   const right = bigSide === 'left' ? pairData.small : pairData.big;
+
+  // Keep ref in sync so effects always see the latest soundOn
+  useEffect(() => { soundOnRef.current = soundOn; }, [soundOn]);
 
   const resetIdle = useCallback(() => {
     clearTimeout(idleTimer.current);
@@ -54,14 +80,14 @@ export default function App() {
 
   useEffect(() => {
     if (done) {
-      speak('Amazing! You finished! Great job!', soundOn);
+      speak('Amazing! You finished! Great job!', soundOnRef.current);
       return;
     }
-    speak('Who is bigger?', soundOn);
+    speak('Who is bigger?', soundOnRef.current);
     setWinner(null);
     setHighlight(null);
     setLocked(false);
-  }, [pairIndex, done]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pairIndex, done]);
 
   useEffect(() => {
     resetIdle();
@@ -133,7 +159,12 @@ export default function App() {
           <div className="hud-controls">
             <button
               className={`sound-btn ${soundOn ? 'on' : 'off'}`}
-              onClick={() => setSoundOn(s => !s)}
+              onClick={() => {
+                const next = !soundOn;
+                setSoundOn(next);
+                // Unlock Android WebView's TTS engine from this user gesture
+                if (next) unlockTTS();
+              }}
               aria-label={soundOn ? 'Sound on' : 'Sound off'}
             >
               {soundOn ? '🔊' : '🔇'}

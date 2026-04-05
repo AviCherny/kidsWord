@@ -139,6 +139,7 @@ body {
   transition: background 0.2s, border-color 0.2s;
   min-height: 240px;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation; /* Prevent 300ms delay & double-tap zoom on Android */
 }
 
 .animal-btn:active {
