@@ -216,8 +216,17 @@ export default function App() {
         )}
       </div>
 
-      {/* Situation text */}
-      <p className="situation-text">{scenario.situation}</p>
+      {/* Situation text + read-aloud button */}
+      <div className="situation-row">
+        <p className="situation-text">{scenario.situation}</p>
+        <button
+          className="situation-speak-btn"
+          onClick={() => speak(scenario.tts, scenario.ttsFallback, true)}
+          aria-label="שמע את השאלה"
+        >
+          🔊
+        </button>
+      </div>
       <p className="prompt">מה אתה עושה?</p>
 
       {/* Response options */}
