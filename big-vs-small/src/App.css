@@ -62,6 +62,33 @@ body {
   transform: scale(0.9);
 }
 
+.hud-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.exit-btn {
+  background: none;
+  border: none;
+  font-size: 22px;
+  font-weight: 700;
+  color: #aaa;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  line-height: 1;
+  transition: color 0.2s, transform 0.15s;
+}
+
+.exit-btn:hover {
+  color: #e57373;
+}
+
+.exit-btn:active {
+  transform: scale(0.9);
+}
+
 .star-pip {
   font-size: 28px;
   opacity: 0.2;

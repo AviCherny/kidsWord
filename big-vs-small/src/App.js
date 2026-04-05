@@ -111,6 +111,16 @@ export default function App() {
     );
   }
 
+  function exitGame() {
+    clearTimeout(idleTimer.current);
+    setPairIndex(0);
+    setStars(0);
+    setBalloons(0);
+    setWinner(null);
+    setHighlight(null);
+    setLocked(false);
+  }
+
   return (
     <div className="game">
       <header className="hud">
@@ -120,13 +130,18 @@ export default function App() {
               <span key={i} className={`star-pip ${i < starsInRow ? 'filled' : ''}`}>⭐</span>
             ))}
           </div>
-          <button
-            className={`sound-btn ${soundOn ? 'on' : 'off'}`}
-            onClick={() => setSoundOn(s => !s)}
-            aria-label={soundOn ? 'Sound on' : 'Sound off'}
-          >
-            {soundOn ? '🔊' : '🔇'}
-          </button>
+          <div className="hud-controls">
+            <button
+              className={`sound-btn ${soundOn ? 'on' : 'off'}`}
+              onClick={() => setSoundOn(s => !s)}
+              aria-label={soundOn ? 'Sound on' : 'Sound off'}
+            >
+              {soundOn ? '🔊' : '🔇'}
+            </button>
+            <button className="exit-btn" onClick={exitGame} aria-label="Exit game">
+              ✕
+            </button>
+          </div>
         </div>
         {balloons > 0 && (
           <div className="balloon-row">{'🎈'.repeat(balloons)}</div>
