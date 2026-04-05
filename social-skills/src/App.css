@@ -173,25 +173,38 @@ body {
   flex: 1;
 }
 
-.option-btn {
+/* Row wrapper: holds the main option button + the 🔊 speak button */
+.option-row {
   width: 100%;
-  min-height: 80px;
-  background: #f5efe8;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
   border: 3px solid #ddd0c0;
   border-radius: 20px;
+  background: #f5efe8;
+  transition: background 0.2s, border-color 0.2s;
+  overflow: hidden;
+}
+
+/* Main tap area — takes up the bulk of the row */
+.option-main {
+  flex: 1;
+  min-height: 80px;
+  background: transparent;
+  border: none;
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 14px 20px;
+  padding: 14px 16px;
   cursor: pointer;
   text-align: right;
   direction: rtl;
-  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  transition: transform 0.15s;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
-.option-btn:active {
+.option-main:active {
   transform: scale(0.97);
 }
 
@@ -208,15 +221,38 @@ body {
   flex: 1;
 }
 
+/* Read-aloud button — speaks without selecting */
+.option-speak-btn {
+  flex-shrink: 0;
+  width: 52px;
+  background: rgba(255, 255, 255, 0.6);
+  border: none;
+  border-right: 2px solid #ddd0c0;  /* separator from main area (RTL: right side) */
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  /* In RTL flex, last child appears on the left — this is where we want the speaker */
+}
+
+.option-speak-btn:active {
+  background: rgba(255, 220, 100, 0.4);
+  transform: scale(0.9);
+}
+
 /* Correct tap — green */
-.option-btn.chosen-best {
+.option-row.chosen-best {
   border-color: #4caf50;
   background: #e8f5e9;
   animation: correctPop 0.4s ease;
 }
 
 /* Not-ideal tap — warm orange (never red) */
-.option-btn.chosen-not-good {
+.option-row.chosen-not-good {
   border-color: #ffb74d;
   background: #fff3e0;
   animation: gentlePulse 0.6s ease 2;
@@ -224,7 +260,7 @@ body {
 
 /* Idle hint OR reveal-correct after wrong tap */
 /* 3 cycles max — infinite pulsing is a known sensory trigger for autism */
-.option-btn.hint-glow {
+.option-row.hint-glow {
   border-color: #81c784;
   background: #f1f8e9;
   animation: hintPulse 1s ease 3;

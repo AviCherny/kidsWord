@@ -34,23 +34,29 @@ export default function App() {
     soundOnRef.current = soundOn;
   }, [soundOn]);
 
-  // resetIdle: clears and restarts the 4-second idle hint timer
+  // resetIdle: clears and restarts the idle hint timer
+  // 8s — gives child enough time to hear all options read aloud before hint appears
   const resetIdle = useCallback(() => {
     clearTimeout(idleTimer.current);
     if (locked) return;
     idleTimer.current = setTimeout(() => {
       setShowHint(true);
-    }, 4000);
+    }, 8000);
   }, [locked]);
 
-  // On each new scenario: reset state, speak, start idle timer
+  // On each new scenario: reset state, read situation + both options aloud, start idle timer
   useEffect(() => {
     if (screen !== 'game') return;
     setTapped(null);
     setShowHint(false);
     setLocked(false);
     setVideoError(false);
-    speak(scenario.tts, scenario.ttsFallback, soundOnRef.current);
+
+    // Read situation + both options so non-readers hear all choices before deciding
+    const opts = scenario.options;
+    const fullTts = `${scenario.tts} אפשרות אחת: ${opts[0].text}. אפשרות שתיים: ${opts[1].text}.`;
+    speak(fullTts, scenario.ttsFallback, soundOnRef.current);
+
     resetIdle();
     return () => clearTimeout(idleTimer.current);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -67,11 +73,11 @@ export default function App() {
       setStars(newStars);
       if (newStars % 5 === 0) {
         setBalloons(b => b + 1);
-        // Balloon milestone — celebrate first, lesson secondary (ADHD/non-reader reward)
-        speak('יפה מאוד! קיבלת בלון!', null, soundOnRef.current);
+        // Read: chosen option text + balloon celebration
+        speak(`${opt.text}. יפה מאוד! קיבלת בלון!`, null, soundOnRef.current);
       } else {
-        // Speak lesson aloud — important for non-readers (delay/autism/young children)
-        speak(scenario.lesson, scenario.lessonFallback, soundOnRef.current);
+        // Read: chosen option text + lesson — non-readers hear what they picked and why it's good
+        speak(`${opt.text}. ${scenario.lesson}`, scenario.lessonFallback, soundOnRef.current);
       }
 
       setTimeout(() => {
@@ -82,14 +88,14 @@ export default function App() {
         }
       }, 1500);
     } else {
-      // notGood: speak lesson, show hint glow on best option, then reset so child can retry
-      speak(scenario.lesson, scenario.lessonFallback, soundOnRef.current);
+      // notGood: read chosen option + lesson, show hint on best option, then reset so child can retry
+      speak(`${opt.text}. ${scenario.lesson}`, scenario.lessonFallback, soundOnRef.current);
       setShowHint(true);
       setTimeout(() => {
         setTapped(null);
         setShowHint(false);
         setLocked(false);
-      }, 2500);
+      }, 3500);
     }
   }
 
@@ -221,20 +227,30 @@ export default function App() {
           const isChosen = tapped === opt.quality;
           const isHinted = showHint && isBest && tapped !== 'best';
 
-          let btnClass = 'option-btn';
-          if (isChosen && tapped === 'best') btnClass += ' chosen-best';
-          if (isChosen && tapped === 'notGood') btnClass += ' chosen-not-good';
-          if (isHinted) btnClass += ' hint-glow';
+          let rowClass = 'option-row';
+          if (isChosen && tapped === 'best') rowClass += ' chosen-best';
+          if (isChosen && tapped === 'notGood') rowClass += ' chosen-not-good';
+          if (isHinted) rowClass += ' hint-glow';
 
           return (
-            <button
-              key={opt.quality}
-              className={btnClass}
-              onClick={() => handleTap(opt)}
-            >
-              <span className="option-emoji">{opt.emoji}</span>
-              <span className="option-text">{opt.text}</span>
-            </button>
+            <div key={opt.quality} className={rowClass}>
+              {/* Main tap area — selects this answer */}
+              <button
+                className="option-main"
+                onClick={() => handleTap(opt)}
+              >
+                <span className="option-emoji">{opt.emoji}</span>
+                <span className="option-text">{opt.text}</span>
+              </button>
+              {/* Read-aloud button — speaks the option text WITHOUT selecting it */}
+              <button
+                className="option-speak-btn"
+                onClick={() => speak(opt.text, null, true)}
+                aria-label="שמע את התשובה"
+              >
+                🔊
+              </button>
+            </div>
           );
         })}
       </div>
