@@ -5,6 +5,13 @@ const PAIRS = [
   { left: { emoji: '🐘', name: 'Elephant' }, right: { emoji: '🐭', name: 'Mouse' }, bigger: 'left' },
   { left: { emoji: '🦒', name: 'Giraffe' }, right: { emoji: '🐕', name: 'Dog' }, bigger: 'left' },
   { left: { emoji: '🐄', name: 'Cow' }, right: { emoji: '🐱', name: 'Cat' }, bigger: 'left' },
+  { left: { emoji: '🦁', name: 'Lion' }, right: { emoji: '🐇', name: 'Rabbit' }, bigger: 'left' },
+  { left: { emoji: '🐊', name: 'Crocodile' }, right: { emoji: '🐸', name: 'Frog' }, bigger: 'left' },
+  { left: { emoji: '🦓', name: 'Zebra' }, right: { emoji: '🐿', name: 'Squirrel' }, bigger: 'left' },
+  { left: { emoji: '🐻', name: 'Bear' }, right: { emoji: '🐹', name: 'Hamster' }, bigger: 'left' },
+  { left: { emoji: '🦅', name: 'Eagle' }, right: { emoji: '🐦', name: 'Bird' }, bigger: 'left' },
+  { left: { emoji: '🐴', name: 'Horse' }, right: { emoji: '🐰', name: 'Bunny' }, bigger: 'left' },
+  { left: { emoji: '🦏', name: 'Rhino' }, right: { emoji: '🐝', name: 'Bee' }, bigger: 'left' },
 ];
 
 function speak(text) {
@@ -23,7 +30,8 @@ export default function App() {
   const [locked, setLocked] = useState(false);
   const idleTimer = useRef(null);
 
-  const pair = PAIRS[pairIndex % PAIRS.length];
+  const done = pairIndex >= PAIRS.length;
+  const pair = PAIRS[Math.min(pairIndex, PAIRS.length - 1)];
 
   const resetIdle = useCallback(() => {
     clearTimeout(idleTimer.current);
@@ -34,11 +42,15 @@ export default function App() {
   }, [locked, pair.bigger]);
 
   useEffect(() => {
+    if (done) {
+      speak('Amazing! You finished! Great job!');
+      return;
+    }
     speak('Who is bigger?');
     setWinner(null);
     setHighlight(null);
     setLocked(false);
-  }, [pairIndex]);
+  }, [pairIndex, done]);
 
   useEffect(() => {
     resetIdle();
@@ -70,6 +82,20 @@ export default function App() {
   }
 
   const starsInRow = stars % 5 === 0 && stars > 0 ? 5 : stars % 5;
+
+  if (done) {
+    return (
+      <div className="game win-screen">
+        <div className="win-emoji">🏆</div>
+        <h1 className="win-title">Amazing!</h1>
+        <p className="win-subtitle">You finished all the animals!</p>
+        <div className="win-balloons">{'🎈'.repeat(Math.max(balloons, 1))}</div>
+        <button className="play-again-btn" onClick={() => { setPairIndex(0); setStars(0); setBalloons(0); }}>
+          Play Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="game">
