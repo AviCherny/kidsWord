@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 import { Capacitor } from '@capacitor/core';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
 
 const PAIRS = [
   { big: { emoji: '🐘', name: 'Elephant' }, small: { emoji: '🐭', name: 'Mouse' } },
@@ -15,31 +16,28 @@ const PAIRS = [
   { big: { emoji: '🦏', name: 'Rhino' }, small: { emoji: '🐝', name: 'Bee' } },
 ];
 
-const isAndroid = Capacitor.getPlatform() === 'android';
+const isNative = Capacitor.isNativePlatform();
 
-function speak(text, enabled) {
+// speak() is fire-and-forget — never await it in the component
+async function speak(text, enabled) {
   if (!enabled) return;
-  if (!window.speechSynthesis) return;
-  // Cancel any ongoing speech — wrapped because it throws on some Android WebViews
-  try { window.speechSynthesis.cancel(); } catch (e) {}
-  // On Android, cancel() is async; a small delay prevents silent failures
-  const delay = isAndroid ? 60 : 0;
-  setTimeout(() => {
-    try {
-      const u = new SpeechSynthesisUtterance(text);
-      u.rate = 0.85;
-      u.lang = 'en-US'; // Required for Samsung TTS to select a voice
-      window.speechSynthesis.speak(u);
-    } catch (e) {}
-  }, delay);
-}
 
-// Call once from a user-gesture to unlock Android WebView's TTS engine
-function unlockTTS() {
+  if (isNative) {
+    // Native Android/iOS TTS — reliable, no WebView restrictions
+    try { await TextToSpeech.stop(); } catch (e) {}
+    try {
+      await TextToSpeech.speak({ text, lang: 'en-US', rate: 0.85, pitch: 1.0, volume: 1.0 });
+    } catch (e) {}
+    return;
+  }
+
+  // Browser fallback
   if (!window.speechSynthesis) return;
+  try { window.speechSynthesis.cancel(); } catch (e) {}
   try {
-    const u = new SpeechSynthesisUtterance(' ');
-    u.volume = 0;
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.85;
+    u.lang = 'en-US';
     window.speechSynthesis.speak(u);
   } catch (e) {}
 }
@@ -159,12 +157,7 @@ export default function App() {
           <div className="hud-controls">
             <button
               className={`sound-btn ${soundOn ? 'on' : 'off'}`}
-              onClick={() => {
-                const next = !soundOn;
-                setSoundOn(next);
-                // Unlock Android WebView's TTS engine from this user gesture
-                if (next) unlockTTS();
-              }}
+              onClick={() => setSoundOn(s => !s)}
               aria-label={soundOn ? 'Sound on' : 'Sound off'}
             >
               {soundOn ? '🔊' : '🔇'}
