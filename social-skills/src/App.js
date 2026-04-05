@@ -86,7 +86,7 @@ export default function App() {
         } else {
           setScenarioIndex(i => i + 1);
         }
-      }, 1500);
+      }, 4500); // 1.5s feedback + 3s for TTS to finish speaking
     } else {
       // notGood: read chosen option + lesson, show hint on best option, then reset so child can retry
       speak(`${opt.text}. ${scenario.lesson}`, scenario.lessonFallback, soundOnRef.current);
