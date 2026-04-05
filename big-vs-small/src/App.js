@@ -2,23 +2,28 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import './App.css';
 
 const PAIRS = [
-  { left: { emoji: '🐘', name: 'Elephant' }, right: { emoji: '🐭', name: 'Mouse' }, bigger: 'left' },
-  { left: { emoji: '🦒', name: 'Giraffe' }, right: { emoji: '🐕', name: 'Dog' }, bigger: 'left' },
-  { left: { emoji: '🐄', name: 'Cow' }, right: { emoji: '🐱', name: 'Cat' }, bigger: 'left' },
-  { left: { emoji: '🦁', name: 'Lion' }, right: { emoji: '🐇', name: 'Rabbit' }, bigger: 'left' },
-  { left: { emoji: '🐊', name: 'Crocodile' }, right: { emoji: '🐸', name: 'Frog' }, bigger: 'left' },
-  { left: { emoji: '🦓', name: 'Zebra' }, right: { emoji: '🐿', name: 'Squirrel' }, bigger: 'left' },
-  { left: { emoji: '🐻', name: 'Bear' }, right: { emoji: '🐹', name: 'Hamster' }, bigger: 'left' },
-  { left: { emoji: '🦅', name: 'Eagle' }, right: { emoji: '🐦', name: 'Bird' }, bigger: 'left' },
-  { left: { emoji: '🐴', name: 'Horse' }, right: { emoji: '🐰', name: 'Bunny' }, bigger: 'left' },
-  { left: { emoji: '🦏', name: 'Rhino' }, right: { emoji: '🐝', name: 'Bee' }, bigger: 'left' },
+  { big: { emoji: '🐘', name: 'Elephant' }, small: { emoji: '🐭', name: 'Mouse' } },
+  { big: { emoji: '🦒', name: 'Giraffe' }, small: { emoji: '🐕', name: 'Dog' } },
+  { big: { emoji: '🐄', name: 'Cow' }, small: { emoji: '🐱', name: 'Cat' } },
+  { big: { emoji: '🦁', name: 'Lion' }, small: { emoji: '🐇', name: 'Rabbit' } },
+  { big: { emoji: '🐊', name: 'Crocodile' }, small: { emoji: '🐸', name: 'Frog' } },
+  { big: { emoji: '🦓', name: 'Zebra' }, small: { emoji: '🐿', name: 'Squirrel' } },
+  { big: { emoji: '🐻', name: 'Bear' }, small: { emoji: '🐹', name: 'Hamster' } },
+  { big: { emoji: '🦅', name: 'Eagle' }, small: { emoji: '🐦', name: 'Bird' } },
+  { big: { emoji: '🐴', name: 'Horse' }, small: { emoji: '🐰', name: 'Bunny' } },
+  { big: { emoji: '🦏', name: 'Rhino' }, small: { emoji: '🐝', name: 'Bee' } },
 ];
 
-function speak(text) {
+function speak(text, enabled) {
+  if (!enabled) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.rate = 0.85;
   window.speechSynthesis.speak(u);
+}
+
+function randomSides() {
+  return PAIRS.map(() => (Math.random() < 0.5 ? 'left' : 'right'));
 }
 
 export default function App() {
@@ -28,29 +33,35 @@ export default function App() {
   const [winner, setWinner] = useState(null);
   const [highlight, setHighlight] = useState(null);
   const [locked, setLocked] = useState(false);
+  const [soundOn, setSoundOn] = useState(false);
+  const [sides] = useState(randomSides);
   const idleTimer = useRef(null);
 
   const done = pairIndex >= PAIRS.length;
-  const pair = PAIRS[Math.min(pairIndex, PAIRS.length - 1)];
+  const safeIndex = Math.min(pairIndex, PAIRS.length - 1);
+  const pairData = PAIRS[safeIndex];
+  const bigSide = sides[safeIndex];
+  const left = bigSide === 'left' ? pairData.big : pairData.small;
+  const right = bigSide === 'left' ? pairData.small : pairData.big;
 
   const resetIdle = useCallback(() => {
     clearTimeout(idleTimer.current);
     if (locked) return;
     idleTimer.current = setTimeout(() => {
-      setHighlight(pair.bigger);
+      setHighlight(bigSide);
     }, 3000);
-  }, [locked, pair.bigger]);
+  }, [locked, bigSide]);
 
   useEffect(() => {
     if (done) {
-      speak('Amazing! You finished! Great job!');
+      speak('Amazing! You finished! Great job!', soundOn);
       return;
     }
-    speak('Who is bigger?');
+    speak('Who is bigger?', soundOn);
     setWinner(null);
     setHighlight(null);
     setLocked(false);
-  }, [pairIndex, done]);
+  }, [pairIndex, done]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     resetIdle();
@@ -62,18 +73,18 @@ export default function App() {
     clearTimeout(idleTimer.current);
     setLocked(true);
 
-    if (side === pair.bigger) {
+    if (side === bigSide) {
       setWinner(side);
       const newStars = stars + 1;
       setStars(newStars);
       if (newStars % 5 === 0) setBalloons(b => b + 1);
-      speak('Correct!');
+      speak('Correct!', soundOn);
       setTimeout(() => {
         setPairIndex(i => i + 1);
       }, 1500);
     } else {
-      setHighlight(pair.bigger);
-      speak('This one is bigger');
+      setHighlight(bigSide);
+      speak('This one is bigger', soundOn);
       setTimeout(() => {
         setHighlight(null);
         setLocked(false);
@@ -90,7 +101,10 @@ export default function App() {
         <h1 className="win-title">Amazing!</h1>
         <p className="win-subtitle">You finished all the animals!</p>
         <div className="win-balloons">{'🎈'.repeat(Math.max(balloons, 1))}</div>
-        <button className="play-again-btn" onClick={() => { setPairIndex(0); setStars(0); setBalloons(0); }}>
+        <button
+          className="play-again-btn"
+          onClick={() => { setPairIndex(0); setStars(0); setBalloons(0); }}
+        >
           Play Again
         </button>
       </div>
@@ -100,23 +114,29 @@ export default function App() {
   return (
     <div className="game">
       <header className="hud">
-        <div className="star-row">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <span key={i} className={`star-pip ${i < starsInRow ? 'filled' : ''}`}>⭐</span>
-          ))}
+        <div className="hud-top">
+          <div className="star-row">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <span key={i} className={`star-pip ${i < starsInRow ? 'filled' : ''}`}>⭐</span>
+            ))}
+          </div>
+          <button
+            className={`sound-btn ${soundOn ? 'on' : 'off'}`}
+            onClick={() => setSoundOn(s => !s)}
+            aria-label={soundOn ? 'Sound on' : 'Sound off'}
+          >
+            {soundOn ? '🔊' : '🔇'}
+          </button>
         </div>
         {balloons > 0 && (
-          <div className="balloon-row">
-            {'🎈'.repeat(balloons)}
-          </div>
+          <div className="balloon-row">{'🎈'.repeat(balloons)}</div>
         )}
       </header>
 
       <h1 className="prompt">Who is bigger?</h1>
 
       <div className="arena">
-        {['left', 'right'].map(side => {
-          const animal = side === 'left' ? pair.left : pair.right;
+        {[{ side: 'left', animal: left }, { side: 'right', animal: right }].map(({ side, animal }) => {
           const isWinner = winner === side;
           const isHighlighted = highlight === side;
           return (
