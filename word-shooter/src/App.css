@@ -162,15 +162,20 @@ body {
 /* Distractor — visible but muted */
 .obj-distractor {
   opacity: 0.45;
-  pointer-events: none;
   filter: grayscale(0.4);
 }
 
-/* Glow — highlight correct after wrong tap */
+/* Shake — distractor tapped */
+.obj-distractor-shake {
+  animation: distractor-shake 0.4s ease !important;
+}
+
+/* Glow — highlight correct after wrong tap.
+   Must come AFTER float rules in cascade, and use !important,
+   so it wins over float-slow / float-fast on the same element. */
 .obj-glow {
   border-color: #22c55e !important;
   box-shadow: 0 0 0 6px #bbf7d0, 0 0 24px #22c55e80 !important;
-  animation: bounce-glow 0.5s ease-in-out infinite alternate;
 }
 
 /* Explosion feedback */
@@ -184,6 +189,9 @@ body {
 /* Float animations */
 .float-slow { animation: float 3s ease-in-out infinite; }
 .float-fast { animation: float 1.8s ease-in-out infinite; }
+
+/* Glow bounce — declared AFTER float so it wins the cascade */
+.obj-glow { animation: bounce-glow 0.5s ease-in-out infinite alternate !important; }
 
 /* Hero area */
 .hero-area {
@@ -220,10 +228,67 @@ body {
 /* ── Rocket projectile ─────────────────────────────────────────── */
 .rocket-projectile {
   position: fixed;
-  font-size: 1.8rem;
+  display: flex;
+  flex-direction: row;   /* [FIRE][🚀] — fire on left = tail */
+  align-items: center;
   pointer-events: none;
   z-index: 100;
-  animation: rocket-fly 0.4s ease-in forwards;
+  animation: rocket-fly 1.1s ease-in forwards;
+}
+
+.rocket-body {
+  font-size: 2rem;
+  line-height: 1;
+  position: relative;
+  z-index: 2;
+  /* 🚀 emoji nose points upper-left (~NW). Rotate +45° so nose → right,
+     exhaust nozzle → left, perfectly facing the fire plume. */
+  transform: rotate(45deg);
+}
+
+/* Fire plume — attached to the nozzle (left of rocket body) */
+.rocket-fire {
+  position: relative;
+  width: 58px;
+  height: 28px;
+  margin-right: -12px;  /* tuck under the rocket nozzle */
+  flex-shrink: 0;
+}
+
+/* Outer glow — wide orange/red cone, tapers to the left */
+.fire-outer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    #ff2200 35%,
+    #ff6600 65%,
+    #ffaa00 85%,
+    #ffee44 100%
+  );
+  border-radius: 50% 8px 8px 50%;
+  filter: blur(4px);
+  animation: flicker-outer 0.13s ease-in-out infinite alternate;
+  transform-origin: right center;
+}
+
+/* Inner core — tight bright white/yellow spike */
+.fire-core {
+  position: absolute;
+  top: 32%;
+  bottom: 32%;
+  left: 25%;
+  right: 0;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    #ffe066 40%,
+    #ffffff 100%
+  );
+  border-radius: 50% 4px 4px 50%;
+  animation: flicker-core 0.1s ease-in-out infinite alternate-reverse;
+  transform-origin: right center;
 }
 
 /* ── Celebration overlay ───────────────────────────────────────── */
@@ -258,8 +323,16 @@ body {
 }
 @keyframes rocket-fly {
   0%   { transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) scale(1);    opacity: 1; }
-  80%  { transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(1.1); opacity: 1; }
-  100% { transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(0.5); opacity: 0; }
+  85%  { transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(1.15); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(0.4); opacity: 0; }
+}
+@keyframes flicker-outer {
+  0%   { transform: scaleX(1)    scaleY(1);    opacity: 1; }
+  100% { transform: scaleX(0.82) scaleY(0.72); opacity: 0.85; }
+}
+@keyframes flicker-core {
+  0%   { transform: scaleX(1)    scaleY(1);   opacity: 1; }
+  100% { transform: scaleX(0.9)  scaleY(0.6); opacity: 0.9; }
 }
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
@@ -284,4 +357,11 @@ body {
   0%   { top: -40px; opacity: 1; }
   80%  { opacity: 1; }
   100% { top: 110vh; opacity: 0; }
+}
+@keyframes distractor-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  20%  { transform: translateX(-8px) rotate(-3deg); }
+  40%  { transform: translateX(8px) rotate(3deg); }
+  60%  { transform: translateX(-6px) rotate(-2deg); }
+  80%  { transform: translateX(6px) rotate(2deg); }
 }

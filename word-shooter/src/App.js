@@ -49,6 +49,7 @@ export default function App() {
   const [rocketAnim, setRocketAnim] = useState(null);  // {fromX,fromY,toX,toY}
   const [glowIndex, setGlowIndex] = useState(null);
   const [explosionIndex, setExplosionIndex] = useState(null);
+  const [distractorShake, setDistractorShake] = useState(false);
 
   const idleTimer = useRef(null);
   const heroRef = useRef(null);
@@ -65,11 +66,16 @@ export default function App() {
     setRocketAnim(null);
     setGlowIndex(null);
     setExplosionIndex(null);
+    setDistractorShake(false);
 
     setTimeout(() => {
       speak(r.target.word, () => {
         setPhase('waiting');
-        idleTimer.current = setTimeout(() => speak(r.target.word), 3000);
+        // Keep repeating the word every 4 s until the child taps
+        const scheduleRepeat = () => {
+          idleTimer.current = setTimeout(() => speak(r.target.word, scheduleRepeat), 4000);
+        };
+        scheduleRepeat();
       });
     }, 500);
   }, [level]);
@@ -83,7 +89,11 @@ export default function App() {
   // ── tap ────────────────────────────────────────────────────────────────
   const handleTap = useCallback((obj, idx) => {
     if (phase !== 'waiting') return;
-    if (obj.isDistractor) return;
+    if (obj.isDistractor) {
+      setDistractorShake(true);
+      setTimeout(() => setDistractorShake(false), 450);
+      return;
+    }
     clearTimeout(idleTimer.current);
     setPhase('shooting');
 
@@ -141,7 +151,7 @@ export default function App() {
           startRound();
         }, 2200);
       }
-    }, 420);
+    }, 1150);
   }, [phase, round, stars, correctCount, level, levelIndex, startRound]);
 
   // ── level up actions ───────────────────────────────────────────────────
@@ -184,7 +194,7 @@ export default function App() {
     <div className="screen end-screen">
       <div className="big-emoji">🏆</div>
       <div className="result-title">You Win!</div>
-      <div className="stars-total">⭐ {stars} stars!</div>
+      <div className="stars-total">🌟 {stars} stars!</div>
       <button className="btn-primary" onClick={() => { setStars(0); setLevelIndex(0); setScreen('start'); }}>
         Play Again
       </button>
@@ -196,7 +206,7 @@ export default function App() {
     <div className="screen game-screen">
       {/* HUD */}
       <div className="hud">
-        <span className="hud-stars">⭐ {stars}</span>
+        <span className="hud-stars">🌟 {stars}</span>
         <div className="progress-bar-wrap">
           <div className="progress-bar-fill" style={{ width: `${progress * 100}%` }} />
         </div>
@@ -220,6 +230,7 @@ export default function App() {
               'obj-card',
               floatClass,
               obj.isDistractor ? 'obj-distractor' : '',
+              obj.isDistractor && distractorShake ? 'obj-distractor-shake' : '',
               glowIndex === i ? 'obj-glow' : '',
               explosionIndex === i && correct === true  ? 'obj-explode-correct' : '',
               explosionIndex === i && correct === false ? 'obj-explode-wrong'   : '',
@@ -263,10 +274,15 @@ function Rocket({ pos }) {
         top: pos.fromY,
         '--dx': `${dx}px`,
         '--dy': `${dy}px`,
-        transform: `translate(-50%, -50%) rotate(${angle}deg)`,
+        '--angle': `${angle}deg`,
       }}
     >
-      🚀
+      {/* Fire sits at the tail — left side, since 🚀 points right */}
+      <span className="rocket-fire" aria-hidden="true">
+        <span className="fire-outer" />
+        <span className="fire-core" />
+      </span>
+      <span className="rocket-body">🚀</span>
     </div>
   );
 }
