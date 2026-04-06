@@ -1,0 +1,287 @@
+/* ── Reset & base ──────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', 'Segoe UI', sans-serif;
+  background: linear-gradient(160deg, #e8f4ff 0%, #f5eaff 100%);
+  min-height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── Screen shell ──────────────────────────────────────────────── */
+.screen {
+  width: 100vw;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   START / LEVELUP / END SCREENS
+════════════════════════════════════════════════════════════════ */
+.start-screen, .levelup-screen, .end-screen {
+  justify-content: center;
+  gap: 24px;
+  background: linear-gradient(160deg, #fff7e6 0%, #ffe0f0 100%);
+}
+
+.game-title {
+  font-size: 3rem;
+  font-weight: 900;
+  color: #7c3aed;
+  text-align: center;
+  line-height: 1.1;
+  text-shadow: 0 2px 8px #c4b5fd80;
+}
+
+.hero-icon { font-size: 6rem; animation: hero-bob 2.5s ease-in-out infinite; }
+
+.big-emoji  { font-size: 5rem; }
+.result-title { font-size: 2.4rem; font-weight: 800; color: #7c3aed; }
+.result-sub   { font-size: 1.3rem; color: #6b7280; }
+.stars-total  { font-size: 2rem; font-weight: 700; color: #f59e0b; }
+
+.btn-primary {
+  padding: 16px 44px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(135deg, #7c3aed, #ec4899);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 20px #7c3aed40;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn-primary:active { transform: scale(0.95); box-shadow: none; }
+
+.btn-secondary {
+  padding: 12px 32px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  border: 3px solid #7c3aed;
+  border-radius: 50px;
+  background: transparent;
+  color: #7c3aed;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.btn-secondary:active { transform: scale(0.95); }
+
+/* ════════════════════════════════════════════════════════════════
+   GAME SCREEN
+════════════════════════════════════════════════════════════════ */
+.game-screen {
+  justify-content: flex-start;
+  gap: 0;
+}
+
+/* HUD */
+.hud {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 6px;
+}
+.hud-stars, .hud-level {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #7c3aed;
+  white-space: nowrap;
+}
+.progress-bar-wrap {
+  flex: 1;
+  height: 10px;
+  background: #e9d5ff;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #7c3aed, #ec4899);
+  border-radius: 99px;
+  transition: width 0.5s ease;
+}
+
+/* Word prompt */
+.word-prompt {
+  margin-top: 4px;
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1e1b4b;
+  background: rgba(255,255,255,0.7);
+  border: none;
+  border-radius: 16px;
+  padding: 8px 24px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px #7c3aed20;
+  letter-spacing: 0.02em;
+}
+
+/* Objects area */
+.objects-area {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 0 12px;
+  max-height: 50vh;
+}
+
+.obj-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.85);
+  border: 3px solid #e9d5ff;
+  border-radius: 24px;
+  padding: 12px 10px 10px;
+  width: clamp(90px, 28vw, 150px);
+  box-shadow: 0 4px 16px #7c3aed18;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.obj-card:active { transform: scale(0.93); }
+
+.obj-emoji { font-size: clamp(3rem, 12vw, 5rem); line-height: 1; }
+.obj-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #4c1d95;
+  letter-spacing: 0.03em;
+}
+
+/* Distractor — visible but muted */
+.obj-distractor {
+  opacity: 0.45;
+  pointer-events: none;
+  filter: grayscale(0.4);
+}
+
+/* Glow — highlight correct after wrong tap */
+.obj-glow {
+  border-color: #22c55e !important;
+  box-shadow: 0 0 0 6px #bbf7d0, 0 0 24px #22c55e80 !important;
+  animation: bounce-glow 0.5s ease-in-out infinite alternate;
+}
+
+/* Explosion feedback */
+.obj-explode-correct {
+  animation: explode-correct 0.5s ease forwards;
+}
+.obj-explode-wrong {
+  animation: explode-wrong 0.45s ease forwards;
+}
+
+/* Float animations */
+.float-slow { animation: float 3s ease-in-out infinite; }
+.float-fast { animation: float 1.8s ease-in-out infinite; }
+
+/* Hero area */
+.hero-area {
+  width: 100%;
+  height: 36vh;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 12px;
+}
+
+.hero-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.hero-emoji { font-size: clamp(5rem, 20vw, 9rem); display: block; }
+
+.hero-idle-anim .hero-emoji {
+  animation: hero-bob 2.5s ease-in-out infinite;
+}
+.hero-shooting .hero-emoji {
+  animation: hero-shoot-bounce 0.35s ease;
+}
+
+.chest-burst {
+  position: absolute;
+  top: 15%;
+  font-size: 2rem;
+  animation: burst-out 0.4s ease forwards;
+}
+
+/* ── Rocket projectile ─────────────────────────────────────────── */
+.rocket-projectile {
+  position: fixed;
+  font-size: 1.8rem;
+  pointer-events: none;
+  z-index: 100;
+  animation: rocket-fly 0.4s ease-in forwards;
+}
+
+/* ── Celebration overlay ───────────────────────────────────────── */
+.celebration-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 200;
+  overflow: hidden;
+}
+.confetti {
+  position: absolute;
+  top: -40px;
+  animation: confetti-fall 1.8s ease-in forwards;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   KEYFRAMES
+════════════════════════════════════════════════════════════════ */
+@keyframes hero-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+@keyframes hero-shoot-bounce {
+  0%   { transform: scale(1) rotate(0deg); }
+  30%  { transform: scale(1.12) rotate(-4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+@keyframes burst-out {
+  0%   { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+@keyframes rocket-fly {
+  0%   { transform: translate(-50%, -50%) rotate(var(--angle, 0deg)) scale(1);    opacity: 1; }
+  80%  { transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(1.1); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(0.5); opacity: 0; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+@keyframes bounce-glow {
+  0%   { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+@keyframes explode-correct {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.25); box-shadow: 0 0 0 12px #fde68a, 0 0 30px #f59e0b80; }
+  100% { transform: scale(1); }
+}
+@keyframes explode-wrong {
+  0%, 100% { transform: translateX(0); opacity: 1; }
+  25%  { transform: translateX(-6px); }
+  50%  { transform: translateX(6px); }
+  75%  { transform: translateX(-4px); }
+}
+@keyframes confetti-fall {
+  0%   { top: -40px; opacity: 1; }
+  80%  { opacity: 1; }
+  100% { top: 110vh; opacity: 0; }
+}
