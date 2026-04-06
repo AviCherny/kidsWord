@@ -350,19 +350,21 @@ body {
   background: #4caf50;
   color: white;
   border: none;
-  border-radius: 28px;
-  padding: 10px 24px;
-  font-size: clamp(16px, 4vw, 20px);
-  font-weight: 800;
+  border-radius: 50px;
+  padding: 16px 0;
+  width: 100%;
+  font-size: clamp(22px, 6vw, 28px);
+  font-weight: 900;
   cursor: pointer;
-  align-self: center;
+  align-self: stretch;
   animation: popIn 0.35s ease;
+  box-shadow: 0 5px 18px rgba(76, 175, 80, 0.55);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
 }
 
 .continue-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
 
 /* "נסה שוב 🔄" — visible signal that retry is available; early-reset on tap */
