@@ -46,7 +46,7 @@ export default function App() {
   const [round, setRound] = useState(null);
   const [phase, setPhase] = useState('idle');          // idle|speaking|waiting|shooting|feedback
   const [correct, setCorrect] = useState(null);
-  const [rocketAnim, setRocketAnim] = useState(null);  // {fromX,fromY,toX,toY}
+  const [laserAnim, setLaserAnim] = useState(null);    // {fromX,fromY,toX,toY}
   const [glowIndex, setGlowIndex] = useState(null);
   const [explosionIndex, setExplosionIndex] = useState(null);
   const [distractorShake, setDistractorShake] = useState(false);
@@ -63,7 +63,7 @@ export default function App() {
     setRound(r);
     setPhase('speaking');
     setCorrect(null);
-    setRocketAnim(null);
+    setLaserAnim(null);
     setGlowIndex(null);
     setExplosionIndex(null);
     setDistractorShake(false);
@@ -97,13 +97,13 @@ export default function App() {
     clearTimeout(idleTimer.current);
     setPhase('shooting');
 
-    // rocket trajectory
+    // laser trajectory
     const heroEl = heroRef.current;
     const objEl = objectRefs.current[idx];
     if (heroEl && objEl) {
       const hr = heroEl.getBoundingClientRect();
       const or = objEl.getBoundingClientRect();
-      setRocketAnim({
+      setLaserAnim({
         fromX: hr.left + hr.width / 2,
         fromY: hr.top + hr.height * 0.25,
         toX: or.left + or.width / 2,
@@ -114,7 +114,7 @@ export default function App() {
     const isCorrect = obj.word === round.target.word;
 
     setTimeout(() => {
-      setRocketAnim(null);
+      setLaserAnim(null);
       setCorrect(isCorrect);
       setExplosionIndex(idx);
 
@@ -151,7 +151,7 @@ export default function App() {
           startRound();
         }, 2200);
       }
-    }, 1150);
+    }, 450);
   }, [phase, round, stars, correctCount, level, levelIndex, startRound]);
 
   // ── level up actions ───────────────────────────────────────────────────
@@ -252,8 +252,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Rocket */}
-      {rocketAnim && <Rocket pos={rocketAnim} />}
+      {/* Laser */}
+      {laserAnim && <Laser pos={laserAnim} />}
 
       {/* Celebration */}
       {showCelebration && <Celebration />}
@@ -261,28 +261,23 @@ export default function App() {
   );
 }
 
-// ─── Rocket ──────────────────────────────────────────────────────────────────
-function Rocket({ pos }) {
+// ─── Laser ───────────────────────────────────────────────────────────────────
+function Laser({ pos }) {
   const dx = pos.toX - pos.fromX;
   const dy = pos.toY - pos.fromY;
+  const length = Math.sqrt(dx * dx + dy * dy);
   const angle = Math.atan2(dy, dx) * (180 / Math.PI);
   return (
     <div
-      className="rocket-projectile"
+      className="laser-wrap"
       style={{
         left: pos.fromX,
         top: pos.fromY,
-        '--dx': `${dx}px`,
-        '--dy': `${dy}px`,
-        '--angle': `${angle}deg`,
+        width: length,
+        transform: `translate(0, -50%) rotate(${angle}deg)`,
       }}
     >
-      {/* Fire sits at the tail — left side, since 🚀 points right */}
-      <span className="rocket-fire" aria-hidden="true">
-        <span className="fire-outer" />
-        <span className="fire-core" />
-      </span>
-      <span className="rocket-body">🚀</span>
+      <div className="laser-beam" />
     </div>
   );
 }
