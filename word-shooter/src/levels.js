@@ -1,5 +1,6 @@
 // Word Shooter — level definitions
-// Each level: { id, name, objectCount, words: [{word, emoji, label}], targetCorrect, floatSpeed }
+// Each level: { id, name, objectCount, wordPool, wordsPerGame, targetCorrect, floatSpeed, distractors }
+// wordsPerGame words are randomly picked from wordPool at the start of each game session.
 
 export const LEVELS = [
   {
@@ -9,11 +10,16 @@ export const LEVELS = [
     targetCorrect: 5,
     floatSpeed: 0,          // no float
     distractors: false,
-    words: [
-      { word: 'Apple',   emoji: '🍎', label: 'Apple'   },
-      { word: 'Dog',     emoji: '🐶', label: 'Dog'     },
-      { word: 'Car',     emoji: '🚗', label: 'Car'     },
-      { word: 'Ball',    emoji: '⚽', label: 'Ball'    },
+    wordsPerGame: 4,
+    wordPool: [
+      { word: 'Apple', emoji: '🍎', label: 'Apple' },
+      { word: 'Dog',   emoji: '🐶', label: 'Dog'   },
+      { word: 'Car',   emoji: '🚗', label: 'Car'   },
+      { word: 'Ball',  emoji: '⚽', label: 'Ball'  },
+      { word: 'Hat',   emoji: '🎩', label: 'Hat'   },
+      { word: 'Cup',   emoji: '☕', label: 'Cup'   },
+      { word: 'Pig',   emoji: '🐷', label: 'Pig'   },
+      { word: 'Hen',   emoji: '🐔', label: 'Hen'   },
     ],
   },
   {
@@ -23,13 +29,19 @@ export const LEVELS = [
     targetCorrect: 7,
     floatSpeed: 1,          // slow float
     distractors: false,
-    words: [
-      { word: 'Cat',    emoji: '🐱', label: 'Cat'    },
-      { word: 'Cap',    emoji: '🧢', label: 'Cap'    },
-      { word: 'Ship',   emoji: '🚢', label: 'Ship'   },
-      { word: 'Sheep',  emoji: '🐑', label: 'Sheep'  },
-      { word: 'Car',    emoji: '🚗', label: 'Car'    },
-      { word: 'Bus',    emoji: '🚌', label: 'Bus'    },
+    wordsPerGame: 5,
+    // Similar-sounding pairs to challenge phonological discrimination
+    wordPool: [
+      { word: 'Cat',   emoji: '🐱', label: 'Cat'   },
+      { word: 'Cap',   emoji: '🧢', label: 'Cap'   },
+      { word: 'Ship',  emoji: '🚢', label: 'Ship'  },
+      { word: 'Sheep', emoji: '🐑', label: 'Sheep' },
+      { word: 'Bus',   emoji: '🚌', label: 'Bus'   },
+      { word: 'Bat',   emoji: '🦇', label: 'Bat'   },
+      { word: 'Pan',   emoji: '🍳', label: 'Pan'   },
+      { word: 'Pen',   emoji: '🖊️', label: 'Pen'   },
+      { word: 'Fox',   emoji: '🦊', label: 'Fox'   },
+      { word: 'Box',   emoji: '📦', label: 'Box'   },
     ],
   },
   {
@@ -38,12 +50,18 @@ export const LEVELS = [
     objectCount: 3,
     targetCorrect: 7,
     floatSpeed: 1,
-    distractors: true,      // 1 clickable-looking but non-target decoy
-    words: [
-      { word: 'Sun',    emoji: '☀️', label: 'Sun'   },
-      { word: 'Moon',   emoji: '🌙', label: 'Moon'  },
-      { word: 'Tree',   emoji: '🌳', label: 'Tree'  },
-      { word: 'Fish',   emoji: '🐟', label: 'Fish'  },
+    distractors: true,      // 1 visual distractor (non-clickable)
+    wordsPerGame: 4,
+    // Harder single-syllable words
+    wordPool: [
+      { word: 'Frog',   emoji: '🐸', label: 'Frog'   },
+      { word: 'Crab',   emoji: '🦀', label: 'Crab'   },
+      { word: 'Drum',   emoji: '🥁', label: 'Drum'   },
+      { word: 'Crown',  emoji: '👑', label: 'Crown'  },
+      { word: 'Truck',  emoji: '🚛', label: 'Truck'  },
+      { word: 'Shark',  emoji: '🦈', label: 'Shark'  },
+      { word: 'Snail',  emoji: '🐌', label: 'Snail'  },
+      { word: 'Grapes', emoji: '🍇', label: 'Grapes' },
     ],
   },
   {
@@ -53,20 +71,25 @@ export const LEVELS = [
     targetCorrect: 10,
     floatSpeed: 2,          // faster float
     distractors: false,
-    words: [
-      { word: 'Star',   emoji: '⭐', label: 'Star'   },
-      { word: 'Flower', emoji: '🌸', label: 'Flower' },
-      { word: 'Bird',   emoji: '🐦', label: 'Bird'   },
-      { word: 'Cake',   emoji: '🎂', label: 'Cake'   },
-      { word: 'Boat',   emoji: '⛵', label: 'Boat'   },
+    wordsPerGame: 4,
+    // Two-syllable words for maximum challenge
+    wordPool: [
+      { word: 'Tiger',   emoji: '🐯', label: 'Tiger'   },
+      { word: 'Rabbit',  emoji: '🐰', label: 'Rabbit'  },
+      { word: 'Monkey',  emoji: '🐒', label: 'Monkey'  },
+      { word: 'Penguin', emoji: '🐧', label: 'Penguin' },
+      { word: 'Turtle',  emoji: '🐢', label: 'Turtle'  },
+      { word: 'Dragon',  emoji: '🐉', label: 'Dragon'  },
+      { word: 'Rocket',  emoji: '🚀', label: 'Rocket'  },
+      { word: 'Cactus',  emoji: '🌵', label: 'Cactus'  },
     ],
   },
 ];
 
-// All possible distractor objects (never the target word)
+// Visual distractors — never the target word, just visual noise
 export const DISTRACTOR_POOL = [
-  { emoji: '🌈', label: 'Rainbow' },
-  { emoji: '🎈', label: 'Balloon' },
+  { emoji: '🌈', label: 'Rainbow'   },
+  { emoji: '🎈', label: 'Balloon'   },
   { emoji: '🦋', label: 'Butterfly' },
-  { emoji: '🌺', label: 'Hibiscus' },
+  { emoji: '🌺', label: 'Hibiscus'  },
 ];

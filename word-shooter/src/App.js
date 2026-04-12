@@ -13,16 +13,28 @@ function shuffle(arr) {
   return a;
 }
 
-function pickRandom(arr, exclude = []) {
-  const pool = arr.filter(x => !exclude.includes(x));
-  return pool[Math.floor(Math.random() * pool.length)];
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// Build objects for one round
-function buildRound(level) {
-  const { words, objectCount, distractors } = level;
-  const target = pickRandom(words);
-  const foils = shuffle(words.filter(w => w.word !== target.word)).slice(0, objectCount - 1);
+// Randomly select words from the pool for this game session
+function pickLevelWords(level) {
+  return shuffle([...level.wordPool]).slice(0, level.wordsPerGame);
+}
+
+// Build objects for one round.
+// selectedWords: the subset of wordPool chosen for this session.
+// lastTargetWord: word string to avoid repeating as the new target.
+function buildRound(level, selectedWords, lastTargetWord) {
+  const { objectCount, distractors } = level;
+
+  // Avoid the same target two rounds in a row (confuses pattern-seeking kids)
+  const available = lastTargetWord
+    ? selectedWords.filter(w => w.word !== lastTargetWord)
+    : selectedWords;
+  const target = pickRandom(available.length > 0 ? available : selectedWords);
+
+  const foils = shuffle(selectedWords.filter(w => w.word !== target.word)).slice(0, objectCount - 1);
   let objects = [target, ...foils];
 
   // Level 3+: replace last slot with a visual distractor (non-clickable)
@@ -54,12 +66,15 @@ export default function App() {
   const idleTimer = useRef(null);
   const heroRef = useRef(null);
   const objectRefs = useRef([]);
+  const selectedWordsRef = useRef([]);   // words chosen for this session
+  const lastTargetRef = useRef(null);    // avoid same target two rounds in a row
   const level = LEVELS[levelIndex];
 
   // ── new round ──────────────────────────────────────────────────────────
   const startRound = useCallback(() => {
     clearTimeout(idleTimer.current);
-    const r = buildRound(level);
+    const r = buildRound(level, selectedWordsRef.current, lastTargetRef.current);
+    lastTargetRef.current = r.target.word;
     setRound(r);
     setPhase('speaking');
     setCorrect(null);
@@ -73,7 +88,7 @@ export default function App() {
         setPhase('waiting');
         // Keep repeating the word every 4 s until the child taps
         const scheduleRepeat = () => {
-          idleTimer.current = setTimeout(() => speak(r.target.word, scheduleRepeat), 4000);
+          idleTimer.current = setTimeout(() => speak(r.target.word, scheduleRepeat), 3000);
         };
         scheduleRepeat();
       });
@@ -82,7 +97,12 @@ export default function App() {
 
   // ── start / level change ───────────────────────────────────────────────
   useEffect(() => {
-    if (screen === 'game') startRound();
+    if (screen === 'game') {
+      // Pick a fresh word subset from the pool for this session/level
+      selectedWordsRef.current = pickLevelWords(level);
+      lastTargetRef.current = null;
+      startRound();
+    }
     return () => clearTimeout(idleTimer.current);
   }, [screen, levelIndex]); // eslint-disable-line
 
@@ -195,7 +215,7 @@ export default function App() {
       <div className="big-emoji">🏆</div>
       <div className="result-title">You Win!</div>
       <div className="stars-total">🌟 {stars} stars!</div>
-      <button className="btn-primary" onClick={() => { setStars(0); setLevelIndex(0); setScreen('start'); }}>
+      <button className="btn-primary" onClick={() => { setStars(0); setLevelIndex(0); setCorrectCount(0); setScreen('start'); }}>
         Play Again
       </button>
     </div>
