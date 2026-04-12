@@ -3,10 +3,14 @@ import './App.css';
 import { SCENARIOS } from './scenarios';
 import { speak } from './speak';
 
+const SESSION_SIZE = 8; // scenarios per session — enough variety, not overwhelming
+
 export default function App() {
   // ── Screens: 'start' | 'game' | 'end' ──────────────────────────────────
   const [screen, setScreen] = useState('start');
   const [scenarioIndex, setScenarioIndex] = useState(0);
+  // Shuffled subset of scenario indices — repicked every session so order is always different
+  const [shuffledOrder, setShuffledOrder] = useState(() => SCENARIOS.map((_, i) => i));
 
   // ── Rewards ─────────────────────────────────────────────────────────────
   const [stars, setStars] = useState(0);
@@ -37,7 +41,7 @@ export default function App() {
   const autoAdvanceTimer = useRef(null);
   const resetTimer = useRef(null);
 
-  const scenario = SCENARIOS[scenarioIndex];
+  const scenario = SCENARIOS[shuffledOrder[scenarioIndex]];
 
   // Sync ref so closures always read current soundOn
   useEffect(() => {
@@ -58,7 +62,7 @@ export default function App() {
   // advance to next scenario or end screen
   function advanceScenario() {
     clearTimeout(autoAdvanceTimer.current);
-    if (scenarioIndex + 1 >= SCENARIOS.length) {
+    if (scenarioIndex + 1 >= shuffledOrder.length) {
       setScreen('end');
     } else {
       setScenarioIndex(i => i + 1);
@@ -160,6 +164,13 @@ export default function App() {
   }
 
   function startGame() {
+    // Fisher-Yates shuffle then take first SESSION_SIZE
+    const indices = SCENARIOS.map((_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    setShuffledOrder(indices.slice(0, SESSION_SIZE));
     setScenarioIndex(0);
     setStars(0);
     setBalloons(0);
@@ -183,7 +194,7 @@ export default function App() {
         <h1 className="start-title">מה אני עושה?</h1>
         <p className="start-subtitle">נלמד יחד איך להתמודד עם מצבים עם חברים</p>
         {/* Session length — helps routine-dependent children know what to expect */}
-        <div className="scenario-count">20 סיפורים ⭐</div>
+        <div className="scenario-count">{SESSION_SIZE} סיפורים ⭐</div>
         <div className="model-steps">
           <div className="model-step">👀 מה קורה?</div>
           <div className="model-step">❤️ איך אני מרגיש?</div>
@@ -223,7 +234,7 @@ export default function App() {
       <header className="hud">
         <div className="hud-top">
           <div className="progress-indicator">
-            {scenarioIndex + 1} / {SCENARIOS.length}
+            {scenarioIndex + 1} / {shuffledOrder.length}
           </div>
           <div className="star-row">
             {Array.from({ length: 5 }).map((_, i) => (
