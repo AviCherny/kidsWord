@@ -21,6 +21,7 @@ export const T = {
     youFinished: 'סיימת!',
     playAgain: 'שחק שוב',
     youFinishedAll: 'סיימת את כל החיות!',
+    collectSticker: 'קבל מדבקה! 🌟',
     // MemoryGame
     memoryTitle: 'משחק\nזיכרון',
     chooseBoardSize: 'בחר גודל לוח:',
@@ -88,6 +89,7 @@ export const T = {
     youFinished: 'You finished!',
     playAgain: 'Play Again',
     youFinishedAll: 'You finished all the animals!',
+    collectSticker: 'Collect Sticker! 🌟',
     // MemoryGame
     memoryTitle: 'Memory\nGame',
     chooseBoardSize: 'Choose board size:',

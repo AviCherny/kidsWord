@@ -82,14 +82,7 @@ export default function BigVsSmall({ onSuccess, onExit }) {
       if (newStars % 5 === 0) setBalloons(b => b + 1);
       if (soundOnRef.current) speak(t(lang, 'correct'), lang);
       setTimeout(() => {
-        const nextIndex = pairIndex + 1;
-        if (nextIndex >= PAIRS.length) {
-          setPairIndex(nextIndex);
-          // trigger onSuccess after showing done screen briefly
-          setTimeout(() => onSuccess(), 1200);
-        } else {
-          setPairIndex(nextIndex);
-        }
+        setPairIndex(pairIndex + 1);
       }, 700);
     } else {
       setHighlight(bigSide);
@@ -109,7 +102,24 @@ export default function BigVsSmall({ onSuccess, onExit }) {
         <div className="bvs-win-emoji">🏆</div>
         <h1 className="bvs-win-title">{t(lang, 'amazing')}</h1>
         <p className="bvs-win-sub">{t(lang, 'youFinishedAll')}</p>
-        <div className="bvs-win-balloons">{'🎈'.repeat(Math.max(balloons, 1))}</div>
+
+        <div className="bvs-win-stats">
+          <div className="bvs-win-stat-row">
+            <span className="bvs-win-stat-stars">
+              {Array.from({ length: PAIRS.length }).map((_, i) => (
+                <span key={i} className={i < stars ? 'bvs-star filled' : 'bvs-star empty'}>⭐</span>
+              ))}
+            </span>
+            <span className="bvs-win-stat-count">{stars} / {PAIRS.length}</span>
+          </div>
+          {balloons > 0 && (
+            <div className="bvs-win-balloons">{'🎈'.repeat(balloons)}</div>
+          )}
+        </div>
+
+        <button className="bvs-collect-btn" onClick={onSuccess}>
+          {t(lang, 'collectSticker')}
+        </button>
         <button
           className="bvs-play-again"
           onClick={() => { setPairIndex(0); setStars(0); setBalloons(0); }}
