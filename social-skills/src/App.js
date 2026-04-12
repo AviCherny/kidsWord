@@ -183,7 +183,7 @@ export default function App() {
         <h1 className="start-title">מה אני עושה?</h1>
         <p className="start-subtitle">נלמד יחד איך להתמודד עם מצבים עם חברים</p>
         {/* Session length — helps routine-dependent children know what to expect */}
-        <div className="scenario-count">10 סיפורים ⭐</div>
+        <div className="scenario-count">20 סיפורים ⭐</div>
         <div className="model-steps">
           <div className="model-step">👀 מה קורה?</div>
           <div className="model-step">❤️ איך אני מרגיש?</div>
