@@ -6,7 +6,7 @@ import { t } from '../../i18n/translations';
 import { speak } from '../../speak';
 import StarBar from '../../components/StarBar';
 
-export default function SocialSkills({ onSuccess, onExit }) {
+export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
   const { lang, dir } = useLanguage();
   const [screen, setScreen] = useState('start');
   const [scenarioIndex, setScenarioIndex] = useState(0);
@@ -20,7 +20,7 @@ export default function SocialSkills({ onSuccess, onExit }) {
   const [displayOrder, setDisplayOrder] = useState([0, 1]);
   const [soundOn, setSoundOn] = useState(false);
   const soundOnRef = useRef(false);
-  const [facilitator, setFacilitator] = useState(false);
+  const [facilitator, setFacilitator] = useState(!!facilitatorMode);
   const [videoError, setVideoError] = useState(false);
 
   const idleTimer = useRef(null);

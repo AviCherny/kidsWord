@@ -10,6 +10,7 @@ import SocialSkills from './games/SocialSkills';
 import WordShooter from './games/WordShooter';
 import { getEarnedStickers, earnSticker, migrateLegacyStickers } from './lib/storage';
 import { getNextSticker } from './data/stickers';
+import { getSettings } from './lib/settings';
 
 const GAME_COMPONENTS = {
   bigvssmall: BigVsSmall,
@@ -24,6 +25,7 @@ export default function App() {
   const [showCreature, setShowCreature]     = useState(false);
   const [stickerReveal, setStickerReveal]   = useState(null); // { sticker, earnedCount, isNew }
   const [earnedIds, setEarnedIds]           = useState([]);
+  const [appSettings, setAppSettings]       = useState(getSettings);
 
   useEffect(() => {
     migrateLegacyStickers();
@@ -75,11 +77,16 @@ export default function App() {
           onLaunch={setCurrentGame}
           earnedCount={earnedIds.length}
           onOpenCollection={() => setShowCollection(true)}
+          onSettingsChange={setAppSettings}
         />
       )}
       {ActiveGame && (
         <div className="game-wrapper">
-          <ActiveGame onSuccess={handleSuccess} onExit={handleExit} />
+          <ActiveGame
+            onSuccess={handleSuccess}
+            onExit={handleExit}
+            facilitatorMode={appSettings.facilitator}
+          />
         </div>
       )}
       {showCreature && (
