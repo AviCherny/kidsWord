@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { t } from '../i18n/translations';
+import { TOTAL_STICKERS } from '../data/stickers';
 
 const GAMES = [
   {
@@ -37,8 +38,12 @@ const GAMES = [
   },
 ];
 
-export default function Hub({ onLaunch, stickers }) {
+export default function Hub({ onLaunch, earnedCount, onOpenCollection }) {
   const { lang, setLang, dir } = useLanguage();
+
+  const collectionLabel = lang === 'he'
+    ? `🌿 ${earnedCount}/${TOTAL_STICKERS} מדבקות`
+    : `🌿 ${earnedCount}/${TOTAL_STICKERS} stickers`;
 
   return (
     <div className="hub" dir={dir}>
@@ -46,11 +51,12 @@ export default function Hub({ onLaunch, stickers }) {
       <header className="hub-topbar">
         <h1 className="hub-title">{t(lang, 'appTitle')}</h1>
         <div className="hub-topbar-right">
-          {stickers > 0 && (
-            <div className="hub-stickers">
-              🌟 {stickers} {t(lang, 'stickers')}
-            </div>
-          )}
+          <button
+            className="hub-collection-btn"
+            onClick={onOpenCollection}
+          >
+            {collectionLabel}
+          </button>
           <button
             className="lang-toggle"
             onClick={() => setLang(lang === 'he' ? 'en' : 'he')}
