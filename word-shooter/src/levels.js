@@ -10,7 +10,7 @@ export const LEVELS = [
     targetCorrect: 5,
     floatSpeed: 0,          // no float
     distractors: false,
-    wordsPerGame: 4,
+    wordsPerGame: 8,
     wordPool: [
       { word: 'Apple', emoji: '🍎', label: 'Apple' },
       { word: 'Dog',   emoji: '🐶', label: 'Dog'   },
@@ -29,7 +29,7 @@ export const LEVELS = [
     targetCorrect: 7,
     floatSpeed: 1,          // slow float
     distractors: false,
-    wordsPerGame: 5,
+    wordsPerGame: 10,
     // Similar-sounding pairs to challenge phonological discrimination
     wordPool: [
       { word: 'Cat',   emoji: '🐱', label: 'Cat'   },
@@ -47,11 +47,11 @@ export const LEVELS = [
   {
     id: 3,
     name: 'Level 3',
-    objectCount: 3,
+    objectCount: 4,
     targetCorrect: 7,
     floatSpeed: 1,
-    distractors: true,      // 1 visual distractor (non-clickable)
-    wordsPerGame: 4,
+    distractors: true,      // 1 visual distractor (non-clickable), added as 4th card
+    wordsPerGame: 8,
     // Harder single-syllable words
     wordPool: [
       { word: 'Frog',   emoji: '🐸', label: 'Frog'   },
@@ -71,7 +71,7 @@ export const LEVELS = [
     targetCorrect: 10,
     floatSpeed: 2,          // faster float
     distractors: false,
-    wordsPerGame: 4,
+    wordsPerGame: 8,
     // Two-syllable words for maximum challenge
     wordPool: [
       { word: 'Tiger',   emoji: '🐯', label: 'Tiger'   },

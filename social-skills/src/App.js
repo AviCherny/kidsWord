@@ -26,9 +26,9 @@ export default function App() {
   // ── Display order — randomized per scenario (FIX: was always best=top) ──
   const [displayOrder, setDisplayOrder] = useState([0, 1]);
 
-  // ── Sound (OFF by default — sensory sensitivity) ─────────────────────────
-  const [soundOn, setSoundOn] = useState(false);
-  const soundOnRef = useRef(false);
+  // ── Sound (ON by default) ─────────────────────────────────────────────────
+  const [soundOn, setSoundOn] = useState(true);
+  const soundOnRef = useRef(true);
 
   // ── Facilitator mode — disables all auto-timers for therapist-led sessions
   const [facilitator, setFacilitator] = useState(false);
