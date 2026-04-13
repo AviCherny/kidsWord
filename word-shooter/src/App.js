@@ -37,7 +37,7 @@ function buildRound(level, selectedWords, lastTargetWord) {
   const foils = shuffle(selectedWords.filter(w => w.word !== target.word)).slice(0, objectCount - 1);
   let objects = [target, ...foils];
 
-  // Level 3+: replace last slot with a visual distractor (non-clickable)
+  // Level 3+: replace last foil slot with a visual distractor (non-clickable)
   if (distractors && objects.length >= 3) {
     const distractor = pickRandom(DISTRACTOR_POOL);
     objects[objects.length - 1] = { ...distractor, word: null, isDistractor: true };
@@ -272,8 +272,8 @@ export default function App() {
         </div>
       </div>
 
-      {/* Laser */}
-      {laserAnim && <Laser pos={laserAnim} />}
+      {/* Missile */}
+      {laserAnim && <Missile pos={laserAnim} />}
 
       {/* Celebration */}
       {showCelebration && <Celebration />}
@@ -281,23 +281,23 @@ export default function App() {
   );
 }
 
-// ─── Laser ───────────────────────────────────────────────────────────────────
-function Laser({ pos }) {
+// ─── Missile ─────────────────────────────────────────────────────────────────
+function Missile({ pos }) {
   const dx = pos.toX - pos.fromX;
   const dy = pos.toY - pos.fromY;
-  const length = Math.sqrt(dx * dx + dy * dy);
   const angle = Math.atan2(dy, dx) * (180 / Math.PI);
   return (
     <div
-      className="laser-wrap"
+      className="missile-wrap"
       style={{
         left: pos.fromX,
         top: pos.fromY,
-        width: length,
-        transform: `translate(0, -50%) rotate(${angle}deg)`,
+        '--dx': `${dx}px`,
+        '--dy': `${dy}px`,
+        '--angle': `${angle + 90}deg`,
       }}
     >
-      <div className="laser-beam" />
+      🚀
     </div>
   );
 }

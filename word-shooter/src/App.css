@@ -225,32 +225,14 @@ body {
   animation: burst-out 0.4s ease forwards;
 }
 
-/* ── Laser projectile ──────────────────────────────────────────── */
-.laser-wrap {
+/* ── Missile projectile ────────────────────────────────────────── */
+.missile-wrap {
   position: fixed;
-  transform-origin: left center;
   pointer-events: none;
   z-index: 100;
-}
-
-.laser-beam {
-  width: 100%;
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    #00e5ff 15%,
-    #ffffff 50%,
-    #00e5ff 85%,
-    transparent 100%
-  );
-  box-shadow:
-    0 0 6px 2px #00e5ff,
-    0 0 18px 4px #00e5ff80,
-    0 0 40px 8px #00e5ff30;
-  animation: laser-fire 0.45s ease forwards;
-  transform-origin: left center;
+  font-size: 2rem;
+  line-height: 1;
+  animation: missile-fly 0.45s ease-in forwards;
 }
 
 /* ── Celebration overlay ───────────────────────────────────────── */
@@ -283,11 +265,10 @@ body {
   0%   { transform: scale(0.5); opacity: 1; }
   100% { transform: scale(2.5); opacity: 0; }
 }
-@keyframes laser-fire {
-  0%   { transform: scaleX(0); opacity: 1; }
-  18%  { transform: scaleX(1); opacity: 1; }
-  70%  { opacity: 1; }
-  100% { opacity: 0; transform: scaleX(1); }
+@keyframes missile-fly {
+  0%   { transform: translate(-50%, -50%) rotate(var(--angle)); opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(var(--angle)); opacity: 0; }
 }
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
