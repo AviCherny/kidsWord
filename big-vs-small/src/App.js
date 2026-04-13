@@ -53,8 +53,8 @@ export default function App() {
   const [winner, setWinner] = useState(null);
   const [highlight, setHighlight] = useState(null);
   const [locked, setLocked] = useState(false);
-  const [soundOn, setSoundOn] = useState(false);
-  const soundOnRef = useRef(false); // ref so useEffect always reads current value
+  const [soundOn, setSoundOn] = useState(true);
+  const soundOnRef = useRef(true); // ref so useEffect always reads current value
   const [sides] = useState(randomSides);
   const idleTimer = useRef(null);
 
@@ -108,7 +108,7 @@ export default function App() {
       }, 700);
     } else {
       setHighlight(bigSide);
-      speak('This one is bigger', soundOn);
+      speak(`${pairData.big.name} is bigger!`, soundOn);
       setTimeout(() => {
         setHighlight(null);
         setLocked(false);
