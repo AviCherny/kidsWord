@@ -33,10 +33,20 @@ export const T = {
     picturePuzzleDesc: 'בנה את התמונה',
     bubblePopName: 'פוצץ בועות',
     bubblePopDesc: 'פוצץ את הבועות הנכונות!',
+    // Character games
+    pawPatrolName: 'משמר הכפה',
+    pawPatrolDesc: 'שלח את הגור הנכון!',
+    spiderManName: 'ספיידרמן',
+    spiderManDesc: 'ארוג מילים עם קורי עכביש!',
+    pjMasksName: 'מסכות הפיג\'מה',
+    pjMasksDesc: 'מיין לפי צבעי הגיבורים!',
+    sonicName: 'סוניק',
+    sonicDesc: 'ענה מהר לפני שהטבעת נעלמת!',
     // Category labels
     catLanguage: 'שפה ומילים',
     catLogic: 'חשיבה והיגיון',
     catCreative: 'יצירה',
+    catCharacters: 'גיבורים',
     // BigVsSmall
     whoIsBigger: 'מי יותר גדול?',
     correct: 'נכון!',
@@ -125,10 +135,20 @@ export const T = {
     picturePuzzleDesc: 'Build the picture!',
     bubblePopName: 'Bubble Pop',
     bubblePopDesc: 'Pop the right bubbles!',
+    // Character games
+    pawPatrolName: 'Paw Patrol',
+    pawPatrolDesc: 'Send the right pup to help!',
+    spiderManName: 'Spider-Man',
+    spiderManDesc: 'Spell words with web power!',
+    pjMasksName: 'PJ Masks',
+    pjMasksDesc: 'Sort by hero colors!',
+    sonicName: 'Sonic',
+    sonicDesc: 'Answer fast before the ring vanishes!',
     // Category labels
     catLanguage: 'Language & Words',
     catLogic: 'Logic & Thinking',
     catCreative: 'Creative',
+    catCharacters: 'Heroes',
     // BigVsSmall
     whoIsBigger: 'Who is bigger?',
     correct: 'Correct!',

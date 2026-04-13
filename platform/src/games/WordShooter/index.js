@@ -49,7 +49,7 @@ export default function WordShooter({ onSuccess, onExit }) {
   const [round, setRound] = useState(null);
   const [phase, setPhase] = useState('idle');
   const [correct, setCorrect] = useState(null);
-  const [laserAnim, setLaserAnim] = useState(null);
+  const [missileAnim, setMissileAnim] = useState(null);
   const [glowIndex, setGlowIndex] = useState(null);
   const [explosionIndex, setExplosionIndex] = useState(null);
   const [distractorShake, setDistractorShake] = useState(false);
@@ -78,7 +78,7 @@ export default function WordShooter({ onSuccess, onExit }) {
     setRound(r);
     setPhase('speaking');
     setCorrect(null);
-    setLaserAnim(null);
+    setMissileAnim(null);
     setGlowIndex(null);
     setExplosionIndex(null);
     setDistractorShake(false);
@@ -121,7 +121,7 @@ export default function WordShooter({ onSuccess, onExit }) {
     if (heroEl && objEl) {
       const hr = heroEl.getBoundingClientRect();
       const or = objEl.getBoundingClientRect();
-      setLaserAnim({
+      setMissileAnim({
         fromX: hr.left + hr.width / 2,
         fromY: hr.top + hr.height * 0.25,
         toX: or.left + or.width / 2,
@@ -132,7 +132,7 @@ export default function WordShooter({ onSuccess, onExit }) {
     const isCorrect = obj.word === round.target.word;
 
     setTimeout(() => {
-      setLaserAnim(null);
+      setMissileAnim(null);
       setCorrect(isCorrect);
       setExplosionIndex(idx);
 
@@ -167,7 +167,7 @@ export default function WordShooter({ onSuccess, onExit }) {
           startRound();
         }, 2200);
       }
-    }, 450);
+    }, 750);
   }, [phase, round, stars, correctCount, level, levelIndex, lang, startRound, onSuccess]); // eslint-disable-line
 
   const goNextLevel = () => {
@@ -270,27 +270,28 @@ export default function WordShooter({ onSuccess, onExit }) {
         </div>
       </div>
 
-      {laserAnim && <Laser pos={laserAnim} />}
+      {missileAnim && <Missile pos={missileAnim} />}
     </div>
   );
 }
 
-function Laser({ pos }) {
+function Missile({ pos }) {
   const dx = pos.toX - pos.fromX;
   const dy = pos.toY - pos.fromY;
-  const length = Math.sqrt(dx * dx + dy * dy);
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+  // 🚀 points up by default; rotate so it faces the target direction
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
   return (
     <div
-      className="ws-laser-wrap"
+      className="ws-missile"
       style={{
-        left: pos.fromX,
-        top: pos.fromY,
-        width: length,
-        transform: `translate(0, -50%) rotate(${angle}deg)`,
+        left: pos.fromX - 18,
+        top: pos.fromY - 18,
+        '--dx': `${dx}px`,
+        '--dy': `${dy}px`,
+        '--rot': `${angle}deg`,
       }}
     >
-      <div className="ws-laser-beam" />
+      🚀
     </div>
   );
 }
