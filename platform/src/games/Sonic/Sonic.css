@@ -1,0 +1,215 @@
+.sonic-game {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #006abc 0%, #0093e9 40%, #80d0ff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+
+.sonic-hud {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  z-index: 2;
+}
+
+.sonic-exit-btn {
+  background: rgba(255, 255, 255, 0.25);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+  cursor: pointer;
+  color: white;
+  flex-shrink: 0;
+}
+
+/* Speed lines background */
+.sonic-speed-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sonic-speed-line {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  border-radius: 2px;
+  animation: speedRush 0.8s linear infinite;
+}
+
+@keyframes speedRush {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Ring countdown */
+.sonic-ring-wrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin-bottom: 14px;
+  z-index: 2;
+}
+
+.sonic-ring-svg {
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.sonic-ring-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 44px;
+  animation: ringBounce 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes ringBounce {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to   { transform: translate(-50%, -50%) scale(1.08); }
+}
+
+/* Prompt */
+.sonic-prompt-card {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  padding: 18px 28px;
+  text-align: center;
+  max-width: 380px;
+  width: 100%;
+  margin-bottom: 22px;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+}
+
+.sonic-prompt {
+  font-size: 22px;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  margin: 0 0 6px;
+}
+
+.sonic-speed-label {
+  font-size: 14px;
+  color: rgba(255,255,255,0.8);
+  margin: 0;
+}
+
+/* Options grid */
+.sonic-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-width: 380px;
+  width: 100%;
+  z-index: 2;
+}
+
+.sonic-missed {
+  opacity: 0.5;
+}
+
+.sonic-opt-btn {
+  background: rgba(255, 255, 255, 0.9);
+  border: 3px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  padding: 16px 8px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #006abc;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+  letter-spacing: 0.5px;
+}
+
+.sonic-opt-btn:active {
+  transform: scale(0.93);
+}
+
+.sonic-correct {
+  background: #e8f5e9 !important;
+  border-color: #2e7d32 !important;
+  color: #2e7d32 !important;
+  transform: scale(1.07) !important;
+  box-shadow: 0 0 20px rgba(46,125,50,0.4) !important;
+}
+
+.sonic-wrong {
+  background: #ffebee !important;
+  border-color: #c62828 !important;
+  color: #c62828 !important;
+  animation: sonicShake 0.35s ease;
+}
+
+@keyframes sonicShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-7px); }
+  75% { transform: translateX(7px); }
+}
+
+/* Win screen */
+.sonic-win {
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+  background: linear-gradient(180deg, #006abc, #0093e9);
+}
+
+.sonic-win-top { font-size: 64px; }
+.sonic-win-title { font-size: 28px; font-weight: 800; color: #FFD700; margin: 0; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+.sonic-win-sub { font-size: 18px; color: rgba(255,255,255,0.85); margin: 0; }
+.sonic-win-stars { font-size: 22px; letter-spacing: 3px; }
+
+.sonic-collect-btn {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #1a1a1a;
+  border: none;
+  border-radius: 32px;
+  padding: 14px 36px;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(255,165,0,0.5);
+}
+
+.sonic-play-again {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 32px;
+  padding: 10px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sonic-exit-link {
+  background: none;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.4);
+}

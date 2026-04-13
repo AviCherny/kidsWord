@@ -20,6 +20,7 @@ import BubblePop from './games/BubblePop';
 import PawPatrol from './games/PawPatrol';
 import SpiderMan from './games/SpiderMan';
 import PJMasks from './games/PJMasks';
+import Sonic from './games/Sonic';
 import { getEarnedStickers, earnSticker, migrateLegacyStickers } from './lib/storage';
 import { getNextSticker } from './data/stickers';
 import { getSettings } from './lib/settings';
@@ -41,6 +42,7 @@ const GAME_COMPONENTS = {
   pawpatrol:     PawPatrol,
   spiderman:     SpiderMan,
   pjmasks:       PJMasks,
+  sonic:         Sonic,
 };
 
 export default function App() {

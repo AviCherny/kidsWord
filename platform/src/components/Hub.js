@@ -135,6 +135,14 @@ const CATEGORIES = [
         bg: 'linear-gradient(145deg, #050520, #1a1a6e)',
         glow: 'rgba(26,26,110,0.5)',
       },
+      {
+        id: 'sonic',
+        emoji: '💨💍',
+        nameKey: 'sonicName',
+        descKey: 'sonicDesc',
+        bg: 'linear-gradient(145deg, #006abc, #42b3f5)',
+        glow: 'rgba(0,106,188,0.4)',
+      },
     ],
   },
   {

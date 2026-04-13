@@ -40,6 +40,8 @@ export const T = {
     spiderManDesc: 'ארוג מילים עם קורי עכביש!',
     pjMasksName: 'מסכות הפיג\'מה',
     pjMasksDesc: 'מיין לפי צבעי הגיבורים!',
+    sonicName: 'סוניק',
+    sonicDesc: 'ענה מהר לפני שהטבעת נעלמת!',
     // Category labels
     catLanguage: 'שפה ומילים',
     catLogic: 'חשיבה והיגיון',
@@ -140,6 +142,8 @@ export const T = {
     spiderManDesc: 'Spell words with web power!',
     pjMasksName: 'PJ Masks',
     pjMasksDesc: 'Sort by hero colors!',
+    sonicName: 'Sonic',
+    sonicDesc: 'Answer fast before the ring vanishes!',
     // Category labels
     catLanguage: 'Language & Words',
     catLogic: 'Logic & Thinking',
