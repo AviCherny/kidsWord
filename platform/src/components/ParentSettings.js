@@ -3,10 +3,14 @@ import { useLanguage } from '../context/LanguageContext';
 import { getSettings, saveSettings, verifyPin } from '../lib/settings';
 
 const GAME_LABELS = {
-  bigvssmall: { emoji: '🐘🐭', he: 'גדול מול קטן',       en: 'Big vs Small'   },
-  memory:     { emoji: '🧠',   he: 'משחק זיכרון',         en: 'Memory Game'    },
-  social:     { emoji: '💬',   he: 'מיומנויות חברתיות',   en: 'Social Skills'  },
-  shooter:    { emoji: '🦸',   he: 'יורה מילים',           en: 'Word Shooter'   },
+  bigvssmall:  { emoji: '🐘🐭',   he: 'גדול מול קטן',       en: 'Big vs Small'    },
+  memory:      { emoji: '🧠',     he: 'משחק זיכרון',         en: 'Memory Game'     },
+  social:      { emoji: '💬',     he: 'מיומנויות חברתיות',   en: 'Social Skills'   },
+  shooter:     { emoji: '🦸',     he: 'יורה מילים',           en: 'Word Shooter'    },
+  pattern:     { emoji: '⭐🔴⭐', he: 'מציאת דפוסים',        en: 'Pattern Finder'  },
+  numbertrain: { emoji: '🚂',     he: 'רכבת המספרים',        en: 'Number Train'    },
+  shapesorter: { emoji: '🔺⬜🔴', he: 'ממיין הצורות',        en: 'Shape Sorter'    },
+  lego:        { emoji: '🧱',     he: 'בונה לגו',             en: 'Lego Builder'    },
 };
 
 function PinPad({ title, hint, onDigit, onBack, pinLength, hasError, onCancel }) {

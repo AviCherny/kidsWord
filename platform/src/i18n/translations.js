@@ -13,6 +13,19 @@ export const T = {
     socialSkillsDesc: 'מה אני עושה?',
     wordShooterName: 'יורה מילים',
     wordShooterDesc: 'ירה על המילה הנכונה',
+    // New games
+    patternGameName: 'מציאת דפוסים',
+    patternGameDesc: 'מה בא אחר כך?',
+    numberTrainName: 'רכבת המספרים',
+    numberTrainDesc: 'מצא את המספר החסר',
+    shapeSorterName: 'ממיין הצורות',
+    shapeSorterDesc: 'מיין לפי צבע וצורה',
+    legoBuilderName: 'בונה לגו',
+    legoBuilderDesc: 'בנה את הדמות!',
+    // Category labels
+    catLanguage: 'שפה ומילים',
+    catLogic: 'חשיבה והיגיון',
+    catCreative: 'יצירה',
     // BigVsSmall
     whoIsBigger: 'מי יותר גדול?',
     correct: 'נכון!',
@@ -81,6 +94,19 @@ export const T = {
     socialSkillsDesc: 'What do I do?',
     wordShooterName: 'Word Shooter',
     wordShooterDesc: 'Shoot the right word!',
+    // New games
+    patternGameName: 'Pattern Finder',
+    patternGameDesc: "What comes next?",
+    numberTrainName: 'Number Train',
+    numberTrainDesc: 'Find the missing number',
+    shapeSorterName: 'Shape Sorter',
+    shapeSorterDesc: 'Sort by color & shape',
+    legoBuilderName: 'Lego Builder',
+    legoBuilderDesc: 'Build the figure!',
+    // Category labels
+    catLanguage: 'Language & Words',
+    catLogic: 'Logic & Thinking',
+    catCreative: 'Creative',
     // BigVsSmall
     whoIsBigger: 'Who is bigger?',
     correct: 'Correct!',

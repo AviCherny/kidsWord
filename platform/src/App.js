@@ -8,15 +8,23 @@ import BigVsSmall from './games/BigVsSmall';
 import MemoryGame from './games/MemoryGame';
 import SocialSkills from './games/SocialSkills';
 import WordShooter from './games/WordShooter';
+import PatternGame from './games/PatternGame';
+import NumberTrain from './games/NumberTrain';
+import ShapeSorter from './games/ShapeSorter';
+import LegoBuilder from './games/LegoBuilder';
 import { getEarnedStickers, earnSticker, migrateLegacyStickers } from './lib/storage';
 import { getNextSticker } from './data/stickers';
 import { getSettings } from './lib/settings';
 
 const GAME_COMPONENTS = {
-  bigvssmall: BigVsSmall,
-  memory: MemoryGame,
-  social: SocialSkills,
-  shooter: WordShooter,
+  bigvssmall:  BigVsSmall,
+  memory:      MemoryGame,
+  social:      SocialSkills,
+  shooter:     WordShooter,
+  pattern:     PatternGame,
+  numbertrain: NumberTrain,
+  shapesorter: ShapeSorter,
+  lego:        LegoBuilder,
 };
 
 export default function App() {
