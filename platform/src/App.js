@@ -12,19 +12,29 @@ import PatternGame from './games/PatternGame';
 import NumberTrain from './games/NumberTrain';
 import ShapeSorter from './games/ShapeSorter';
 import LegoBuilder from './games/LegoBuilder';
+import LetterMatch from './games/LetterMatch';
+import SpellingBee from './games/SpellingBee';
+import WordRace from './games/WordRace';
+import PicturePuzzle from './games/PicturePuzzle';
+import BubblePop from './games/BubblePop';
 import { getEarnedStickers, earnSticker, migrateLegacyStickers } from './lib/storage';
 import { getNextSticker } from './data/stickers';
 import { getSettings } from './lib/settings';
 
 const GAME_COMPONENTS = {
-  bigvssmall:  BigVsSmall,
-  memory:      MemoryGame,
-  social:      SocialSkills,
-  shooter:     WordShooter,
-  pattern:     PatternGame,
-  numbertrain: NumberTrain,
-  shapesorter: ShapeSorter,
-  lego:        LegoBuilder,
+  bigvssmall:    BigVsSmall,
+  memory:        MemoryGame,
+  social:        SocialSkills,
+  shooter:       WordShooter,
+  lettermatch:   LetterMatch,
+  spellingbee:   SpellingBee,
+  wordrace:      WordRace,
+  picturepuzzle: PicturePuzzle,
+  bubblepop:     BubblePop,
+  pattern:       PatternGame,
+  numbertrain:   NumberTrain,
+  shapesorter:   ShapeSorter,
+  lego:          LegoBuilder,
 };
 
 export default function App() {

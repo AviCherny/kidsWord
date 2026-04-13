@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { speak } from '../../speak';
 import './NumberTrain.css';
 
 // Generate a round: a number sequence with one gap
@@ -43,6 +44,7 @@ export default function NumberTrain({ onSuccess, onExit }) {
   const startRound = useCallback((idx) => {
     setRound(buildRound(idx));
     setFeedback(null);
+    speak('Fill in the missing number!', 'en');
   }, []);
 
   useEffect(() => { startRound(0); }, [startRound]);
@@ -52,19 +54,23 @@ export default function NumberTrain({ onSuccess, onExit }) {
     if (choice === round.answer) {
       setFeedback('correct');
       setStars(s => s + 1);
-      setTimeout(() => {
-        const next = levelIdx + 1;
-        if (next >= MAX_LEVELS) {
-          setDone(true);
-        } else {
-          setLevelIdx(next);
-          startRound(next);
-        }
-      }, 1000);
+      speak(`${choice}! Correct! Choo choo!`, 'en', () => {
+        setTimeout(() => {
+          const next = levelIdx + 1;
+          if (next >= MAX_LEVELS) {
+            setDone(true);
+          } else {
+            setLevelIdx(next);
+            startRound(next);
+          }
+        }, 300);
+      });
     } else {
       setFeedback('wrong');
       setShake(true);
-      setTimeout(() => { setShake(false); setFeedback(null); }, 800);
+      speak('Try again!', 'en', () => {
+        setTimeout(() => { setShake(false); setFeedback(null); }, 300);
+      });
     }
   }
 

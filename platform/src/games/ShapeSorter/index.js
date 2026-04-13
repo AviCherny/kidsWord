@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { speak } from '../../speak';
 import './ShapeSorter.css';
 
 // Items to sort: shape + color combinations
@@ -95,6 +96,7 @@ export default function ShapeSorter({ onSuccess, onExit }) {
     if (bin.matches(emoji)) {
       // correct
       setLastResult('correct');
+      speak('Correct!', 'en');
       setBinContents(prev => ({
         ...prev,
         [binId]: [...(prev[binId] || []), emoji],
@@ -105,6 +107,7 @@ export default function ShapeSorter({ onSuccess, onExit }) {
         // Check level complete
         if (next.length === 0) {
           setStars(s => s + 1);
+          speak('Great job!', 'en');
           setTimeout(() => {
             const nextIdx = levelIdx + 1;
             if (nextIdx >= LEVELS.length) {
@@ -123,7 +126,9 @@ export default function ShapeSorter({ onSuccess, onExit }) {
       // wrong
       setLastResult('wrong');
       setShake(true);
-      setTimeout(() => { setShake(false); setLastResult(null); }, 700);
+      speak('Wrong bin! Try again!', 'en', () => {
+        setTimeout(() => { setShake(false); setLastResult(null); }, 300);
+      });
     }
   }
 

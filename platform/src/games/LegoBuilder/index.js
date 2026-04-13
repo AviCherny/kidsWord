@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { LEGO_LEVELS, COLOR_MAP } from './levels';
+import { speak } from '../../speak';
 import './LegoBuilder.css';
 
 function emptyGrid(rows, cols) {
@@ -43,6 +44,7 @@ export default function LegoBuilder({ onSuccess, onExit }) {
           if (gridsMatch(pg, level.grid)) {
             setCelebrating(true);
             setStars(s => s + 1);
+            speak(`Amazing! You built the ${level.name}!`, 'en');
             setTimeout(() => {
               setCelebrating(false);
               const next2 = levelIdx + 1;

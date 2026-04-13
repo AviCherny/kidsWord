@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { speak } from '../../speak';
 import './PatternGame.css';
 
 const SHAPES = ['⭐', '🔴', '🔵', '🟡', '🟢', '🟠', '💜', '🔶', '🔷', '🌸'];
@@ -49,6 +50,7 @@ export default function PatternGame({ onSuccess, onExit }) {
   const startRound = useCallback((idx) => {
     setRound(buildRound(LEVELS[idx]));
     setFeedback(null);
+    speak('What comes next?', 'en');
   }, []);
 
   useEffect(() => { startRound(0); }, [startRound]);
@@ -58,19 +60,23 @@ export default function PatternGame({ onSuccess, onExit }) {
     if (choice === round.answer) {
       setFeedback('correct');
       setStars(s => s + 1);
-      setTimeout(() => {
-        const next = levelIdx + 1;
-        if (next >= LEVELS.length) {
-          setDone(true);
-        } else {
-          setLevelIdx(next);
-          startRound(next);
-        }
-      }, 1000);
+      speak('Great job!', 'en', () => {
+        setTimeout(() => {
+          const next = levelIdx + 1;
+          if (next >= LEVELS.length) {
+            setDone(true);
+          } else {
+            setLevelIdx(next);
+            startRound(next);
+          }
+        }, 300);
+      });
     } else {
       setFeedback('wrong');
       setShake(true);
-      setTimeout(() => { setShake(false); setFeedback(null); }, 900);
+      speak('Try again!', 'en', () => {
+        setTimeout(() => { setShake(false); setFeedback(null); }, 300);
+      });
     }
   }
 
