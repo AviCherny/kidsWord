@@ -17,6 +17,9 @@ import SpellingBee from './games/SpellingBee';
 import WordRace from './games/WordRace';
 import PicturePuzzle from './games/PicturePuzzle';
 import BubblePop from './games/BubblePop';
+import PawPatrol from './games/PawPatrol';
+import SpiderMan from './games/SpiderMan';
+import PJMasks from './games/PJMasks';
 import { getEarnedStickers, earnSticker, migrateLegacyStickers } from './lib/storage';
 import { getNextSticker } from './data/stickers';
 import { getSettings } from './lib/settings';
@@ -35,6 +38,9 @@ const GAME_COMPONENTS = {
   numbertrain:   NumberTrain,
   shapesorter:   ShapeSorter,
   lego:          LegoBuilder,
+  pawpatrol:     PawPatrol,
+  spiderman:     SpiderMan,
+  pjmasks:       PJMasks,
 };
 
 export default function App() {

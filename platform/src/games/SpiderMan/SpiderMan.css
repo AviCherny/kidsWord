@@ -1,0 +1,216 @@
+.spider-game {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a2e 0%, #1a1a4e 50%, #0d1b4b 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.spider-hud {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  z-index: 2;
+}
+
+.spider-exit-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 16px;
+  cursor: pointer;
+  color: white;
+  flex-shrink: 0;
+}
+
+.spider-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  z-index: 2;
+}
+
+.spider-icon {
+  font-size: 36px;
+  filter: drop-shadow(0 0 8px rgba(255, 50, 50, 0.6));
+}
+
+.spider-prompt {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff4444;
+  margin: 0;
+  text-shadow: 0 0 12px rgba(255, 68, 68, 0.5);
+}
+
+.spider-word-card {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 68, 68, 0.4);
+  border-radius: 24px;
+  padding: 24px 32px;
+  text-align: center;
+  max-width: 380px;
+  width: 100%;
+  margin-bottom: 24px;
+  z-index: 2;
+  backdrop-filter: blur(4px);
+}
+
+.spider-hint-emoji {
+  font-size: 56px;
+  margin-bottom: 14px;
+  line-height: 1;
+}
+
+.spider-word-display {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.spider-letter-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 3px solid rgba(255, 68, 68, 0.5);
+  border-radius: 8px 8px 0 0;
+  font-size: 30px;
+  font-weight: 800;
+  color: white;
+  transition: all 0.2s;
+}
+
+.spider-slot-filled {
+  background: rgba(255, 68, 68, 0.2);
+  border-bottom-color: #ff4444;
+  color: #ff8888;
+}
+
+.spider-slot-active {
+  border-bottom-color: #ffcc00;
+  box-shadow: 0 0 12px rgba(255, 204, 0, 0.4);
+  animation: slotPulse 1s ease-in-out infinite;
+}
+
+@keyframes slotPulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(255, 204, 0, 0.4); }
+  50% { box-shadow: 0 0 24px rgba(255, 204, 0, 0.7); }
+}
+
+.spider-letter-count {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+}
+
+.spider-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  max-width: 320px;
+  width: 100%;
+  z-index: 2;
+  transition: transform 0.15s;
+}
+
+.spider-flash-good {
+  transform: scale(1.04);
+}
+
+.spider-flash-bad {
+  animation: spiderShake 0.35s ease;
+}
+
+@keyframes spiderShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+.spider-choice-btn {
+  background: linear-gradient(135deg, #8b0000, #cc2222);
+  border: 2px solid rgba(255, 68, 68, 0.6);
+  border-radius: 16px;
+  padding: 18px 0;
+  font-size: 32px;
+  font-weight: 900;
+  color: white;
+  cursor: pointer;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(139, 0, 0, 0.4);
+  transition: transform 0.1s, box-shadow 0.1s;
+  letter-spacing: 1px;
+}
+
+.spider-choice-btn:active {
+  transform: scale(0.93);
+  box-shadow: 0 2px 8px rgba(139, 0, 0, 0.3);
+}
+
+.spider-web-deco {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  font-size: 48px;
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Win screen */
+.spider-win {
+  justify-content: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.spider-win-top { font-size: 64px; }
+.spider-win-title { font-size: 26px; font-weight: 800; color: #ff4444; margin: 0; text-shadow: 0 0 16px rgba(255,68,68,0.5); }
+.spider-win-sub { font-size: 18px; color: rgba(255,255,255,0.7); margin: 0; }
+.spider-win-stars { font-size: 22px; letter-spacing: 3px; }
+
+.spider-collect-btn {
+  background: linear-gradient(135deg, #cc2222, #ff4444);
+  color: white;
+  border: none;
+  border-radius: 32px;
+  padding: 14px 36px;
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(204, 34, 34, 0.5);
+}
+
+.spider-play-again {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 2px solid rgba(255, 68, 68, 0.5);
+  border-radius: 32px;
+  padding: 10px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.spider-exit-link {
+  background: none;
+  border: none;
+  font-size: 26px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.4);
+}
