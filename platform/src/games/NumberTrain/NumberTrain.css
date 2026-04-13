@@ -1,0 +1,263 @@
+.nt-root {
+  min-height: 100dvh;
+  background: linear-gradient(180deg, #1a237e 0%, #1565c0 40%, #4fc3f7 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 12px 32px;
+  font-family: 'Nunito', 'Segoe UI', Arial, sans-serif;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Clouds */
+.nt-cloud {
+  position: absolute;
+  font-size: 2.5rem;
+  opacity: 0.6;
+  animation: cloudFloat 12s linear infinite;
+  pointer-events: none;
+}
+.nt-cloud--1 { top: 12%; animation-delay: 0s; }
+.nt-cloud--2 { top: 20%; animation-delay: -5s; }
+@keyframes cloudFloat {
+  from { transform: translateX(-120px); }
+  to   { transform: translateX(calc(100vw + 120px)); }
+}
+
+/* Header */
+.nt-header {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0 10px;
+}
+
+.nt-back {
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  width: 40px; height: 40px;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.nt-back:active { transform: scale(0.9); }
+
+.nt-title {
+  flex: 1;
+  font-size: clamp(1.1rem, 4vw, 1.5rem);
+  font-weight: 900;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+.nt-star-count {
+  font-size: 0.95rem;
+  letter-spacing: -2px;
+}
+
+/* Progress */
+.nt-progress {
+  width: 100%;
+  max-width: 520px;
+  height: 6px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+.nt-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffd54f, #ff8f00);
+  border-radius: 10px;
+  transition: width 0.6s ease;
+}
+
+.nt-prompt {
+  font-size: clamp(1rem, 3.5vw, 1.3rem);
+  font-weight: 800;
+  color: #fff9c4;
+  margin-bottom: 28px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Train */
+.nt-train {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
+  padding: 12px 4px 20px;
+  position: relative;
+  z-index: 1;
+  scrollbar-width: none;
+}
+.nt-train::-webkit-scrollbar { display: none; }
+
+@keyframes nt-shake {
+  0%, 100% { transform: translateX(0); }
+  25%       { transform: translateX(-10px); }
+  75%       { transform: translateX(10px); }
+}
+.nt-shake { animation: nt-shake 0.4s ease; }
+
+.nt-wagon-wrap {
+  display: flex;
+  align-items: center;
+}
+
+.nt-link {
+  color: #90caf9;
+  font-size: 1rem;
+  padding: 0 1px;
+  margin-bottom: 20px;
+}
+
+.nt-wagon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: white;
+  border-radius: 14px;
+  padding: 8px 10px 6px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  min-width: clamp(56px, 14vw, 72px);
+  border: 3px solid transparent;
+  transition: border-color 0.3s;
+}
+
+.nt-wagon--gap {
+  background: #fff9c4;
+  border-color: #f9a825;
+  border-style: dashed;
+  animation: wagGlow 1.2s ease-in-out infinite;
+}
+@keyframes wagGlow {
+  0%, 100% { box-shadow: 0 6px 20px rgba(249,168,37,0.4); }
+  50%       { box-shadow: 0 6px 28px rgba(249,168,37,0.8); }
+}
+
+.nt-wagon--filled {
+  background: #e8f5e9;
+  border-color: #43a047;
+  border-style: solid;
+  animation: wagonFill 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes wagonFill {
+  0%   { transform: scale(0.7); }
+  100% { transform: scale(1); }
+}
+
+.nt-wagon-emoji {
+  font-size: clamp(1.2rem, 4vw, 1.6rem);
+  line-height: 1;
+}
+
+.nt-wagon-num {
+  font-size: clamp(1.1rem, 4vw, 1.5rem);
+  font-weight: 900;
+  color: #1a237e;
+  margin-top: 2px;
+}
+.nt-wagon--gap .nt-wagon-num {
+  color: #f9a825;
+  font-size: clamp(1.3rem, 5vw, 1.8rem);
+}
+
+/* Choices */
+.nt-choices {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.nt-choice {
+  width: clamp(72px, 20vw, 90px);
+  height: clamp(72px, 20vw, 90px);
+  background: white;
+  border: 4px solid rgba(255,255,255,0.5);
+  border-radius: 20px;
+  font-size: clamp(1.4rem, 5vw, 1.9rem);
+  font-weight: 900;
+  color: #1a237e;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.nt-choice:hover  { transform: scale(1.08) translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,0.3); }
+.nt-choice:active { transform: scale(0.93); }
+
+.nt-choice--correct {
+  border-color: #43a047;
+  background: #e8f5e9;
+  animation: correctBounce 0.5s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes correctBounce {
+  0%   { transform: scale(0.8); }
+  100% { transform: scale(1); }
+}
+
+/* Feedback */
+.nt-feedback {
+  margin-top: 18px;
+  font-size: 1.1rem;
+  font-weight: 900;
+  padding: 10px 24px;
+  border-radius: 30px;
+  position: relative;
+  z-index: 1;
+}
+.nt-feedback--good { background: rgba(255,255,255,0.95); color: #2e7d32; }
+.nt-feedback--bad  { background: rgba(255,255,255,0.95); color: #c62828; }
+
+/* Done screen */
+.nt-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60dvh;
+  gap: 12px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.nt-done-emoji { font-size: 4rem; margin-bottom: 8px; }
+.nt-done h2    { font-size: 2rem; font-weight: 900; color: white; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+.nt-done p     { color: rgba(255,255,255,0.85); font-size: 1.1rem; }
+.nt-done-stars { font-size: 1.8rem; letter-spacing: -2px; }
+
+.nt-btn {
+  padding: 14px 32px;
+  border-radius: 50px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.nt-btn--primary { background: linear-gradient(135deg, #ffd54f, #ff8f00); color: #1a237e; box-shadow: 0 4px 16px rgba(255,143,0,0.4); }
+.nt-btn--ghost   { background: rgba(255,255,255,0.15); color: white; border: 2px solid rgba(255,255,255,0.4); }
+.nt-btn:active   { transform: scale(0.95); }

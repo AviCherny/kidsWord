@@ -1,0 +1,120 @@
+.wr-root {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #1a237e 0%, #283593 50%, #3949ab 100%);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 16px; font-family: 'Segoe UI', system-ui, sans-serif;
+  box-sizing: border-box; color: white;
+}
+
+.wr-header {
+  width: 100%; max-width: 480px;
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.wr-back {
+  background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+  width: 40px; height: 40px; font-size: 20px; cursor: pointer; color: white;
+}
+.wr-title { font-size: 22px; font-weight: 800; margin: 0; }
+.wr-lap   { font-size: 14px; font-weight: 700; opacity: 0.8; }
+
+/* Race Track */
+.wr-track-wrap {
+  width: 100%; max-width: 480px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 20px; padding: 16px;
+  margin-bottom: 20px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+
+.wr-lane {
+  display: flex; align-items: center; gap: 8px;
+}
+.wr-lane-label {
+  font-size: 13px; font-weight: 700; opacity: 0.8;
+  min-width: 28px; text-align: right;
+}
+.wr-road {
+  flex: 1; height: 44px;
+  background: linear-gradient(90deg, #424242 0%, #616161 100%);
+  border-radius: 10px; position: relative; overflow: visible;
+  /* road stripes */
+  background-image: repeating-linear-gradient(
+    90deg, transparent, transparent 30px, rgba(255,255,255,0.15) 30px, rgba(255,255,255,0.15) 32px
+  );
+}
+.wr-car {
+  position: absolute; top: 50%;
+  transform: translateY(-50%);
+  font-size: 28px; line-height: 1;
+  transition: left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+}
+.wr-flag { font-size: 24px; }
+
+/* Question area */
+.wr-question-wrap {
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(255,255,255,0.12);
+  border-radius: 20px; padding: 16px 20px;
+  width: 100%; max-width: 480px;
+  margin-bottom: 16px;
+  box-sizing: border-box;
+}
+.wr-question {
+  flex: 1; font-size: 20px; font-weight: 800; text-align: center;
+}
+.wr-hear {
+  background: rgba(255,255,255,0.2); border: none; border-radius: 50%;
+  width: 40px; height: 40px; font-size: 18px; cursor: pointer; color: white;
+}
+
+/* Answer choices */
+.wr-choices {
+  display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+  width: 100%; max-width: 480px;
+  margin-bottom: 16px;
+}
+.wr-choice {
+  flex: 1; min-width: 100px; padding: 16px 12px;
+  border-radius: 18px; border: 2px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.15);
+  font-size: 18px; font-weight: 800; color: white;
+  cursor: pointer; transition: transform 0.15s, background 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.wr-choice:active { transform: scale(0.95); }
+.wr-choice:disabled { opacity: 0.6; cursor: default; }
+
+.wr-choice--correct { background: #43a047 !important; border-color: #66bb6a !important; }
+.wr-choice--reveal  { border-color: #66bb6a !important; }
+.wr-choice--wrong   { background: rgba(239,83,80,0.4) !important; border-color: #ef5350 !important; }
+
+.wr-feedback {
+  font-size: 20px; font-weight: 800;
+  padding: 10px 24px; border-radius: 16px; margin-top: 4px;
+}
+.wr-feedback--good { background: rgba(67,160,71,0.8); }
+.wr-feedback--bad  { background: rgba(239,83,80,0.8); }
+
+/* Done screen */
+.wr-done {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 16px; padding: 36px; text-align: center;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 28px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  margin-top: 60px;
+}
+.wr-done-emoji { font-size: 52px; }
+.wr-done h2 { font-size: 30px; font-weight: 900; margin: 0; }
+
+.wr-btn {
+  border: none; border-radius: 20px;
+  padding: 14px 32px; font-size: 17px; font-weight: 800;
+  cursor: pointer; transition: transform 0.15s;
+}
+.wr-btn:active { transform: scale(0.95); }
+.wr-btn--primary { background: #ffb300; color: #1a237e; }
+.wr-btn--ghost   { background: rgba(255,255,255,0.15); color: white; }

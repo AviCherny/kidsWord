@@ -1,0 +1,33 @@
+export const CARD_POOL = [
+  { id: 'apple',      emoji: '🍎', label: 'Apple',      heLabel: 'תפוח' },
+  { id: 'dog',        emoji: '🐶', label: 'Dog',        heLabel: 'כלב' },
+  { id: 'cat',        emoji: '🐱', label: 'Cat',        heLabel: 'חתול' },
+  { id: 'car',        emoji: '🚗', label: 'Car',        heLabel: 'מכונית' },
+  { id: 'ball',       emoji: '⚽', label: 'Ball',       heLabel: 'כדור' },
+  { id: 'sun',        emoji: '☀️', label: 'Sun',        heLabel: 'שמש' },
+  { id: 'moon',       emoji: '🌙', label: 'Moon',       heLabel: 'ירח' },
+  { id: 'star',       emoji: '⭐', label: 'Star',       heLabel: 'כוכב' },
+  { id: 'fish',       emoji: '🐟', label: 'Fish',       heLabel: 'דג' },
+  { id: 'bird',       emoji: '🐦', label: 'Bird',       heLabel: 'ציפור' },
+  { id: 'frog',       emoji: '🐸', label: 'Frog',       heLabel: 'צפרדע' },
+  { id: 'pig',        emoji: '🐷', label: 'Pig',        heLabel: 'חזיר' },
+  { id: 'cow',        emoji: '🐮', label: 'Cow',        heLabel: 'פרה' },
+  { id: 'duck',       emoji: '🦆', label: 'Duck',       heLabel: 'ברווז' },
+  { id: 'rabbit',     emoji: '🐰', label: 'Rabbit',     heLabel: 'ארנב' },
+  { id: 'tiger',      emoji: '🐯', label: 'Tiger',      heLabel: 'נמר' },
+  { id: 'elephant',   emoji: '🐘', label: 'Elephant',   heLabel: 'פיל' },
+  { id: 'lion',       emoji: '🦁', label: 'Lion',       heLabel: 'אריה' },
+  { id: 'bee',        emoji: '🐝', label: 'Bee',        heLabel: 'דבורה' },
+  { id: 'butterfly',  emoji: '🦋', label: 'Butterfly',  heLabel: 'פרפר' },
+  { id: 'cake',       emoji: '🎂', label: 'Cake',       heLabel: 'עוגה' },
+  { id: 'pizza',      emoji: '🍕', label: 'Pizza',      heLabel: 'פיצה' },
+  { id: 'banana',     emoji: '🍌', label: 'Banana',     heLabel: 'בננה' },
+  { id: 'strawberry', emoji: '🍓', label: 'Strawberry', heLabel: 'תות' },
+];
+
+export const BOARD_SIZES = [
+  { pairs: 4,  cols: 4, nameKey: 'easy',   labelPairs: '4' },
+  { pairs: 6,  cols: 4, nameKey: 'medium', labelPairs: '6' },
+  { pairs: 8,  cols: 4, nameKey: 'hard',   labelPairs: '8' },
+  { pairs: 12, cols: 6, nameKey: 'expert', labelPairs: '12' },
+];
