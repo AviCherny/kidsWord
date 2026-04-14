@@ -80,7 +80,7 @@ export const LEVELS = [
     objectCount: 3,
     targetCorrect: 7,
     floatSpeed: 1,
-    distractors: true,
+    distractors: false,
     wordsPerGame: 4,
     wordPool: [
       { word: 'Crab',   heWord: 'סרטן',   emoji: '🦀', label: 'Crab',   heLabel: 'סרטן' },
