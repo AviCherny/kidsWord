@@ -18,11 +18,6 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function pickLevelWords(level) {
-  return shuffle([...level.wordPool]).slice(0, level.wordsPerGame);
-}
-
-// Accepts a pre-chosen target so the caller controls the deck
 function buildRound(level, selectedWords, target) {
   const { objectCount, distractors } = level;
   const foils = shuffle(selectedWords.filter(w => w.word !== target.word)).slice(0, objectCount - 1);
@@ -34,12 +29,31 @@ function buildRound(level, selectedWords, target) {
   return { target, objects: shuffle(objects) };
 }
 
-// CSS animation class per word — simulates GIF-like motion
+// Animation class per word — each icon gets a unique motion
 const EMOJI_ANIM = {
-  Bat:  'ws-anim-bat',
-  Box:  'ws-anim-box',
-  Cap:  'ws-anim-cap',
-  Bird: 'ws-anim-bat', // reuse wing-flap
+  // bounce
+  Apple: 'ws-anim-bounce', Ball: 'ws-anim-bounce',
+  Frog: 'ws-anim-bounce', Rabbit: 'ws-anim-bounce', Penguin: 'ws-anim-bounce',
+  // sway
+  Dog: 'ws-anim-sway', Cat: 'ws-anim-sway', Fox: 'ws-anim-sway',
+  Pig: 'ws-anim-sway', Hen: 'ws-anim-sway', Tiger: 'ws-anim-sway',
+  Monkey: 'ws-anim-sway', Dragon: 'ws-anim-sway', Sheep: 'ws-anim-sway',
+  // rock (water/slow creatures)
+  Ship: 'ws-anim-rock', Shark: 'ws-anim-rock', Crab: 'ws-anim-rock',
+  Turtle: 'ws-anim-rock', Snail: 'ws-anim-rock',
+  // pulse (objects that breathe)
+  Crown: 'ws-anim-pulse', Cactus: 'ws-anim-pulse',
+  Grapes: 'ws-anim-pulse', Cup: 'ws-anim-pulse', Hat: 'ws-anim-pulse',
+  // roll (vehicles)
+  Car: 'ws-anim-roll', Bus: 'ws-anim-roll', Truck: 'ws-anim-roll',
+  // shake (noisy objects)
+  Pan: 'ws-anim-shake', Drum: 'ws-anim-shake',
+  // spin
+  Rocket: 'ws-anim-spin',
+  // write
+  Pen: 'ws-anim-write',
+  // specific
+  Bat: 'ws-anim-bat', Box: 'ws-anim-box', Cap: 'ws-anim-cap',
 };
 
 export default function WordShooter({ onSuccess, onExit }) {
@@ -57,15 +71,18 @@ export default function WordShooter({ onSuccess, onExit }) {
   const [explosionIndex, setExplosionIndex] = useState(null);
   const [distractorShake, setDistractorShake] = useState(false);
   const [showSidekick, setShowSidekick] = useState(false);
-  // EN toggle: forces English labels regardless of app language
   const [showEnglish, setShowEnglish] = useState(false);
+
+  // Use a ref so startRound always reads current value without needing it as a dep
+  const showEnglishRef = useRef(false);
+  useEffect(() => { showEnglishRef.current = showEnglish; }, [showEnglish]);
 
   const idleTimer = useRef(null);
   const heroRef = useRef(null);
   const objectRefs = useRef([]);
   const selectedWordsRef = useRef([]);
   const lastTargetRef = useRef(null);
-  const wordDeckRef = useRef([]); // deck shuffle — each word plays once before repeating
+  const wordDeckRef = useRef([]);
   const level = LEVELS[levelIndex];
 
   const objLabel = (obj) => {
@@ -73,7 +90,6 @@ export default function WordShooter({ onSuccess, onExit }) {
     return showEnglish ? obj.label : (lang === 'he' ? obj.heLabel : obj.label);
   };
 
-  // Pick next target from the deck, avoiding immediate repeats
   const pickFromDeck = useCallback(() => {
     if (wordDeckRef.current.length === 0) {
       wordDeckRef.current = shuffle([...selectedWordsRef.current]);
@@ -112,14 +128,18 @@ export default function WordShooter({ onSuccess, onExit }) {
     setDistractorShake(false);
     setShowSidekick(false);
 
-    // Use heSpeech if available (corrected TTS pronunciation), else heWord
-    const spokenWord = lang === 'he' ? (target.heSpeech || target.heWord) : target.word;
+    // If EN mode: speak English word; else speak Hebrew (with nikud hint if available)
+    const useEn = showEnglishRef.current || lang === 'en';
+    const spokenWord = useEn ? target.word : (target.heSpeech || target.heWord);
+    const speakLang  = useEn ? 'en' : lang;
+
     setTimeout(() => {
-      speak(spokenWord, lang, () => {
+      speak(spokenWord, speakLang, () => {
         setPhase('waiting');
         const scheduleRepeat = () => {
           idleTimer.current = setTimeout(() => {
-            speak(lang === 'he' ? (r.target.heSpeech || r.target.heWord) : r.target.word, lang, scheduleRepeat);
+            const en = showEnglishRef.current || lang === 'en';
+            speak(en ? r.target.word : (r.target.heSpeech || r.target.heWord), en ? 'en' : lang, scheduleRepeat);
           }, 3000);
         };
         scheduleRepeat();
@@ -129,7 +149,8 @@ export default function WordShooter({ onSuccess, onExit }) {
 
   useEffect(() => {
     if (screen === 'game') {
-      selectedWordsRef.current = pickLevelWords(level);
+      // Use ALL words from the pool — deck handles variety
+      selectedWordsRef.current = shuffle([...level.wordPool]);
       lastTargetRef.current = null;
       wordDeckRef.current = [];
       startRound();
@@ -138,17 +159,13 @@ export default function WordShooter({ onSuccess, onExit }) {
   }, [screen, levelIndex]); // eslint-disable-line
 
   const handleTap = useCallback((obj, idx) => {
-    // Retry phase: child taps the glowing correct answer — launch missile then next round
     if (phase === 'retry') {
       if (obj.isDistractor || obj.word !== round.target.word) return;
       setPhase('shooting');
       launchMissile(idx);
       setGlowIndex(null);
       setShowSidekick(false);
-      setTimeout(() => {
-        setMissileAnim(null);
-        startRound();
-      }, 1100);
+      setTimeout(() => { setMissileAnim(null); startRound(); }, 1100);
       return;
     }
 
@@ -175,30 +192,20 @@ export default function WordShooter({ onSuccess, onExit }) {
         setStars(newStars);
         const newCount = correctCount + 1;
         setCorrectCount(newCount);
-
         setTimeout(() => {
           setExplosionIndex(null);
           if (newCount >= level.targetCorrect) {
-            if (levelIndex < LEVELS.length - 1) {
-              setScreen('levelup');
-            } else {
-              setScreen('end');
-              onSuccess();
-            }
-          } else {
-            startRound();
-          }
+            if (levelIndex < LEVELS.length - 1) { setScreen('levelup'); }
+            else { setScreen('end'); onSuccess(); }
+          } else { startRound(); }
         }, 1200);
       } else {
         const correctIdx = round.objects.findIndex(o => o.word === round.target.word);
         setGlowIndex(correctIdx);
-        const thisWord = lang === 'he' ? (round.target.heSpeech || round.target.heWord) : round.target.word;
-        speak(thisWord, lang);
+        const useEn = showEnglishRef.current || lang === 'en';
+        speak(useEn ? round.target.word : (round.target.heSpeech || round.target.heWord), useEn ? 'en' : lang);
         setShowSidekick(true);
-        setTimeout(() => {
-          setExplosionIndex(null);
-          setPhase('retry');
-        }, 700);
+        setTimeout(() => { setExplosionIndex(null); setPhase('retry'); }, 700);
       }
     }, 1100);
   }, [phase, round, stars, correctCount, level, levelIndex, lang, startRound, launchMissile, onSuccess]); // eslint-disable-line
@@ -206,10 +213,7 @@ export default function WordShooter({ onSuccess, onExit }) {
   const goNextLevel = () => { setLevelIndex(l => l + 1); setCorrectCount(0); setScreen('game'); };
   const replayLevel = () => { setCorrectCount(0); setScreen('game'); };
 
-  const floatClass =
-    level?.floatSpeed === 0 ? '' :
-    level?.floatSpeed === 1 ? 'ws-float-slow' : 'ws-float-fast';
-
+  const floatClass = level?.floatSpeed === 0 ? '' : level?.floatSpeed === 1 ? 'ws-float-slow' : 'ws-float-fast';
   const progress = level ? Math.min(correctCount / level.targetCorrect, 1) : 0;
 
   if (screen === 'start') return (
@@ -243,7 +247,7 @@ export default function WordShooter({ onSuccess, onExit }) {
     </div>
   );
 
-  const targetWord = round ? (lang === 'he' ? round.target.heWord : round.target.word) : '';
+  const targetWord = round ? (showEnglish ? round.target.word : (lang === 'he' ? round.target.heWord : round.target.word)) : '';
 
   return (
     <div className="ws-screen ws-game" dir={dir}>
@@ -257,17 +261,15 @@ export default function WordShooter({ onSuccess, onExit }) {
       </div>
 
       {round && (
-        <button className="ws-word-prompt" onClick={() => speak(lang === 'he' ? (round.target.heSpeech || round.target.heWord) : round.target.word, lang)}>
+        <button className="ws-word-prompt" onClick={() => {
+          const useEn = showEnglishRef.current || lang === 'en';
+          speak(useEn ? round.target.word : (round.target.heSpeech || round.target.heWord), useEn ? 'en' : lang);
+        }}>
           {targetWord} 🔊
         </button>
       )}
 
-      {/* EN label toggle — forces English labels regardless of app language */}
-      <button
-        className={`ws-lang-toggle ${showEnglish ? 'active' : ''}`}
-        onClick={() => setShowEnglish(v => !v)}
-        aria-label="Toggle English labels"
-      >
+      <button className={`ws-lang-toggle ${showEnglish ? 'active' : ''}`} onClick={() => setShowEnglish(v => !v)} aria-label="Toggle English">
         EN
       </button>
 
@@ -277,18 +279,17 @@ export default function WordShooter({ onSuccess, onExit }) {
             key={`${round.target.word}-${i}`}
             ref={el => objectRefs.current[i] = el}
             className={[
-              'ws-obj-card',
-              floatClass,
+              'ws-obj-card', floatClass,
               obj.isDistractor ? 'ws-obj-distractor' : '',
               obj.isDistractor && distractorShake ? 'ws-obj-distractor-shake' : '',
               glowIndex === i ? 'ws-obj-glow' : '',
               explosionIndex === i && correct === true  ? 'ws-obj-explode-correct' : '',
-              explosionIndex === i && correct === false ? 'ws-obj-explode-wrong'   : '',
+              explosionIndex === i && correct === false ? 'ws-obj-explode-wrong' : '',
             ].join(' ')}
             style={{ animationDelay: `${i * 0.35}s` }}
             onClick={() => handleTap(obj, i)}
           >
-            <span className={`ws-obj-emoji ${EMOJI_ANIM[obj.word] || ''}`}>{obj.emoji}</span>
+            <span className={`ws-obj-emoji ${EMOJI_ANIM[obj.word] || 'ws-anim-pulse'}`}>{obj.emoji}</span>
             <span className="ws-obj-label">{objLabel(obj)}</span>
           </div>
         ))}
@@ -302,19 +303,14 @@ export default function WordShooter({ onSuccess, onExit }) {
       </div>
 
       {missileAnim && <Missile pos={missileAnim} />}
-      {showSidekick && round && (
-        <Sidekick
-          word={lang === 'he' ? round.target.heWord : round.target.word}
-          lang={lang}
-        />
-      )}
+      {showSidekick && round && <Sidekick word={showEnglish ? round.target.word : (lang === 'he' ? round.target.heWord : round.target.word)} lang={lang} showEnglish={showEnglish} />}
     </div>
   );
 }
 
-function Sidekick({ word, lang }) {
-  const findIt = lang === 'he' ? '!מצא את' : 'Find it!';
-  const tapIt  = lang === 'he' ? '👆 !לחץ'  : '👆 Tap!';
+function Sidekick({ word, lang, showEnglish }) {
+  const findIt = (showEnglish || lang === 'en') ? 'Find it!' : '!מצא את';
+  const tapIt  = (showEnglish || lang === 'en') ? '👆 Tap!'  : '!לחץ 👆';
   return (
     <div className="ws-sidekick-wrap">
       <div className="ws-sidekick-bubble">
@@ -335,15 +331,14 @@ function Missile({ pos }) {
     <div
       className="ws-missile"
       style={{
-        left: pos.fromX - 18,
-        top: pos.fromY - 18,
+        left: pos.fromX - 16,
+        top: pos.fromY - 16,
         '--dx': `${dx}px`,
         '--dy': `${dy}px`,
         '--rot': `${angle}deg`,
       }}
     >
-      <span>🚀</span>
-      <span className="ws-missile-flame">🔥</span>
+      <span className="ws-missile-rocket">🚀</span>
     </div>
   );
 }
