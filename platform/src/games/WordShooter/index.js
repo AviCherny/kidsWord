@@ -36,14 +36,15 @@ const EMOJI_ANIM = {
   Frog: 'ws-anim-bounce', Rabbit: 'ws-anim-bounce', Penguin: 'ws-anim-bounce',
   // sway
   Dog: 'ws-anim-sway', Cat: 'ws-anim-sway', Fox: 'ws-anim-sway',
-  Pig: 'ws-anim-sway', Hen: 'ws-anim-sway', Tiger: 'ws-anim-sway',
-  Monkey: 'ws-anim-sway', Dragon: 'ws-anim-sway', Sheep: 'ws-anim-sway',
+  Pig: 'ws-anim-sway', Hen: 'ws-anim-sway',
+  Monkey: 'ws-anim-sway', Sheep: 'ws-anim-sway', Flamingo: 'ws-anim-sway',
   // rock (water/slow creatures)
   Ship: 'ws-anim-rock', Shark: 'ws-anim-rock', Crab: 'ws-anim-rock',
   Turtle: 'ws-anim-rock', Snail: 'ws-anim-rock',
-  // pulse (objects that breathe)
+  // pulse (objects that glow/breathe)
   Crown: 'ws-anim-pulse', Cactus: 'ws-anim-pulse',
   Grapes: 'ws-anim-pulse', Cup: 'ws-anim-pulse', Hat: 'ws-anim-pulse',
+  Unicorn: 'ws-anim-pulse', Peacock: 'ws-anim-pulse',
   // roll (vehicles)
   Car: 'ws-anim-roll', Bus: 'ws-anim-roll', Truck: 'ws-anim-roll',
   // shake (noisy objects)
@@ -52,8 +53,28 @@ const EMOJI_ANIM = {
   Rocket: 'ws-anim-spin',
   // write
   Pen: 'ws-anim-write',
-  // specific
+  // specific — meaningful logical motion per creature/object
   Bat: 'ws-anim-bat', Box: 'ws-anim-box', Cap: 'ws-anim-cap',
+  Tiger: 'ws-anim-tiger',
+  Dragon: 'ws-anim-dragon',
+  Dinosaur: 'ws-anim-dino',
+  Bee: 'ws-anim-bee',
+  Fish: 'ws-anim-fish',
+  Bird: 'ws-anim-bird',
+  Eagle: 'ws-anim-bird',
+  Duck: 'ws-anim-duck',
+  Whale: 'ws-anim-whale',
+  Volcano: 'ws-anim-volcano',
+  Flame: 'ws-anim-flame',
+  Bell: 'ws-anim-bell',
+  Elephant: 'ws-anim-elephant',
+  Kangaroo: 'ws-anim-kangaroo',
+  Jellyfish: 'ws-anim-jellyfish',
+  Sun: 'ws-anim-sun',
+  Star: 'ws-anim-star',
+  Helicopter: 'ws-anim-helicopter',
+  Octopus: 'ws-anim-octopus',
+  Crocodile: 'ws-anim-croc',
 };
 
 export default function WordShooter({ onSuccess, onExit }) {

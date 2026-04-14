@@ -458,3 +458,176 @@
   50%  { transform: rotate(0deg) translateY(-5px); }
   75%  { transform: rotate(10deg) translateY(-3px); }
 }
+
+/* ── Specific logical animations ───────────────────────── */
+
+/* Tiger — roar: breathe in, burst open */
+.ws-anim-tiger { animation: ws-tiger-roar 2.2s ease-in-out infinite; }
+@keyframes ws-tiger-roar {
+  0%, 55%, 100% { transform: scale(1); }
+  65%  { transform: scale(1.18) rotate(-4deg); }
+  78%  { transform: scale(1.24); }
+  90%  { transform: scale(1.16) rotate(4deg); }
+}
+
+/* Dinosaur — tail wag: rotate from top so tail swings */
+.ws-anim-dino {
+  animation: ws-dino-tail 1.8s ease-in-out infinite;
+  transform-origin: top center;
+}
+@keyframes ws-dino-tail {
+  0%, 100% { transform: rotate(0deg); }
+  25%  { transform: rotate(-10deg); }
+  75%  { transform: rotate(10deg); }
+}
+
+/* Dragon — fire breath: lunge + orange-red glow */
+.ws-anim-dragon { animation: ws-dragon-fire 2.5s ease-in-out infinite; }
+@keyframes ws-dragon-fire {
+  0%, 40%, 100% { transform: scale(1) translateX(0); filter: none; }
+  55%  { transform: scale(1.1) translateX(4px);
+         filter: drop-shadow(0 0 6px #ff8c00) drop-shadow(0 0 14px #ff4500); }
+  72%  { transform: scale(1.15) translateX(6px);
+         filter: drop-shadow(0 0 10px #ff8c00) drop-shadow(0 0 22px #ff0000); }
+  88%  { transform: scale(1.06) translateX(2px); filter: drop-shadow(0 0 4px #ff8c00); }
+}
+
+/* Bee — rapid buzz */
+.ws-anim-bee { animation: ws-bee-buzz 0.13s ease-in-out infinite alternate; }
+@keyframes ws-bee-buzz {
+  from { transform: translateY(0) rotate(-5deg); }
+  to   { transform: translateY(-4px) rotate(5deg); }
+}
+
+/* Fish — swim: horizontal body-waggle */
+.ws-anim-fish { animation: ws-fish-swim 1.2s ease-in-out infinite alternate; }
+@keyframes ws-fish-swim {
+  from { transform: rotate(-10deg) translateX(-3px); }
+  to   { transform: rotate(10deg) translateX(3px); }
+}
+
+/* Bird / Eagle — wing flap */
+.ws-anim-bird { animation: ws-bird-flap 0.55s ease-in-out infinite alternate; }
+@keyframes ws-bird-flap {
+  from { transform: scaleY(1) translateY(0); }
+  to   { transform: scaleY(0.65) translateY(-5px); }
+}
+
+/* Duck — waddle: side-to-side lean */
+.ws-anim-duck { animation: ws-duck-waddle 0.9s ease-in-out infinite alternate; }
+@keyframes ws-duck-waddle {
+  from { transform: rotate(-8deg) translateX(-3px); }
+  to   { transform: rotate(8deg) translateX(3px); }
+}
+
+/* Whale — surface dive: arc up then plunge */
+.ws-anim-whale { animation: ws-whale-dive 2.8s ease-in-out infinite; }
+@keyframes ws-whale-dive {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30%  { transform: translateY(-12px) rotate(-10deg); }
+  55%  { transform: translateY(5px) rotate(12deg); }
+  80%  { transform: translateY(-4px) rotate(-5deg); }
+}
+
+/* Volcano — erupt: grow + red-orange glow upward */
+.ws-anim-volcano {
+  animation: ws-volcano-erupt 2.2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+@keyframes ws-volcano-erupt {
+  0%, 50%, 100% { transform: scale(1) translateY(0); filter: none; }
+  62%  { transform: scale(1.04) translateY(-3px); filter: drop-shadow(0 -4px 8px #ff4500); }
+  78%  { transform: scale(1.09) translateY(-6px); filter: drop-shadow(0 -8px 14px #ff8c00); }
+  90%  { transform: scale(1.04) translateY(-2px); filter: drop-shadow(0 -3px 6px #ff4500); }
+}
+
+/* Flame — flicker: scale + lean + glow */
+.ws-anim-flame { animation: ws-flame-flicker 0.8s ease-in-out infinite alternate; }
+@keyframes ws-flame-flicker {
+  from { transform: scale(1) rotate(-3deg); filter: drop-shadow(0 0 4px #ff8c00); }
+  to   { transform: scale(1.15) rotate(3deg); filter: drop-shadow(0 0 12px #ff4500); }
+}
+
+/* Bell — ring: pendulum swing from top */
+.ws-anim-bell {
+  animation: ws-bell-ring 1s ease-in-out infinite;
+  transform-origin: top center;
+}
+@keyframes ws-bell-ring {
+  0%, 100% { transform: rotate(0deg); }
+  15%  { transform: rotate(20deg); }
+  35%  { transform: rotate(-20deg); }
+  55%  { transform: rotate(13deg); }
+  72%  { transform: rotate(-8deg); }
+  88%  { transform: rotate(4deg); }
+}
+
+/* Elephant — heavy stomp: lift + squish landing */
+.ws-anim-elephant {
+  animation: ws-elephant-stomp 1.5s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+@keyframes ws-elephant-stomp {
+  0%, 45%, 100% { transform: translateY(0) scaleX(1); }
+  20%  { transform: translateY(-10px) scaleX(0.93); }
+  38%  { transform: translateY(4px) scaleX(1.08); }
+}
+
+/* Kangaroo — big bounding jump */
+.ws-anim-kangaroo {
+  animation: ws-kangaroo-jump 1.7s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  transform-origin: bottom center;
+}
+@keyframes ws-kangaroo-jump {
+  0%, 55%, 100% { transform: translateY(0) scaleY(1); }
+  20%  { transform: translateY(-20px) scaleY(1.06); }
+  48%  { transform: translateY(4px) scaleY(0.9); }
+}
+
+/* Jellyfish — pulsate: umbrella contract/expand */
+.ws-anim-jellyfish {
+  animation: ws-jellyfish-pulse 1.4s ease-in-out infinite alternate;
+  transform-origin: top center;
+}
+@keyframes ws-jellyfish-pulse {
+  from { transform: scaleY(1) scaleX(1); }
+  to   { transform: scaleY(0.78) scaleX(1.16); }
+}
+
+/* Sun — slow spin */
+.ws-anim-sun { animation: ws-sun-spin 7s linear infinite; }
+@keyframes ws-sun-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Star — twinkle: scale + rotate */
+.ws-anim-star { animation: ws-star-twinkle 1.5s ease-in-out infinite alternate; }
+@keyframes ws-star-twinkle {
+  from { transform: scale(1) rotate(0deg); }
+  to   { transform: scale(1.22) rotate(18deg); }
+}
+
+/* Helicopter — hover: bob + gentle tilt */
+.ws-anim-helicopter { animation: ws-helicopter-hover 1.4s ease-in-out infinite alternate; }
+@keyframes ws-helicopter-hover {
+  from { transform: translateY(0) rotate(-4deg); }
+  to   { transform: translateY(-7px) rotate(4deg); }
+}
+
+/* Octopus — wriggle: squash + stretch + rotate */
+.ws-anim-octopus { animation: ws-octopus-wriggle 1.3s ease-in-out infinite; }
+@keyframes ws-octopus-wriggle {
+  0%, 100% { transform: scale(1, 1) rotate(0deg); }
+  25%  { transform: scale(1.06, 0.93) rotate(-6deg); }
+  75%  { transform: scale(0.93, 1.06) rotate(6deg); }
+}
+
+/* Crocodile — snap: quick horizontal compress then spring */
+.ws-anim-croc { animation: ws-croc-snap 2.5s ease-in-out infinite; }
+@keyframes ws-croc-snap {
+  0%, 50%, 100% { transform: scaleX(1); }
+  62%  { transform: scaleX(0.86); }
+  72%  { transform: scaleX(1.14); }
+  84%  { transform: scaleX(0.95); }
+}
