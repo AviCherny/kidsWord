@@ -234,6 +234,83 @@ body {
   line-height: 1;
   animation: missile-fly 0.45s ease-in forwards;
 }
+/* Fire trail — positioned in the rocket's local space (below = behind after rotation) */
+.missile-wrap::after {
+  content: '🔥';
+  position: absolute;
+  top: 95%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.3rem;
+  animation: flame-flicker 0.1s ease-in-out infinite alternate;
+}
+
+/* ── Sidekick helper ───────────────────────────────────────────── */
+.sidekick-wrap {
+  position: fixed;
+  right: 0;
+  top: 42%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  z-index: 50;
+  animation: sidekick-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.sidekick-bubble {
+  background: #fff;
+  border: 2.5px solid #7c3aed;
+  border-radius: 18px 18px 4px 18px;
+  padding: 10px 14px;
+  margin-right: 6px;
+  text-align: center;
+  box-shadow: 0 4px 16px #7c3aed30;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidekick-line {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #6b7280;
+}
+.sidekick-word {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #7c3aed;
+}
+.sidekick-emoji {
+  font-size: 3rem;
+  margin-right: 4px;
+}
+
+/* ── English label toggle ──────────────────────────────────────── */
+.lang-toggle {
+  position: fixed;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 50;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2.5px solid #c4b5fd;
+  background: rgba(255,255,255,0.85);
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #a78bfa;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.lang-toggle.active {
+  background: #7c3aed;
+  color: #fff;
+  border-color: #7c3aed;
+}
 
 /* ── Celebration overlay ───────────────────────────────────────── */
 .celebration-layer {
@@ -300,4 +377,12 @@ body {
   40%  { transform: translateX(8px) rotate(3deg); }
   60%  { transform: translateX(-6px) rotate(-2deg); }
   80%  { transform: translateX(6px) rotate(2deg); }
+}
+@keyframes flame-flicker {
+  0%   { transform: translateX(-52%) scaleX(0.85); opacity: 0.85; }
+  100% { transform: translateX(-48%) scaleX(1.15); opacity: 1; }
+}
+@keyframes sidekick-in {
+  from { transform: translateY(-50%) translateX(110%); }
+  to   { transform: translateY(-50%) translateX(0); }
 }

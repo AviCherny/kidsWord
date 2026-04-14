@@ -53,6 +53,8 @@ export default function App() {
   const [correctCount, setCorrectCount] = useState(0);
   const [stars, setStars] = useState(0);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [showSidekick, setShowSidekick] = useState(false);
+  const [showLabels, setShowLabels] = useState(true);
 
   // round
   const [round, setRound] = useState(null);
@@ -82,6 +84,7 @@ export default function App() {
     setGlowIndex(null);
     setExplosionIndex(null);
     setDistractorShake(false);
+    setShowSidekick(false);
 
     setTimeout(() => {
       speak(r.target.word, () => {
@@ -108,6 +111,15 @@ export default function App() {
 
   // ── tap ────────────────────────────────────────────────────────────────
   const handleTap = useCallback((obj, idx) => {
+    // Retry phase: child must tap the glowing correct answer to continue
+    if (phase === 'retry') {
+      if (obj.isDistractor || obj.word !== round.target.word) return;
+      setGlowIndex(null);
+      setShowSidekick(false);
+      startRound();
+      return;
+    }
+
     if (phase !== 'waiting') return;
     if (obj.isDistractor) {
       setDistractorShake(true);
@@ -165,11 +177,12 @@ export default function App() {
         const correctIdx = round.objects.findIndex(o => o.word === round.target.word);
         setGlowIndex(correctIdx);
         speak(`This is ${round.target.word}`);
+        setShowSidekick(true);
+        // Enter retry mode — child must tap the glowing correct answer
         setTimeout(() => {
           setExplosionIndex(null);
-          setGlowIndex(null);
-          startRound();
-        }, 2200);
+          setPhase('retry');
+        }, 700);
       }
     }, 450);
   }, [phase, round, stars, correctCount, level, levelIndex, startRound]);
@@ -240,6 +253,15 @@ export default function App() {
         </button>
       )}
 
+      {/* EN label toggle */}
+      <button
+        className={`lang-toggle ${showLabels ? 'active' : ''}`}
+        onClick={() => setShowLabels(v => !v)}
+        aria-label="Toggle English labels"
+      >
+        EN
+      </button>
+
       {/* Objects */}
       <div className="objects-area">
         {round?.objects.map((obj, i) => (
@@ -259,7 +281,7 @@ export default function App() {
             onClick={() => handleTap(obj, i)}
           >
             <span className="obj-emoji">{obj.emoji}</span>
-            <span className="obj-label">{obj.label}</span>
+            {showLabels && <span className="obj-label">{obj.label}</span>}
           </div>
         ))}
       </div>
@@ -274,6 +296,9 @@ export default function App() {
 
       {/* Missile */}
       {laserAnim && <Missile pos={laserAnim} />}
+
+      {/* Sidekick — appears after wrong answer, prompts retry */}
+      {showSidekick && round && <Sidekick word={round.target.word} />}
 
       {/* Celebration */}
       {showCelebration && <Celebration />}
@@ -298,6 +323,20 @@ function Missile({ pos }) {
       }}
     >
       🚀
+    </div>
+  );
+}
+
+// ─── Sidekick ─────────────────────────────────────────────────────────────────
+function Sidekick({ word }) {
+  return (
+    <div className="sidekick-wrap">
+      <div className="sidekick-bubble">
+        <span className="sidekick-line">Find it!</span>
+        <span className="sidekick-word">{word}</span>
+        <span className="sidekick-line">👆 Tap!</span>
+      </div>
+      <span className="sidekick-emoji">🤖</span>
     </div>
   );
 }
