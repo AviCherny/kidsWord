@@ -36,7 +36,8 @@ export const LEVELS = [
       { word: 'Owl',    heWord: 'ינשוף',    heSpeech: 'יַנְשׁוּף', emoji: '🦉', label: 'Owl',    heLabel: 'ינשוף' },
       { word: 'Key',    heWord: 'מפתח',     heSpeech: 'מַפְתֵּחַ', emoji: '🔑', label: 'Key',    heLabel: 'מפתח' },
       { word: 'Corn',   heWord: 'תירס',     emoji: '🌽', label: 'Corn',   heLabel: 'תירס' },
-      { word: 'Food',   heWord: 'אוכל',     emoji: '🍽️', label: 'Food',   heLabel: 'אוכל' },
+      { word: 'Food',    heWord: 'אוכל',  emoji: '🍽️', label: 'Food',    heLabel: 'אוכל' },
+      { word: 'Animals', heWord: 'חיות',  emoji: '🐾', label: 'Animals', heLabel: 'חיות' },
     ],
   },
   {
