@@ -2,6 +2,45 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { speak } from '../../speak';
 import './BubblePop.css';
 
+// ── Synthesized sounds ────────────────────────────────────────────────────────
+function playPopSound() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 0.12, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3);
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 800;
+  filter.Q.value = 0.8;
+  src.connect(filter);
+  filter.connect(ctx.destination);
+  src.start();
+  src.onended = () => ctx.close();
+}
+
+function playSuccessSound() {
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.1);
+    gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + i * 0.1 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.18);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime + i * 0.1);
+    osc.stop(ctx.currentTime + i * 0.1 + 0.2);
+  });
+  setTimeout(() => ctx.close(), 800);
+}
+
 // ── Math question generator ───────────────────────────────────────────────────
 const LEVELS = [
   { label: 'Level 1', ops: ['+'], max: 5  },
@@ -162,7 +201,8 @@ export default function BubblePop({ onSuccess, onExit }) {
       if (bubble.isAnswer) {
         transitioning.current = true;
         setCombo(c => c + 1);
-        speak('Pop!', 'en');
+        playPopSound();
+        playSuccessSound();
 
         // Spawn particle burst
         const popEntry = {
