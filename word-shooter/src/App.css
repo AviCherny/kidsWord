@@ -232,7 +232,7 @@ body {
   z-index: 100;
   font-size: 2rem;
   line-height: 1;
-  animation: missile-fly 0.45s ease-in forwards;
+  animation: missile-fly 0.85s ease-in forwards;
 }
 /* Fire trail — positioned in the rocket's local space (below = behind after rotation) */
 .missile-wrap::after {

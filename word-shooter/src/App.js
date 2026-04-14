@@ -184,7 +184,7 @@ export default function App() {
           setPhase('retry');
         }, 700);
       }
-    }, 450);
+    }, 850);
   }, [phase, round, stars, correctCount, level, levelIndex, startRound]);
 
   // ── level up actions ───────────────────────────────────────────────────
