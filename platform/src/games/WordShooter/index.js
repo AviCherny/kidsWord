@@ -327,11 +327,10 @@ function Missile({ pos }) {
   const dx = pos.toX - pos.fromX;
   const dy = pos.toY - pos.fromY;
   const dist = Math.hypot(dx, dy);
-  const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
-  // perpendicular arc: bulge sideways so the path curves instead of going straight
-  const arc = Math.min(dist * 0.28, 55);
-  const px = (-dy / dist) * arc;
-  const py = (dx / dist) * arc;
+  // parabola height — upward arc above the straight-line path
+  const h = Math.min(dist * 0.45, 130);
+  // tangent angle at time t: x velocity is constant (dx), y velocity is dy minus arc derivative
+  const rotAt = t => Math.atan2(dy - h * 4 * (1 - 2 * t), dx) * (180 / Math.PI) + 90;
   return (
     <div
       className="ws-missile"
@@ -340,9 +339,10 @@ function Missile({ pos }) {
         top: pos.fromY - 16,
         '--dx': `${dx}px`,
         '--dy': `${dy}px`,
-        '--rot': `${angle}deg`,
-        '--px': `${px}px`,
-        '--py': `${py}px`,
+        '--h':   `${h}px`,
+        '--r0':  `${rotAt(0)}deg`,
+        '--r50': `${rotAt(0.5)}deg`,
+        '--r1':  `${rotAt(1)}deg`,
       }}
     >
       <span className="ws-missile-rocket">🚀</span>
