@@ -53,6 +53,8 @@ export default function WordShooter({ onSuccess, onExit }) {
   const [glowIndex, setGlowIndex] = useState(null);
   const [explosionIndex, setExplosionIndex] = useState(null);
   const [distractorShake, setDistractorShake] = useState(false);
+  const [showSidekick, setShowSidekick] = useState(false);
+  const [showLabels, setShowLabels] = useState(true);
 
   const idleTimer = useRef(null);
   const heroRef = useRef(null);
@@ -82,6 +84,7 @@ export default function WordShooter({ onSuccess, onExit }) {
     setGlowIndex(null);
     setExplosionIndex(null);
     setDistractorShake(false);
+    setShowSidekick(false);
 
     const spokenWord = lang === 'he' ? r.target.heWord : r.target.word;
     setTimeout(() => {
@@ -107,6 +110,15 @@ export default function WordShooter({ onSuccess, onExit }) {
   }, [screen, levelIndex]); // eslint-disable-line
 
   const handleTap = useCallback((obj, idx) => {
+    // Retry phase: child must tap the glowing correct answer to continue
+    if (phase === 'retry') {
+      if (obj.isDistractor || obj.word !== round.target.word) return;
+      setGlowIndex(null);
+      setShowSidekick(false);
+      startRound();
+      return;
+    }
+
     if (phase !== 'waiting') return;
     if (obj.isDistractor) {
       setDistractorShake(true);
@@ -161,13 +173,14 @@ export default function WordShooter({ onSuccess, onExit }) {
         setGlowIndex(correctIdx);
         const thisWord = lang === 'he' ? round.target.heWord : round.target.word;
         speak(thisWord, lang);
+        setShowSidekick(true);
+        // Enter retry mode — child must tap the glowing correct answer
         setTimeout(() => {
           setExplosionIndex(null);
-          setGlowIndex(null);
-          startRound();
-        }, 2200);
+          setPhase('retry');
+        }, 700);
       }
-    }, 750);
+    }, 1100);
   }, [phase, round, stars, correctCount, level, levelIndex, lang, startRound, onSuccess]); // eslint-disable-line
 
   const goNextLevel = () => {
@@ -240,6 +253,15 @@ export default function WordShooter({ onSuccess, onExit }) {
         </button>
       )}
 
+      {/* EN label toggle */}
+      <button
+        className={`ws-lang-toggle ${showLabels ? 'active' : ''}`}
+        onClick={() => setShowLabels(v => !v)}
+        aria-label="Toggle labels"
+      >
+        EN
+      </button>
+
       <div className="ws-objects-area">
         {round?.objects.map((obj, i) => (
           <div
@@ -258,7 +280,7 @@ export default function WordShooter({ onSuccess, onExit }) {
             onClick={() => handleTap(obj, i)}
           >
             <span className="ws-obj-emoji">{obj.emoji}</span>
-            <span className="ws-obj-label">{objLabel(obj)}</span>
+            {showLabels && <span className="ws-obj-label">{objLabel(obj)}</span>}
           </div>
         ))}
       </div>
@@ -271,6 +293,20 @@ export default function WordShooter({ onSuccess, onExit }) {
       </div>
 
       {missileAnim && <Missile pos={missileAnim} />}
+      {showSidekick && round && <Sidekick word={lang === 'he' ? round.target.heWord : round.target.word} />}
+    </div>
+  );
+}
+
+function Sidekick({ word }) {
+  return (
+    <div className="ws-sidekick-wrap">
+      <div className="ws-sidekick-bubble">
+        <span className="ws-sidekick-line">Find it!</span>
+        <span className="ws-sidekick-word">{word}</span>
+        <span className="ws-sidekick-line">👆 Tap!</span>
+      </div>
+      <span className="ws-sidekick-emoji">🤖</span>
     </div>
   );
 }
