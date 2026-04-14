@@ -11,7 +11,7 @@
   overflow: hidden;
 }
 
-/* ── Header ─────────────────────────────────────── */
+/* ── Header ──────────────────────────────────────── */
 .lm-header {
   width: 100%;
   max-width: 480px;
@@ -32,18 +32,38 @@
 
 .lm-title { font-size: 20px; font-weight: 800; color: #2e7d32; margin: 0; }
 
-/* ── Mascot ─────────────────────────────────────── */
+.lm-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ── Language toggle ─────────────────────────────── */
+.lm-lang-toggle {
+  background: rgba(255,255,255,0.85);
+  border: 2px solid #a5d6a7;
+  border-radius: 12px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 800;
+  color: #2e7d32;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.lm-lang-toggle--active {
+  background: #43a047;
+  color: white;
+  border-color: #2e7d32;
+}
+
+/* ── Mascot ──────────────────────────────────────── */
 .lm-mascot {
-  font-size: 32px;
-  transition: transform 0.2s;
+  font-size: 30px;
   display: inline-block;
 }
-.lm-mascot--happy {
-  animation: lmMascotCheer 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-.lm-mascot--sad {
-  animation: lmShake 0.4s ease;
-}
+.lm-mascot--happy { animation: lmMascotCheer 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+.lm-mascot--sad   { animation: lmShake 0.4s ease; }
+
 @keyframes lmMascotCheer {
   0%   { transform: scale(1) rotate(0deg); }
   30%  { transform: scale(1.5) rotate(-15deg); }
@@ -51,13 +71,13 @@
   100% { transform: scale(1) rotate(0deg); }
 }
 
-/* ── Progress bar ───────────────────────────────── */
+/* ── Progress bar ────────────────────────────────── */
 .lm-progress {
   width: 100%; max-width: 480px;
   height: 8px;
   background: rgba(0,0,0,0.1);
   border-radius: 4px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   overflow: hidden;
 }
 .lm-progress-fill {
@@ -67,18 +87,7 @@
   transition: width 0.4s ease;
 }
 
-/* ── Phase badge ────────────────────────────────── */
-.lm-phase-badge {
-  background: #43a047;
-  color: white;
-  border-radius: 20px;
-  padding: 4px 14px;
-  font-size: 13px;
-  font-weight: 700;
-  margin-bottom: 16px;
-}
-
-/* ── Display card ───────────────────────────────── */
+/* ── Display card ────────────────────────────────── */
 .lm-display {
   background: white;
   border-radius: 24px;
@@ -95,30 +104,71 @@
   to   { transform: scale(1);   opacity: 1; }
 }
 
-.lm-big-letter {
+.lm-big-emoji {
   font-size: 80px;
-  font-weight: 900;
-  color: #1b5e20;
   line-height: 1;
-  font-family: 'Segoe UI', system-ui, sans-serif;
 }
 
-.lm-hint {
-  font-size: 22px;
-  color: #555;
-  margin-top: 8px;
+.lm-word {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1b5e20;
+  margin-top: 10px;
+  letter-spacing: 0.5px;
 }
 
-/* ── Prompt ─────────────────────────────────────── */
+/* ── Animal mouth animation ──────────────────────── */
+/*
+  The emoji is rendered twice:
+    - Top layer: clipped to the upper 58% (eyes, nose, ears) — stays still
+    - Bottom layer: clipped to the lower 42% (mouth area) — slides down = "opens"
+  The gap created between them simulates a talking mouth.
+*/
+.lm-animal-wrap {
+  position: relative;
+  display: inline-block;
+  font-size: 80px;
+  line-height: 1;
+  width: 1em;
+  height: 1em;
+}
+
+.lm-animal-layer {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  font-size: inherit;
+  line-height: 1;
+}
+
+.lm-animal-top {
+  clip-path: polygon(0 0, 100% 0, 100% 58%, 0 58%);
+}
+
+.lm-animal-bottom {
+  clip-path: polygon(0 58%, 100% 58%, 100% 100%, 0 100%);
+  animation: lmMouthOpen 0.55s ease-in-out infinite;
+}
+
+@keyframes lmMouthOpen {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(7px); }
+}
+
+/* ── Prompt ──────────────────────────────────────── */
 .lm-prompt {
   font-size: 17px;
   font-weight: 700;
   color: #2e7d32;
   margin-bottom: 20px;
   text-align: center;
+  max-width: 320px;
 }
 
-/* ── Choice buttons ─────────────────────────────── */
+/* ── Choice buttons ──────────────────────────────── */
 .lm-choices {
   display: flex;
   gap: 16px;
@@ -140,10 +190,7 @@
   animation: lmButtonIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
   transition: transform 0.15s, background 0.2s, border-color 0.2s;
 }
-.lm-choice:hover:not(:disabled) {
-  transform: scale(1.12) rotate(-3deg);
-  border-color: #43a047;
-}
+.lm-choice:hover { transform: scale(1.12) rotate(-3deg); border-color: #43a047; }
 .lm-choice:active { transform: scale(0.92); }
 
 @keyframes lmButtonIn {
@@ -154,12 +201,11 @@
 .lm-choice--correct {
   background: #c8e6c9 !important;
   border-color: #43a047 !important;
-  transform: scale(1.15) !important;
-  animation: lmCorrectPop 0.4s ease !important;
+  animation: lmCorrectPop 0.4s ease forwards !important;
 }
 @keyframes lmCorrectPop {
   0%   { transform: scale(1); }
-  50%  { transform: scale(1.25); }
+  50%  { transform: scale(1.3); }
   100% { transform: scale(1.15); }
 }
 
@@ -171,19 +217,53 @@
 .lm-choice--wrong {
   background: #ffcdd2 !important;
   border-color: #e53935 !important;
-  animation: lmShake 0.4s ease !important;
+  animation: lmShake 0.4s ease forwards !important;
 }
 
 /* ── Shared shake ────────────────────────────────── */
 @keyframes lmShake {
   0%,100% { transform: translateX(0); }
-  20%      { transform: translateX(-8px); }
-  40%      { transform: translateX(8px); }
-  60%      { transform: translateX(-6px); }
-  80%      { transform: translateX(6px); }
+  20%     { transform: translateX(-8px); }
+  40%     { transform: translateX(8px); }
+  60%     { transform: translateX(-6px); }
+  80%     { transform: translateX(6px); }
+}
+.lm-shake { animation: lmShake 0.4s ease; }
+
+/* ── Flying letter bullet ────────────────────────── */
+.lm-bullet {
+  position: fixed;
+  z-index: 500;
+  pointer-events: none;
+  /* Centered on fromX/fromY via transform */
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  font-weight: 900;
+  color: #1b5e20;
+  background: white;
+  border: 3px solid #43a047;
+  border-radius: 50%;
+  box-shadow: 0 0 14px rgba(67,160,71,0.6), 0 0 28px rgba(67,160,71,0.3);
+  animation: lmBulletFly 0.48s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* ── Hear Again button ──────────────────────────── */
+@keyframes lmBulletFly {
+  from {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 1;
+  }
+  to {
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0.25);
+    opacity: 0.6;
+  }
+}
+
+/* ── Hear Again ──────────────────────────────────── */
 .lm-replay {
   background: rgba(255,255,255,0.8);
   border: 2px solid #a5d6a7;
@@ -224,9 +304,9 @@
   line-height: 1;
 }
 @keyframes lmConfettiFly {
-  0%   { transform: translate(0, 0) scale(0.5) rotate(0deg);   opacity: 1; }
+  0%   { transform: translate(0, 0) scale(0.5) rotate(0deg);                    opacity: 1; }
   80%  { opacity: 1; }
-  100% { transform: translate(var(--cx), -280px) scale(1.2) rotate(360deg); opacity: 0; }
+  100% { transform: translate(var(--cx), -280px) scale(1.2) rotate(360deg);     opacity: 0; }
 }
 
 /* ── Done screen ─────────────────────────────────── */
