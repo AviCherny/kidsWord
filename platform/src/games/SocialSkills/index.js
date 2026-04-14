@@ -18,8 +18,8 @@ export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
   const [showContinueBtn, setShowContinueBtn] = useState(false);
   const [locked, setLocked] = useState(false);
   const [displayOrder, setDisplayOrder] = useState([0, 1]);
-  const [soundOn, setSoundOn] = useState(false);
-  const soundOnRef = useRef(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const soundOnRef = useRef(true);
   const [facilitator, setFacilitator] = useState(!!facilitatorMode);
   const [videoError, setVideoError] = useState(false);
 
@@ -199,9 +199,12 @@ export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
             <button
               className={`ss-facilitator-btn${facilitator ? ' on' : ''}`}
               onClick={() => setFacilitator(f => !f)}
-              title="Facilitator mode"
+              title={lang === 'he' ? 'מצב מטפל' : 'Facilitator mode'}
+              aria-label={facilitator
+                ? (lang === 'he' ? 'כבה מצב מטפל' : 'Turn off facilitator mode')
+                : (lang === 'he' ? 'הפעל מצב מטפל' : 'Turn on facilitator mode')}
             >
-              🧑‍🏫
+              💡
             </button>
             <button
               className={`ss-sound-btn${soundOn ? ' on' : ''}`}
@@ -212,6 +215,14 @@ export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
             <button className="ss-exit-btn" onClick={exitGame}>✕</button>
           </div>
         </div>
+        {facilitator && (
+          <div className="ss-facilitator-banner">
+            💡{' '}
+            {lang === 'he'
+              ? 'מצב מטפל פעיל — אין טיימרים אוטומטיים'
+              : 'Facilitator mode — no auto-timers'}
+          </div>
+        )}
         {balloons > 0 && <div className="ss-balloon-row">{'🎈'.repeat(balloons)}</div>}
       </header>
 
@@ -228,7 +239,20 @@ export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
             onError={() => setVideoError(true)}
           />
         ) : (
-          <div className="ss-scene-strip">{scenario.scene}</div>
+          <div className="ss-animated-scene" key={scenario.id}>
+            {scenario.sceneEmojis
+              ? scenario.sceneEmojis.map((emoji, i) => (
+                  <span
+                    key={i}
+                    className={`ss-scene-emoji ss-anim-${scenario.sceneAnims[i]}`}
+                    style={{ animationDelay: `${i * 0.15}s` }}
+                  >
+                    {emoji}
+                  </span>
+                ))
+              : <span className="ss-scene-emoji ss-anim-float">{scenario.scene}</span>
+            }
+          </div>
         )}
       </div>
 
