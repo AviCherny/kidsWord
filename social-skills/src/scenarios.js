@@ -2,12 +2,18 @@
 // Hebrew primary. Each scenario has a video path (in public/videos/).
 // If the video file is missing, the emoji scene strip is shown instead.
 // Scenarios ordered: prosocial first (1-6), boundary/safety last (7-10).
+//
+// sceneEmojis: the 3 emojis that tell the story visually
+// sceneAnims:  CSS animation class per emoji (float|shake|bounce|pulse|wave|spin|sparkle|cry|nod|none)
 
 export const SCENARIOS = [
   {
     id: 1,
     video: 'videos/scenario-1.mp4',
     scene: '🧒😤🪀',
+    sceneEmojis: ['🧒', '😤', '🪀'],
+    sceneAnims:  ['float', 'shake', 'bounce'],
+    // child stands → frustration vibrates → toy bounces away
     situation: 'חבר לקח את הצעצוע שלך',
     situationEn: 'A friend took your toy',
     tts: 'חבר לקח את הצעצוע שלך. מה אתה עושה?',
@@ -24,6 +30,9 @@ export const SCENARIOS = [
     id: 2,
     video: 'videos/scenario-2.mp4',
     scene: '🧒😢👫',
+    sceneEmojis: ['🧒', '😢', '👫'],
+    sceneAnims:  ['float', 'cry', 'bounce'],
+    // lonely child floats → tear drops → friends bounce together
     situation: 'אף אחד לא רוצה לשחק איתי',
     situationEn: 'Nobody wants to play with me',
     tts: 'אף אחד לא רוצה לשחק איתך. מה אתה עושה?',
@@ -40,6 +49,9 @@ export const SCENARIOS = [
     id: 3,
     video: 'videos/scenario-3.mp4',
     scene: '⚽👫🙋',
+    sceneEmojis: ['⚽', '👫', '🙋'],
+    sceneAnims:  ['spin', 'bounce', 'wave'],
+    // ball spins → friends bounce playing → hand raises to ask
     situation: 'אני רוצה להצטרף למשחק של חברים',
     situationEn: 'I want to join my friends\' game',
     tts: 'אתה רוצה להצטרף למשחק. מה אתה עושה?',
@@ -56,6 +68,9 @@ export const SCENARIOS = [
     id: 4,
     video: 'videos/scenario-4.mp4',
     scene: '🧒😢💙',
+    sceneEmojis: ['🧒', '😢', '💙'],
+    sceneAnims:  ['float', 'cry', 'pulse'],
+    // child stands → sad face droops → heart pulses with care
     situation: 'חבר שלי בוכה ועצוב',
     situationEn: 'My friend is crying and sad',
     tts: 'חבר שלך בוכה ועצוב. מה אתה עושה?',
@@ -72,6 +87,9 @@ export const SCENARIOS = [
     id: 5,
     video: 'videos/scenario-5.mp4',
     scene: '🧒😳💔',
+    sceneEmojis: ['🧒', '😳', '💔'],
+    sceneAnims:  ['shake', 'pulse', 'pulse'],
+    // child trembles with guilt → shocked face pulses → broken heart pulses
     situation: 'עשיתי טעות ושברתי משהו',
     situationEn: 'I made a mistake and broke something',
     tts: 'עשית טעות ושברת משהו. מה אתה עושה?',
@@ -88,6 +106,9 @@ export const SCENARIOS = [
     id: 6,
     video: 'videos/scenario-6.mp4',
     scene: '🧒💢🧒',
+    sceneEmojis: ['🧒', '💢', '🧒'],
+    sceneAnims:  ['shake', 'pulse', 'float'],
+    // pushed child shakes → anger symbol pulses → pusher stands
     situation: 'חבר דוחף אותי',
     situationEn: 'A friend is pushing me',
     tts: 'חבר דוחף אותך. מה אתה עושה?',
@@ -104,6 +125,9 @@ export const SCENARIOS = [
     id: 7,
     video: 'videos/scenario-7.mp4',
     scene: '🧒😠🤝',
+    sceneEmojis: ['🧒', '😠', '🤝'],
+    sceneAnims:  ['float', 'shake', 'pulse'],
+    // child stands firm → angry face shakes (threat) → handshake pulses (the right choice)
     situation: 'מישהו אומר: "אם לא תיתן לי, אני לא חבר שלך"',
     situationEn: '"If you don\'t give me that, I\'m not your friend"',
     tts: 'מישהו אומר — אם לא תיתן לי, אני לא חבר שלך. מה אתה עושה?',
@@ -120,6 +144,9 @@ export const SCENARIOS = [
     id: 8,
     video: 'videos/scenario-8.mp4',
     scene: '🧒😤😆',
+    sceneEmojis: ['🧒', '😤', '😆'],
+    sceneAnims:  ['float', 'shake', 'bounce'],
+    // victim floats sadly → frustration shakes → mocking laughter bounces
     situation: 'מישהו צוחק עליי',
     situationEn: 'Someone is laughing at me',
     tts: 'מישהו צוחק עליך. מה אתה עושה?',
@@ -136,6 +163,9 @@ export const SCENARIOS = [
     id: 9,
     video: 'videos/scenario-9.mp4',
     scene: '🤫😨🙅',
+    sceneEmojis: ['🤫', '😨', '🙅'],
+    sceneAnims:  ['pulse', 'shake', 'wave'],
+    // shushing pulses with pressure → fear shakes → no-sign waves (boundary)
     // Note: may need adult facilitation for younger/autistic children
     situation: 'מישהו מבקש שאשמור סוד שמפחיד אותי',
     situationEn: 'Someone asks me to keep a secret that scares me',
@@ -153,6 +183,9 @@ export const SCENARIOS = [
     id: 10,
     video: 'videos/scenario-10.mp4',
     scene: '🧒😟🚫',
+    sceneEmojis: ['🧒', '😟', '🚫'],
+    sceneAnims:  ['float', 'cry', 'pulse'],
+    // child floats uncertain → worried face droops → stop-sign pulses
     situation: 'חבר אומר לי לעשות משהו שנראה לא בסדר',
     situationEn: 'A friend wants me to do something that feels wrong',
     tts: 'חבר מבקש ממך לעשות משהו שנראה לא בסדר. מה אתה עושה?',
@@ -169,6 +202,9 @@ export const SCENARIOS = [
     id: 11,
     video: 'videos/scenario-11.mp4',
     scene: '🎢🧒⏳',
+    sceneEmojis: ['🎢', '🧒', '⏳'],
+    sceneAnims:  ['bounce', 'float', 'pulse'],
+    // slide bounces (inviting) → child waits patiently → hourglass pulses (time passing)
     situation: 'אני מחכה בתור לגלשן וזה לוקח הרבה זמן',
     situationEn: 'I am waiting in line for the slide and it takes a long time',
     tts: 'אתה מחכה בתור לגלשן וזה לוקח הרבה זמן. מה אתה עושה?',
@@ -185,6 +221,9 @@ export const SCENARIOS = [
     id: 12,
     video: 'videos/scenario-12.mp4',
     scene: '🎲😢🏆',
+    sceneEmojis: ['🎲', '😢', '🏆'],
+    sceneAnims:  ['spin', 'cry', 'sparkle'],
+    // dice spins (game chance) → sad face droops (loss) → trophy sparkles (goal)
     situation: 'הפסדתי במשחק',
     situationEn: 'I lost the game',
     tts: 'הפסדת במשחק. מה אתה עושה?',
@@ -201,6 +240,9 @@ export const SCENARIOS = [
     id: 13,
     video: 'videos/scenario-13.mp4',
     scene: '🧒👋😊',
+    sceneEmojis: ['🧒', '👋', '😊'],
+    sceneAnims:  ['float', 'wave', 'sparkle'],
+    // child approaches → hand waves hello → warm smile sparkles
     situation: 'יש ילד חדש בגן ואני רוצה להכיר אותו',
     situationEn: 'There is a new kid at school and I want to meet them',
     tts: 'יש ילד חדש בגן ואתה רוצה להכיר אותו. מה אתה עושה?',
@@ -217,6 +259,9 @@ export const SCENARIOS = [
     id: 14,
     video: 'videos/scenario-14.mp4',
     scene: '🧒💥🧒',
+    sceneEmojis: ['🧒', '💥', '🧒'],
+    sceneAnims:  ['shake', 'pulse', 'float'],
+    // fallen child shakes from impact → crash burst pulses → the other child floats (by accident)
     situation: 'ילד נתקל בי בטעות ואני נפלתי',
     situationEn: 'A child bumped into me by accident and I fell',
     tts: 'ילד נתקל בך בטעות ואתה נפלת. מה אתה עושה?',
@@ -233,6 +278,9 @@ export const SCENARIOS = [
     id: 15,
     video: 'videos/scenario-15.mp4',
     scene: '🚗🧒🤲',
+    sceneEmojis: ['🚗', '🧒', '🤲'],
+    sceneAnims:  ['bounce', 'float', 'wave'],
+    // toy car bounces (moving/desirable) → child floats → open hands wave/reach
     situation: 'חבר מבקש לשאול את המכונית שלי',
     situationEn: 'A friend asks to borrow my toy car',
     tts: 'חבר מבקש לשאול את המכונית שלך. מה אתה עושה?',
@@ -249,6 +297,9 @@ export const SCENARIOS = [
     id: 16,
     video: 'videos/scenario-16.mp4',
     scene: '🎂👫😢',
+    sceneEmojis: ['🎂', '👫', '😢'],
+    sceneAnims:  ['pulse', 'bounce', 'cry'],
+    // cake pulses (party happening) → friends bounce together → excluded child cries
     situation: 'כולם משחקים ביחד ואני לא מוזמן',
     situationEn: 'Everyone is playing together and I am not invited',
     tts: 'כולם משחקים ביחד ואתה לא מוזמן. מה אתה עושה?',
@@ -265,6 +316,9 @@ export const SCENARIOS = [
     id: 17,
     video: 'videos/scenario-17.mp4',
     scene: '🧒😵‍💫🔊',
+    sceneEmojis: ['🧒', '😵‍💫', '🔊'],
+    sceneAnims:  ['shake', 'shake', 'pulse'],
+    // overwhelmed child shakes → dizzy/sensory face shakes → loud sound pulses
     situation: 'יש הרבה רעש ואני מרגיש המום',
     situationEn: 'There is a lot of noise and I feel overwhelmed',
     tts: 'יש הרבה רעש ואתה מרגיש המום. מה אתה עושה?',
@@ -281,6 +335,9 @@ export const SCENARIOS = [
     id: 18,
     video: 'videos/scenario-18.mp4',
     scene: '🧒🤕👀',
+    sceneEmojis: ['🧒', '🤕', '👀'],
+    sceneAnims:  ['bounce', 'pulse', 'nod'],
+    // hurt child bounces (just fell) → hurt face pulses with pain → eyes nod looking
     situation: 'ילד נפל ונפצע ואני ראיתי',
     situationEn: 'A child fell and got hurt and I saw it',
     tts: 'ילד נפל ונפצע ואתה ראית. מה אתה עושה?',
@@ -297,6 +354,9 @@ export const SCENARIOS = [
     id: 19,
     video: 'videos/scenario-19.mp4',
     scene: '🎨🧒⭐',
+    sceneEmojis: ['🎨', '🧒', '⭐'],
+    sceneAnims:  ['float', 'float', 'sparkle'],
+    // painting floats (artwork displayed) → child floats proudly → star sparkles with praise
     situation: 'הציור של החבר שלי יצא יפה מאוד',
     situationEn: 'My friend\'s drawing came out really beautiful',
     tts: 'הציור של חברך יצא יפה מאוד. מה אתה עושה?',
@@ -313,6 +373,9 @@ export const SCENARIOS = [
     id: 20,
     video: 'videos/scenario-20.mp4',
     scene: '🧒😍🚂',
+    sceneEmojis: ['🧒', '😍', '🚂'],
+    sceneAnims:  ['float', 'pulse', 'bounce'],
+    // child floats wanting → desire-eyes pulse → train bounces (the coveted toy)
     situation: 'אני ורעי רוצים את אותו הצעצוע בדיוק',
     situationEn: 'Me and my friend both want the exact same toy',
     tts: 'אתה ורעך רוצים את אותו הצעצוע. מה אתה עושה?',

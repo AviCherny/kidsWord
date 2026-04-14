@@ -30,10 +30,14 @@ export default function App() {
   const [soundOn, setSoundOn] = useState(true);
   const soundOnRef = useRef(true);
 
+  // ── Language: 'he' (Hebrew/RTL) or 'en' (English/LTR) ─────────────────
+  const [lang, setLang] = useState('he');
+  const langRef = useRef('he');
+
   // ── Facilitator mode — disables all auto-timers for therapist-led sessions
   const [facilitator, setFacilitator] = useState(false);
 
-  // ── Video error state (falls back to emoji strip) ────────────────────────
+  // ── Video error state (falls back to animated emoji scene) ───────────────
   const [videoError, setVideoError] = useState(false);
 
   // ── Timers ────────────────────────────────────────────────────────────────
@@ -42,11 +46,11 @@ export default function App() {
   const resetTimer = useRef(null);
 
   const scenario = SCENARIOS[shuffledOrder[scenarioIndex]];
+  const isHe = lang === 'he';
 
-  // Sync ref so closures always read current soundOn
-  useEffect(() => {
-    soundOnRef.current = soundOn;
-  }, [soundOn]);
+  // Sync refs so closures always read current values
+  useEffect(() => { soundOnRef.current = soundOn; }, [soundOn]);
+  useEffect(() => { langRef.current = lang; }, [lang]);
 
   // resetIdle: clears and restarts the idle hint timer
   // 8s — gives child enough time to hear all options read aloud before prompt appears
@@ -83,8 +87,11 @@ export default function App() {
 
     // Read situation + both options so non-readers hear all choices before deciding
     const opts = scenario.options;
-    const fullTts = `${scenario.tts} אפשרות אחת: ${opts[0].text}. אפשרות שתיים: ${opts[1].text}.`;
-    speak(fullTts, scenario.ttsFallback, soundOnRef.current);
+    const he = langRef.current === 'he';
+    const fullTts = he
+      ? `${scenario.tts} אפשרות אחת: ${opts[0].text}. אפשרות שתיים: ${opts[1].text}.`
+      : scenario.ttsFallback;
+    speak(fullTts, he ? scenario.ttsFallback : null, soundOnRef.current);
 
     resetIdle();
     return () => {
@@ -107,10 +114,12 @@ export default function App() {
       setStars(newStars);
       if (newStars % 5 === 0) {
         setBalloons(b => b + 1);
-        speak(`${opt.text}. יפה מאוד! קיבלת בלון!`, null, soundOnRef.current);
+        const msg = isHe ? `${opt.text}. יפה מאוד! קיבלת בלון!` : `${opt.text}. Well done! You got a balloon!`;
+        speak(msg, null, soundOnRef.current);
       } else {
         // Read chosen option + lesson so non-readers hear the lesson too
-        speak(`${opt.text}. ${scenario.lesson}`, scenario.lessonFallback, soundOnRef.current);
+        const lesson = isHe ? scenario.lesson : scenario.lessonFallback;
+        speak(`${opt.text}. ${lesson}`, isHe ? scenario.lessonFallback : null, soundOnRef.current);
       }
 
       // Show "הבנתי ✓" — child controls when to advance after reading lesson
@@ -123,7 +132,8 @@ export default function App() {
     } else {
       // notGood: read chosen option + lesson, reveal correct option with hint glow
       // "נסה שוב" button provides clear signal; auto-resets after 3.5s in normal mode
-      speak(`${opt.text}. ${scenario.lesson}`, scenario.lessonFallback, soundOnRef.current);
+      const lesson = isHe ? scenario.lesson : scenario.lessonFallback;
+      speak(`${opt.text}. ${lesson}`, isHe ? scenario.lessonFallback : null, soundOnRef.current);
       setShowHint(true);
       if (!facilitator) {
         resetTimer.current = setTimeout(handleRetry, 3500);
@@ -189,20 +199,28 @@ export default function App() {
   // ── START SCREEN ─────────────────────────────────────────────────────────
   if (screen === 'start') {
     return (
-      <div className="game start-screen" dir="rtl">
+      <div className="game start-screen" dir={isHe ? 'rtl' : 'ltr'}>
         <div className="start-emoji">🧠💬</div>
-        <h1 className="start-title">מה אני עושה?</h1>
-        <p className="start-subtitle">נלמד יחד איך להתמודד עם מצבים עם חברים</p>
+        <h1 className="start-title">{isHe ? 'מה אני עושה?' : 'What Do I Do?'}</h1>
+        <p className="start-subtitle">
+          {isHe
+            ? 'נלמד יחד איך להתמודד עם מצבים עם חברים'
+            : 'Let\'s learn together how to handle situations with friends'}
+        </p>
         {/* Session length — helps routine-dependent children know what to expect */}
-        <div className="scenario-count">{SESSION_SIZE} סיפורים ⭐</div>
+        <div className="scenario-count">{SESSION_SIZE} {isHe ? 'סיפורים ⭐' : 'stories ⭐'}</div>
         <div className="model-steps">
-          <div className="model-step">👀 מה קורה?</div>
-          <div className="model-step">❤️ איך אני מרגיש?</div>
-          <div className="model-step">🛡️ בטוח / לא בטוח?</div>
-          <div className="model-step">💡 מה אני עושה?</div>
+          <div className="model-step">👀 {isHe ? 'מה קורה?' : 'What\'s happening?'}</div>
+          <div className="model-step">❤️ {isHe ? 'איך אני מרגיש?' : 'How do I feel?'}</div>
+          <div className="model-step">🛡️ {isHe ? 'בטוח / לא בטוח?' : 'Safe / not safe?'}</div>
+          <div className="model-step">💡 {isHe ? 'מה אני עושה?' : 'What do I do?'}</div>
         </div>
         <button className="start-btn" onClick={startGame}>
-          בואו נתחיל! 🚀
+          {isHe ? 'בואו נתחיל! 🚀' : 'Let\'s start! 🚀'}
+        </button>
+        {/* Language toggle — bottom of start screen so it doesn't clutter */}
+        <button className="lang-btn" onClick={() => setLang(l => l === 'he' ? 'en' : 'he')}>
+          {isHe ? 'EN' : 'עב'}
         </button>
       </div>
     );
@@ -211,16 +229,16 @@ export default function App() {
   // ── END SCREEN ────────────────────────────────────────────────────────────
   if (screen === 'end') {
     return (
-      <div className="game end-screen" dir="rtl">
+      <div className="game end-screen" dir={isHe ? 'rtl' : 'ltr'}>
         <div className="end-trophy">🌟</div>
-        <h1 className="end-title">כל הכבוד!</h1>
-        <p className="end-subtitle">סיימת את כל הסיפורים!</p>
+        <h1 className="end-title">{isHe ? 'כל הכבוד!' : 'Well done!'}</h1>
+        <p className="end-subtitle">{isHe ? 'סיימת את כל הסיפורים!' : 'You finished all the stories!'}</p>
         <div className="end-stars">{'⭐'.repeat(stars)}</div>
         {balloons > 0 && (
           <div className="end-balloons">{'🎈'.repeat(balloons)}</div>
         )}
         <button className="play-again-btn" onClick={exitGame}>
-          שחק שוב 🎮
+          {isHe ? 'שחק שוב 🎮' : 'Play again 🎮'}
         </button>
       </div>
     );
@@ -228,7 +246,7 @@ export default function App() {
 
   // ── GAME SCREEN ───────────────────────────────────────────────────────────
   return (
-    <div className="game" dir="rtl">
+    <div className="game" dir={isHe ? 'rtl' : 'ltr'}>
 
       {/* HUD */}
       <header className="hud">
@@ -244,33 +262,56 @@ export default function App() {
             ))}
           </div>
           <div className="hud-controls">
-            {/* Facilitator mode — disables all auto-timers for therapist-led sessions */}
+            {/* Language toggle */}
+            <button
+              className="lang-btn"
+              onClick={() => setLang(l => l === 'he' ? 'en' : 'he')}
+              aria-label={isHe ? 'Switch to English' : 'עבור לעברית'}
+            >
+              {isHe ? 'EN' : 'עב'}
+            </button>
+            {/* Facilitator mode — 💡 lamp icon; disables all auto-timers for therapist-led sessions */}
             <button
               className={`facilitator-btn ${facilitator ? 'on' : ''}`}
               onClick={() => setFacilitator(f => !f)}
-              aria-label={facilitator ? 'כבה מצב מטפל' : 'הפעל מצב מטפל'}
-              title="מצב מטפל"
+              aria-label={
+                facilitator
+                  ? (isHe ? 'כבה מצב מטפל' : 'Turn off facilitator mode')
+                  : (isHe ? 'הפעל מצב מטפל' : 'Turn on facilitator mode')
+              }
+              title={isHe ? 'מצב מטפל' : 'Facilitator mode'}
             >
-              🧑‍🏫
+              💡
             </button>
             <button
               className={`sound-btn ${soundOn ? 'on' : 'off'}`}
               onClick={() => setSoundOn(s => !s)}
-              aria-label={soundOn ? 'כבה סאונד' : 'הפעל סאונד'}
+              aria-label={soundOn ? (isHe ? 'כבה סאונד' : 'Mute') : (isHe ? 'הפעל סאונד' : 'Unmute')}
             >
               {soundOn ? '🔊' : '🔇'}
             </button>
-            <button className="exit-btn" onClick={exitGame} aria-label="יציאה">
+            <button className="exit-btn" onClick={exitGame} aria-label={isHe ? 'יציאה' : 'Exit'}>
               ✕
             </button>
           </div>
         </div>
+
+        {/* Facilitator mode banner — visible explanation for the therapist */}
+        {facilitator && (
+          <div className="facilitator-banner">
+            💡{' '}
+            {isHe
+              ? 'מצב מטפל פעיל — אין טיימרים אוטומטיים'
+              : 'Facilitator mode — no auto-timers'}
+          </div>
+        )}
+
         {balloons > 0 && (
           <div className="balloon-row">{'🎈'.repeat(balloons)}</div>
         )}
       </header>
 
-      {/* Video scene (or emoji fallback if video missing/errored) */}
+      {/* Animated emoji scene (video preferred; animated emojis as fallback) */}
       <div className="scene-area">
         {!videoError ? (
           <video
@@ -284,17 +325,36 @@ export default function App() {
             onError={() => setVideoError(true)}
           />
         ) : (
-          <div className="scene-strip">{scenario.scene}</div>
+          <div className="animated-scene" key={scenario.id}>
+            {scenario.sceneEmojis
+              ? scenario.sceneEmojis.map((emoji, i) => (
+                  <span
+                    key={i}
+                    className={`scene-emoji anim-${scenario.sceneAnims[i]}`}
+                    style={{ animationDelay: `${i * 0.15}s` }}
+                  >
+                    {emoji}
+                  </span>
+                ))
+              : <span className="scene-emoji anim-float">{scenario.scene}</span>
+            }
+          </div>
         )}
       </div>
 
       {/* Situation text + read-aloud button */}
       <div className="situation-row">
-        <p className="situation-text">{scenario.situation}</p>
+        <p className="situation-text">
+          {isHe ? scenario.situation : scenario.situationEn}
+        </p>
         <button
           className="situation-speak-btn"
-          onClick={() => speak(scenario.tts, scenario.ttsFallback, true)}
-          aria-label="שמע את השאלה"
+          onClick={() => speak(
+            isHe ? scenario.tts : scenario.ttsFallback,
+            isHe ? scenario.ttsFallback : null,
+            true
+          )}
+          aria-label={isHe ? 'שמע את השאלה' : 'Read the question'}
         >
           🔊
         </button>
@@ -302,7 +362,9 @@ export default function App() {
 
       {/* Prompt — changes to a nudge when idle; does NOT reveal which option is correct */}
       <p className={`prompt${showIdlePrompt ? ' prompt-nudge' : ''}`}>
-        {showIdlePrompt ? '👆 בחר אחת!' : 'מה אתה עושה?'}
+        {showIdlePrompt
+          ? (isHe ? '👆 בחר אחת!' : '👆 Pick one!')
+          : (isHe ? 'מה אתה עושה?' : 'What do you do?')}
       </p>
 
       {/* Response options — rendered in randomized order per scenario */}
@@ -336,7 +398,7 @@ export default function App() {
               <button
                 className="option-speak-btn"
                 onClick={() => speak(opt.text, null, true)}
-                aria-label="שמע את התשובה"
+                aria-label={isHe ? 'שמע את התשובה' : 'Read the option'}
               >
                 🔊
               </button>
@@ -350,12 +412,18 @@ export default function App() {
         <div className={`lesson-bar ${tapped === 'best' ? 'lesson-success' : 'lesson-hint'}`}>
           <div className="lesson-content">
             <span className="lesson-icon">{tapped === 'best' ? '✅' : '💡'}</span>
-            <span className="lesson-text">{scenario.lesson}</span>
+            <span className="lesson-text">
+              {isHe ? scenario.lesson : scenario.lessonFallback}
+            </span>
             {/* Speak button on lesson — for non-readers when sound is off */}
             <button
               className="lesson-speak-btn"
-              onClick={() => speak(scenario.lesson, scenario.lessonFallback, true)}
-              aria-label="שמע את השיעור"
+              onClick={() => speak(
+                isHe ? scenario.lesson : scenario.lessonFallback,
+                isHe ? scenario.lessonFallback : null,
+                true
+              )}
+              aria-label={isHe ? 'שמע את השיעור' : 'Read the lesson'}
             >
               🔊
             </button>
@@ -364,14 +432,14 @@ export default function App() {
           {/* "הבנתי ✓" — child taps when done reading; auto-advances after 15s */}
           {tapped === 'best' && showContinueBtn && (
             <button className="continue-btn" onClick={handleContinue}>
-              הבנתי ✓
+              {isHe ? 'הבנתי ✓' : 'Got it ✓'}
             </button>
           )}
 
           {/* "נסה שוב" — visible signal that retry is coming; tappable for early reset */}
           {tapped === 'notGood' && (
             <button className="retry-btn" onClick={handleRetry}>
-              נסה שוב 🔄
+              {isHe ? 'נסה שוב 🔄' : 'Try again 🔄'}
             </button>
           )}
         </div>
