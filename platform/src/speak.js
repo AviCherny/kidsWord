@@ -2,6 +2,8 @@
 // Key: the exact text passed to speak(), Value: filename in /audio/
 const CUSTOM_AUDIO = {
   'אוכל': 'ochel.mp4',
+  'חיות': 'chayot.mp4',
+  'רכב':  'rechev.mp4',
 };
 
 // Shared TTS — language-aware, web-only (no Capacitor)
