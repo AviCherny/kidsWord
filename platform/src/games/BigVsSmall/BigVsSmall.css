@@ -76,11 +76,21 @@
 /* Arena */
 .bvs-arena {
   width: 100%;
-  max-width: 480px;
   display: flex;
-  gap: 16px;
+  gap: 12px;
   justify-content: center;
   flex: 1;
+}
+
+.bvs-arena--2 { max-width: 480px; }
+.bvs-arena--3 { max-width: 640px; }
+.bvs-arena--4 {
+  max-width: 520px;
+  flex-wrap: wrap;
+}
+.bvs-arena--4 .bvs-animal-btn {
+  flex: 0 0 calc(50% - 6px);
+  min-height: 160px;
 }
 
 .bvs-animal-btn {
@@ -92,8 +102,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 24px 8px;
+  gap: 10px;
+  padding: 20px 8px;
   cursor: pointer;
   transition: background 0.2s, border-color 0.2s, transform 0.2s;
   min-height: 200px;
@@ -105,16 +115,59 @@
 .bvs-animal-btn:active { background: #fff3e0; }
 
 .bvs-animal-emoji {
-  font-size: clamp(64px, 16vw, 100px);
+  font-size: clamp(56px, 14vw, 90px);
   line-height: 1;
   transition: transform 0.3s ease;
   display: block;
 }
 
+.bvs-arena--3 .bvs-animal-emoji,
+.bvs-arena--4 .bvs-animal-emoji {
+  font-size: clamp(44px, 10vw, 68px);
+}
+
 .bvs-animal-name {
-  font-size: clamp(16px, 4vw, 22px);
+  font-size: clamp(14px, 3.5vw, 20px);
   font-weight: 700;
   color: #5d3a1a;
+}
+
+/* Level badge */
+.bvs-level-badge {
+  background: rgba(255,140,0,0.15);
+  border: 2px solid rgba(255,140,0,0.35);
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #c56000;
+}
+
+/* Level-up overlay */
+.bvs-levelup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,248,240,0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: bvsPopIn 0.4s ease;
+}
+
+.bvs-levelup-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.bvs-levelup-star { font-size: 80px; }
+
+.bvs-levelup-text {
+  font-size: clamp(36px, 9vw, 56px);
+  font-weight: 900;
+  color: #FF8C00;
 }
 
 /* Correct */
