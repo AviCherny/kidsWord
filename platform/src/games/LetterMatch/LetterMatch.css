@@ -7,8 +7,11 @@
   padding: 16px;
   font-family: 'Segoe UI', system-ui, sans-serif;
   box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
 }
 
+/* ── Header ─────────────────────────────────────── */
 .lm-header {
   width: 100%;
   max-width: 480px;
@@ -28,8 +31,27 @@
 }
 
 .lm-title { font-size: 20px; font-weight: 800; color: #2e7d32; margin: 0; }
-.lm-stars { font-size: 20px; min-width: 40px; text-align: right; }
 
+/* ── Mascot ─────────────────────────────────────── */
+.lm-mascot {
+  font-size: 32px;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+.lm-mascot--happy {
+  animation: lmMascotCheer 0.55s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.lm-mascot--sad {
+  animation: lmShake 0.4s ease;
+}
+@keyframes lmMascotCheer {
+  0%   { transform: scale(1) rotate(0deg); }
+  30%  { transform: scale(1.5) rotate(-15deg); }
+  60%  { transform: scale(1.5) rotate(15deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* ── Progress bar ───────────────────────────────── */
 .lm-progress {
   width: 100%; max-width: 480px;
   height: 8px;
@@ -45,6 +67,7 @@
   transition: width 0.4s ease;
 }
 
+/* ── Phase badge ────────────────────────────────── */
 .lm-phase-badge {
   background: #43a047;
   color: white;
@@ -55,6 +78,7 @@
   margin-bottom: 16px;
 }
 
+/* ── Display card ───────────────────────────────── */
 .lm-display {
   background: white;
   border-radius: 24px;
@@ -63,6 +87,12 @@
   box-shadow: 0 6px 24px rgba(0,0,0,0.12);
   margin-bottom: 16px;
   min-width: 200px;
+  animation: lmBounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+
+@keyframes lmBounceIn {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
 }
 
 .lm-big-letter {
@@ -79,6 +109,7 @@
   margin-top: 8px;
 }
 
+/* ── Prompt ─────────────────────────────────────── */
 .lm-prompt {
   font-size: 17px;
   font-weight: 700;
@@ -87,6 +118,7 @@
   text-align: center;
 }
 
+/* ── Choice buttons ─────────────────────────────── */
 .lm-choices {
   display: flex;
   gap: 16px;
@@ -104,21 +136,54 @@
   font-weight: 800;
   color: #1b5e20;
   cursor: pointer;
-  transition: transform 0.15s, background 0.2s;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  animation: lmButtonIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  transition: transform 0.15s, background 0.2s, border-color 0.2s;
 }
-.lm-choice:active { transform: scale(0.93); }
+.lm-choice:hover:not(:disabled) {
+  transform: scale(1.12) rotate(-3deg);
+  border-color: #43a047;
+}
+.lm-choice:active { transform: scale(0.92); }
+
+@keyframes lmButtonIn {
+  from { transform: scale(0.4) translateY(24px); opacity: 0; }
+  to   { transform: scale(1)   translateY(0);    opacity: 1; }
+}
 
 .lm-choice--correct {
   background: #c8e6c9 !important;
   border-color: #43a047 !important;
-  transform: scale(1.1);
+  transform: scale(1.15) !important;
+  animation: lmCorrectPop 0.4s ease !important;
 }
+@keyframes lmCorrectPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.25); }
+  100% { transform: scale(1.15); }
+}
+
 .lm-choice--reveal {
   border-color: #43a047 !important;
   background: #e8f5e9 !important;
 }
 
+.lm-choice--wrong {
+  background: #ffcdd2 !important;
+  border-color: #e53935 !important;
+  animation: lmShake 0.4s ease !important;
+}
+
+/* ── Shared shake ────────────────────────────────── */
+@keyframes lmShake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-8px); }
+  40%      { transform: translateX(8px); }
+  60%      { transform: translateX(-6px); }
+  80%      { transform: translateX(6px); }
+}
+
+/* ── Hear Again button ──────────────────────────── */
 .lm-replay {
   background: rgba(255,255,255,0.8);
   border: 2px solid #a5d6a7;
@@ -129,32 +194,49 @@
   color: #2e7d32;
   cursor: pointer;
   margin-bottom: 16px;
+  transition: transform 0.15s;
 }
+.lm-replay:active { transform: scale(0.95); }
 
+/* ── Feedback banner ─────────────────────────────── */
 .lm-feedback {
   font-size: 22px;
   font-weight: 800;
   padding: 10px 24px;
   border-radius: 16px;
   margin-top: 8px;
+  animation: lmBounceIn 0.3s ease both;
 }
 .lm-feedback--good { background: #c8e6c9; color: #2e7d32; }
 .lm-feedback--bad  { background: #ffcdd2; color: #c62828; }
 
-.lm-shake { animation: lmShake 0.4s ease; }
-@keyframes lmShake {
-  0%,100% { transform: translateX(0); }
-  25%      { transform: translateX(-8px); }
-  75%      { transform: translateX(8px); }
+/* ── Confetti ────────────────────────────────────── */
+.lm-confetti-container {
+  position: fixed;
+  bottom: 45%;
+  left: 50%;
+  pointer-events: none;
+  z-index: 200;
+}
+.lm-confetti-star {
+  position: absolute;
+  animation: lmConfettiFly 1.5s ease-out forwards;
+  line-height: 1;
+}
+@keyframes lmConfettiFly {
+  0%   { transform: translate(0, 0) scale(0.5) rotate(0deg);   opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translate(var(--cx), -280px) scale(1.2) rotate(360deg); opacity: 0; }
 }
 
-/* Done screen */
+/* ── Done screen ─────────────────────────────────── */
 .lm-done {
   display: flex; flex-direction: column; align-items: center;
   gap: 16px; padding: 32px; text-align: center;
   background: white; border-radius: 28px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.12);
   margin-top: 40px;
+  animation: lmBounceIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 .lm-done-emoji { font-size: 48px; }
 .lm-done h2 { font-size: 28px; font-weight: 900; color: #2e7d32; margin: 0; }

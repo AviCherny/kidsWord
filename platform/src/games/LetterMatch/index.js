@@ -19,12 +19,17 @@ const ROUNDS = [
   { type: 'pl', display: '⭐', hint: 'Star',    answer: 'S', choices: ['Q','R','S','T'] },
 ];
 
+const CONFETTI_EMOJIS = ['⭐','🌟','✨','🎉','🎊','💫'];
+
 export default function LetterMatch({ onSuccess, onExit }) {
-  const [roundIdx, setRoundIdx] = useState(0);
-  const [feedback, setFeedback] = useState(null); // 'correct' | 'wrong'
-  const [stars, setStars]       = useState(0);
-  const [done, setDone]         = useState(false);
-  const [shake, setShake]       = useState(false);
+  const [roundIdx, setRoundIdx]     = useState(0);
+  const [feedback, setFeedback]     = useState(null); // 'correct' | 'wrong'
+  const [stars, setStars]           = useState(0);
+  const [done, setDone]             = useState(false);
+  const [wrongChoice, setWrongChoice] = useState(null);
+  const [confetti, setConfetti]     = useState([]);
+  const [mascotMood, setMascotMood] = useState('neutral');
+  const [roundKey, setRoundKey]     = useState(0); // triggers re-animation each round
 
   const round = ROUNDS[roundIdx];
 
@@ -39,23 +44,49 @@ export default function LetterMatch({ onSuccess, onExit }) {
 
   useEffect(() => { askQuestion(roundIdx); }, [roundIdx, askQuestion]);
 
+  function spawnConfetti() {
+    const particles = Array.from({ length: 14 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 340 - 170,
+      emoji: CONFETTI_EMOJIS[i % CONFETTI_EMOJIS.length],
+      delay: Math.random() * 0.35,
+      size: 22 + Math.random() * 16,
+    }));
+    setConfetti(particles);
+    setTimeout(() => setConfetti([]), 1600);
+  }
+
   function handleChoice(choice) {
     if (feedback) return;
     if (choice === round.answer) {
       setFeedback('correct');
+      setMascotMood('happy');
       setStars(s => s + 1);
+      spawnConfetti();
       speak('Great job!', 'en', () => {
         setTimeout(() => {
           const next = roundIdx + 1;
-          if (next >= ROUNDS.length) { setDone(true); }
-          else { setRoundIdx(next); setFeedback(null); }
+          if (next >= ROUNDS.length) {
+            setDone(true);
+          } else {
+            setRoundIdx(next);
+            setFeedback(null);
+            setWrongChoice(null);
+            setMascotMood('neutral');
+            setRoundKey(k => k + 1);
+          }
         }, 300);
       });
     } else {
+      setWrongChoice(choice);
       setFeedback('wrong');
-      setShake(true);
+      setMascotMood('sad');
       speak('Try again!', 'en', () => {
-        setTimeout(() => { setShake(false); setFeedback(null); }, 400);
+        setTimeout(() => {
+          setWrongChoice(null);
+          setFeedback(null);
+          setMascotMood('neutral');
+        }, 400);
       });
     }
   }
@@ -80,10 +111,29 @@ export default function LetterMatch({ onSuccess, onExit }) {
 
   return (
     <div className="lm-root">
+      {/* Confetti layer */}
+      <div className="lm-confetti-container">
+        {confetti.map(p => (
+          <div
+            key={p.id}
+            className="lm-confetti-star"
+            style={{
+              '--cx': `${p.x}px`,
+              animationDelay: `${p.delay}s`,
+              fontSize: `${p.size}px`,
+            }}
+          >
+            {p.emoji}
+          </div>
+        ))}
+      </div>
+
       <div className="lm-header">
         <button className="lm-back" onClick={onExit}>←</button>
         <h1 className="lm-title">🔤 Letter Match</h1>
-        <div className="lm-stars">{'⭐'.repeat(stars)}</div>
+        <div className={`lm-mascot lm-mascot--${mascotMood}`}>
+          {mascotMood === 'happy' ? '🤩' : mascotMood === 'sad' ? '😬' : '🐨'}
+        </div>
       </div>
 
       <div className="lm-progress">
@@ -94,8 +144,8 @@ export default function LetterMatch({ onSuccess, onExit }) {
         {isPhase2 ? '🖼️ Find the Starting Letter' : '🔡 Match the Lowercase'}
       </div>
 
-      {/* Main display */}
-      <div className={`lm-display ${shake ? 'lm-shake' : ''}`}>
+      {/* Main display — re-keyed each round to replay bounce-in */}
+      <div key={`display-${roundKey}`} className="lm-display">
         <div className="lm-big-letter">{round.display}</div>
         <div className="lm-hint">{round.hint}</div>
       </div>
@@ -106,8 +156,8 @@ export default function LetterMatch({ onSuccess, onExit }) {
           : `Which one is the lowercase ${round.display}?`}
       </div>
 
-      {/* Choices */}
-      <div className="lm-choices">
+      {/* Choices — re-keyed each round to replay bounce-in */}
+      <div key={`choices-${roundKey}`} className="lm-choices">
         {round.choices.map((choice, i) => (
           <button
             key={i}
@@ -115,7 +165,9 @@ export default function LetterMatch({ onSuccess, onExit }) {
               'lm-choice',
               feedback === 'correct' && choice === round.answer ? 'lm-choice--correct' : '',
               feedback === 'wrong'   && choice === round.answer ? 'lm-choice--reveal'  : '',
+              wrongChoice === choice ? 'lm-choice--wrong' : '',
             ].join(' ')}
+            style={{ animationDelay: `${i * 0.07}s` }}
             onClick={() => handleChoice(choice)}
           >
             {choice}
