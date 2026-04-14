@@ -326,7 +326,12 @@ function Sidekick({ word, lang, showEnglish }) {
 function Missile({ pos }) {
   const dx = pos.toX - pos.fromX;
   const dy = pos.toY - pos.fromY;
+  const dist = Math.hypot(dx, dy);
   const angle = Math.atan2(dy, dx) * (180 / Math.PI) + 90;
+  // perpendicular arc: bulge sideways so the path curves instead of going straight
+  const arc = Math.min(dist * 0.28, 55);
+  const px = (-dy / dist) * arc;
+  const py = (dx / dist) * arc;
   return (
     <div
       className="ws-missile"
@@ -336,6 +341,8 @@ function Missile({ pos }) {
         '--dx': `${dx}px`,
         '--dy': `${dy}px`,
         '--rot': `${angle}deg`,
+        '--px': `${px}px`,
+        '--py': `${py}px`,
       }}
     >
       <span className="ws-missile-rocket">🚀</span>
