@@ -167,14 +167,74 @@ function Confetti({ active }) {
   );
 }
 
-// ─── SteamPuff ───────────────────────────────────────────────────────────────
-function SteamPuff({ active }) {
-  if (!active) return null;
+// ─── Locomotive ──────────────────────────────────────────────────────────────
+function Locomotive({ moving, showSteam }) {
   return (
-    <div className="nt-steam-wrap" aria-hidden="true">
-      {[0,1,2,3].map(i => (
-        <div key={i} className="nt-steam-puff" style={{ animationDelay: `${i * 100}ms` }} />
-      ))}
+    <div className={`nt-locomotive${moving ? ' nt-locomotive--moving' : ''}`} aria-hidden="true">
+      {showSteam && (
+        <div className="nt-loco-steam">
+          {[0,1,2,3].map(i => (
+            <div key={i} className="nt-steam-puff" style={{ animationDelay: `${i * 110}ms` }} />
+          ))}
+        </div>
+      )}
+      <svg viewBox="0 0 140 90" width="116" height="75" xmlns="http://www.w3.org/2000/svg">
+        {/* Chimney */}
+        <rect x="18" y="7" width="13" height="23" rx="3" fill="#37474f"/>
+        <rect x="13" y="7" width="23" height="6" rx="3" fill="#546e7a"/>
+
+        {/* Boiler */}
+        <rect x="10" y="28" width="88" height="32" rx="10" fill="#e65100"/>
+        <rect x="14" y="30" width="80" height="12" rx="8" fill="rgba(255,255,255,0.13)"/>
+
+        {/* Steam dome */}
+        <ellipse cx="48" cy="28" rx="12" ry="6.5" fill="#ef6c00"/>
+        <ellipse cx="48" cy="26" rx="8" ry="3" fill="rgba(255,255,255,0.18)"/>
+
+        {/* Headlight */}
+        <circle cx="10" cy="44" r="6.5" fill="#ffd54f"/>
+        <circle cx="10" cy="44" r="3.5" fill="#fffde7"/>
+
+        {/* Cab body */}
+        <rect x="90" y="14" width="40" height="46" rx="4" fill="#c62828"/>
+        {/* Cab roof */}
+        <rect x="86" y="12" width="46" height="8" rx="3" fill="#b71c1c"/>
+        {/* Cab highlight */}
+        <rect x="92" y="14" width="38" height="6" rx="3" fill="rgba(255,255,255,0.1)"/>
+        {/* Cab windows */}
+        <rect x="94" y="22" width="13" height="15" rx="3" fill="#b3e5fc" fillOpacity="0.9"/>
+        <rect x="113" y="22" width="12" height="15" rx="3" fill="#b3e5fc" fillOpacity="0.9"/>
+
+        {/* Chassis */}
+        <rect x="8" y="58" width="124" height="7" rx="2" fill="#455a64"/>
+        <rect x="8" y="58" width="124" height="3" rx="2" fill="rgba(255,255,255,0.1)"/>
+
+        {/* Big drive wheels */}
+        {[34, 68].map((cx, wi) => (
+          <g key={wi}>
+            <circle cx={cx} cy={72} r="15" fill="#212121" stroke="#37474f" strokeWidth="2.5"/>
+            <circle cx={cx} cy={72} r="6" fill="#37474f"/>
+            <circle cx={cx} cy={72} r="2.2" fill="#90a4ae"/>
+            <line x1={cx} y1={57} x2={cx} y2={87} stroke="#455a64" strokeWidth="1.5"/>
+            <line x1={cx-15} y1={72} x2={cx+15} y2={72} stroke="#455a64" strokeWidth="1.5"/>
+            <line x1={cx-10.6} y1={61.4} x2={cx+10.6} y2={82.6} stroke="#455a64" strokeWidth="1.5"/>
+            <line x1={cx+10.6} y1={61.4} x2={cx-10.6} y2={82.6} stroke="#455a64" strokeWidth="1.5"/>
+          </g>
+        ))}
+
+        {/* Small trailing wheel (under cab) */}
+        <circle cx="110" cy="75" r="10" fill="#212121" stroke="#37474f" strokeWidth="2"/>
+        <circle cx="110" cy="75" r="4" fill="#37474f"/>
+        <circle cx="110" cy="75" r="1.5" fill="#90a4ae"/>
+
+        {/* Connecting rod */}
+        <rect x="32" y="70" width="38" height="4" rx="2" fill="#607d8b"/>
+
+        {/* Cowcatcher */}
+        <polygon points="10,59 0,78 10,73" fill="#607d8b"/>
+        <line x1="1" y1="70" x2="10" y2="61" stroke="#546e7a" strokeWidth="1.2"/>
+        <line x1="1" y1="76" x2="10" y2="67" stroke="#546e7a" strokeWidth="1.2"/>
+      </svg>
     </div>
   );
 }
@@ -328,26 +388,24 @@ export default function NumberTrain({ onSuccess, onExit }) {
         {feedback === 'wrong' ? s.promptWrong : s.prompt}
       </p>
 
-      {/* Steam */}
-      <SteamPuff active={showSteam} />
-
       {/* ── Train ── */}
       <div className={`nt-train-scene ${shake ? 'nt-shake' : ''} ${trainMoving ? 'nt-train--moving' : ''}`}>
         {/* Track rail behind wagons */}
         <div className="nt-inline-rail" />
 
         <div className="nt-wagons-row">
+          <Locomotive moving={trainMoving} showSteam={showSteam} />
+          <div className="nt-coupler" />
+
           {round.seq.map((num, i) => {
-            const isGap   = i === round.gapIdx;
-            const filled  = isGap && feedback === 'correct';
-            const isLoco  = i === 0;
+            const isGap  = i === round.gapIdx;
+            const filled = isGap && feedback === 'correct';
 
             return (
               <React.Fragment key={i}>
                 <button
                   className={[
                     'nt-wagon',
-                    isLoco  ? 'nt-wagon--loco'   : '',
                     isGap   ? 'nt-wagon--gap'     : '',
                     filled  ? 'nt-wagon--filled'  : '',
                     isGap && gapHint ? 'nt-wagon--hint' : '',
@@ -356,7 +414,6 @@ export default function NumberTrain({ onSuccess, onExit }) {
                   onClick={() => handleWagonTap(num, i, isGap)}
                   aria-label={isGap ? '?' : String(num)}
                 >
-                  <span className="nt-wagon-icon">{isLoco ? '🚂' : '🚃'}</span>
                   <span className="nt-wagon-num">
                     {isGap ? (filled ? num : '?') : num}
                   </span>

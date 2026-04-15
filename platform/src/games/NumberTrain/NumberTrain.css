@@ -218,27 +218,55 @@
 }
 
 /* ──────────────────────────────────────────
-   Steam puffs
+   Locomotive
 ────────────────────────────────────────── */
-.nt-steam-wrap {
-  position: absolute;
-  top: 118px;
-  left: 22px;
+.nt-locomotive {
+  position: relative;
+  flex-shrink: 0;
   display: flex;
-  gap: 5px;
-  z-index: 10;
+  align-items: flex-end;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 6px 14px rgba(0,0,0,0.35));
+}
+
+/* Spin wheels (and very subtle bounce) when train moves */
+.nt-locomotive--moving svg {
+  animation: locoChug 0.28s ease-in-out infinite;
+}
+@keyframes locoChug {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-3px); }
+}
+
+/* Spin wagon wheels when scene is moving */
+.nt-train--moving .nt-wheel {
+  animation: wheelSpin 0.45s linear infinite;
+}
+@keyframes wheelSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Steam puffs — positioned above the chimney (≈15px from SVG left, near top) */
+.nt-loco-steam {
+  position: absolute;
+  top: -4px;
+  left: 15px;
+  display: flex;
+  gap: 4px;
   pointer-events: none;
+  z-index: 10;
 }
 .nt-steam-puff {
-  width: 20px; height: 20px;
-  background: rgba(255,255,255,0.92);
+  width: 18px; height: 18px;
+  background: rgba(255,255,255,0.93);
   border-radius: 50%;
-  animation: steamRise 0.85s ease-out forwards;
+  animation: steamRise 0.9s ease-out forwards;
   box-shadow: 0 0 8px rgba(255,255,255,0.6);
 }
 @keyframes steamRise {
-  0%   { transform: translateY(0) scale(0.4); opacity: 1; }
-  100% { transform: translateY(-60px) scale(3); opacity: 0; }
+  0%   { transform: translateY(0) scale(0.35); opacity: 1; }
+  100% { transform: translateY(-70px) scale(3.2); opacity: 0; }
 }
 
 /* ──────────────────────────────────────────
@@ -323,9 +351,9 @@
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s, border-color 0.3s, background 0.3s;
   position: relative;
-  /* Add wagon body depth */
   background: linear-gradient(160deg, #ffffff 60%, #e8eaf6 100%);
   margin-bottom: 4px;
+  padding: 14px 10px 6px;
 }
 .nt-wagon:hover {
   transform: translateY(-4px);
@@ -335,16 +363,6 @@
   transform: translateY(0) scale(0.95);
 }
 
-/* Locomotive — bigger, distinct color */
-.nt-wagon--loco {
-  background: linear-gradient(160deg, #ff8f00 0%, #e65100 100%);
-  border-color: #bf360c;
-  min-width: clamp(68px, 17vw, 88px);
-  padding: 10px 12px 6px;
-  box-shadow: 0 8px 24px rgba(230,81,0,0.45), inset 0 1px 0 rgba(255,255,255,0.3);
-}
-.nt-wagon--loco .nt-wagon-num { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
-.nt-wagon--loco .nt-wagon-icon { font-size: clamp(1.6rem, 5vw, 2.2rem); }
 
 /* Gap wagon */
 .nt-wagon--gap {
@@ -390,12 +408,6 @@
   transform: translateY(-6px) scale(1.06) !important;
 }
 
-.nt-wagon-icon {
-  font-size: clamp(1.2rem, 3.8vw, 1.6rem);
-  line-height: 1;
-  margin-bottom: 2px;
-}
-
 .nt-wagon-num {
   font-size: clamp(1.1rem, 4vw, 1.5rem);
   font-weight: 900;
@@ -434,11 +446,6 @@
   background: #b0bec5;
   border-radius: 50%;
 }
-/* Locomotive wheels bigger */
-.nt-wagon--loco .nt-wheel {
-  width: 18px; height: 18px;
-}
-
 /* Coupler between wagons */
 .nt-coupler {
   width: 14px;
