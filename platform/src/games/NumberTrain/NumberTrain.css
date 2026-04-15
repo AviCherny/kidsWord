@@ -1,13 +1,19 @@
 /* ──────────────────────────────────────────
-   Root & background
+   Root & sky background
 ────────────────────────────────────────── */
 .nt-root {
   min-height: 100dvh;
-  background: linear-gradient(180deg, #87ceeb 0%, #b0e0ff 35%, #d4f0ff 60%, #7ec850 60%, #5aaa30 100%);
+  background: linear-gradient(180deg,
+    #5ab4e5 0%,
+    #87ceeb 40%,
+    #b8e4f9 58%,
+    #7ec850 58%,
+    #5aaa30 100%
+  );
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 12px 160px;
+  padding: 0 12px 170px;
   font-family: 'Nunito', 'Segoe UI', Arial, sans-serif;
   overflow: hidden;
   position: relative;
@@ -25,108 +31,100 @@
 
 .nt-sun {
   position: absolute;
-  top: 8%;
-  right: 8%;
-  font-size: 2.8rem;
+  top: 6%;
+  right: 6%;
+  font-size: 3rem;
   animation: sunPulse 4s ease-in-out infinite;
-  filter: drop-shadow(0 0 12px rgba(255,220,0,0.7));
+  filter: drop-shadow(0 0 14px rgba(255,220,0,0.8));
 }
 @keyframes sunPulse {
   0%,100% { transform: scale(1) rotate(-5deg); }
-  50%      { transform: scale(1.1) rotate(5deg); }
+  50%      { transform: scale(1.12) rotate(5deg); }
 }
 
 .nt-cloud {
   position: absolute;
-  font-size: 2.4rem;
-  opacity: 0.85;
+  opacity: 0.88;
   animation: cloudFloat linear infinite;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
 }
-.nt-cloud--1 { top: 6%;  animation-duration: 18s; animation-delay: 0s; }
-.nt-cloud--2 { top: 15%; animation-duration: 22s; animation-delay: -8s; font-size: 1.8rem; }
-.nt-cloud--3 { top: 10%; animation-duration: 26s; animation-delay: -14s; }
+.nt-cloud--1 { top: 5%;  font-size: 2.6rem; animation-duration: 20s; animation-delay: 0s; }
+.nt-cloud--2 { top: 13%; font-size: 1.9rem; animation-duration: 26s; animation-delay: -9s; }
+.nt-cloud--3 { top: 8%;  font-size: 2.2rem; animation-duration: 32s; animation-delay: -17s; }
 @keyframes cloudFloat {
-  from { transform: translateX(-140px); }
-  to   { transform: translateX(calc(100vw + 140px)); }
+  from { transform: translateX(-160px); }
+  to   { transform: translateX(calc(100vw + 160px)); }
 }
 
 .nt-bird {
   position: absolute;
   font-size: 1rem;
-  opacity: 0.7;
+  opacity: 0.65;
   animation: birdFly linear infinite;
 }
-.nt-bird--1 { top: 22%; animation-duration: 14s; animation-delay: -2s; }
-.nt-bird--2 { top: 28%; animation-duration: 19s; animation-delay: -9s; font-size: 0.8rem; }
+.nt-bird--1 { top: 20%; animation-duration: 16s; animation-delay: -3s; }
+.nt-bird--2 { top: 26%; font-size: 0.75rem; animation-duration: 22s; animation-delay: -11s; }
 @keyframes birdFly {
   from { transform: translateX(-60px) scaleX(-1); }
   to   { transform: translateX(calc(100vw + 60px)) scaleX(-1); }
 }
 
 /* ──────────────────────────────────────────
-   Landscape at bottom
+   Landscape at bottom (hills + track)
 ────────────────────────────────────────── */
 .nt-landscape {
   position: absolute;
   bottom: 0;
   left: 0; right: 0;
-  height: 140px;
+  height: 160px;
   pointer-events: none;
   z-index: 0;
 }
 
 .nt-hills {
   position: absolute;
-  bottom: 50px;
+  bottom: 56px;
   left: 0; right: 0;
-  height: 70px;
+  height: 80px;
   background:
-    radial-gradient(ellipse 120px 60px at 15% 100%, #4caf50 99%, transparent 100%),
-    radial-gradient(ellipse 140px 55px at 45% 100%, #66bb6a 99%, transparent 100%),
-    radial-gradient(ellipse 120px 50px at 72% 100%, #43a047 99%, transparent 100%),
-    radial-gradient(ellipse 100px 45px at 92% 100%, #5dbf61 99%, transparent 100%);
+    radial-gradient(ellipse 130px 65px at 12% 100%, #4caf50 99%, transparent 100%),
+    radial-gradient(ellipse 160px 60px at 38% 100%, #66bb6a 99%, transparent 100%),
+    radial-gradient(ellipse 130px 55px at 65% 100%, #43a047 99%, transparent 100%),
+    radial-gradient(ellipse 110px 50px at 90% 100%, #5dbf61 99%, transparent 100%);
 }
 
 .nt-track {
   position: absolute;
-  bottom: 0;
-  left: 0; right: 0;
-  height: 50px;
-  background: #8d6e63;
+  bottom: 0; left: 0; right: 0;
+  height: 56px;
+  background: #795548;
   overflow: hidden;
 }
-.nt-track::before {
-  content: '';
-  position: absolute;
-  top: 18px;
-  left: 0; right: 0;
-  height: 6px;
-  background: #6d4c41;
-}
+.nt-track::before,
 .nt-track::after {
   content: '';
   position: absolute;
-  top: 28px;
   left: 0; right: 0;
-  height: 6px;
-  background: #6d4c41;
+  height: 7px;
+  background: #5d4037;
+  border-radius: 3px;
 }
+.nt-track::before { top: 12px; }
+.nt-track::after  { top: 26px; }
+
 .nt-track-ties {
   position: absolute;
-  top: 10px;
-  left: 0; right: 0;
-  height: 30px;
+  inset: 0;
   background: repeating-linear-gradient(
     90deg,
-    #5d4037 0px, #5d4037 18px,
-    transparent 18px, transparent 36px
+    #4e342e 0px, #4e342e 20px,
+    transparent 20px, transparent 40px
   );
-  animation: trackScroll 1.2s linear infinite;
+  animation: trackScroll 0.9s linear infinite;
 }
 @keyframes trackScroll {
   from { transform: translateX(0); }
-  to   { transform: translateX(-36px); }
+  to   { transform: translateX(-40px); }
 }
 
 /* ──────────────────────────────────────────
@@ -136,15 +134,15 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 540px;
+  max-width: 580px;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 0 8px;
+  padding: 14px 0 6px;
 }
 
 .nt-back {
-  background: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.75);
   border: 2px solid rgba(255,255,255,0.9);
   border-radius: 50%;
   width: 42px; height: 42px;
@@ -161,17 +159,16 @@
 
 .nt-title {
   flex: 1;
-  font-size: clamp(1.2rem, 4.5vw, 1.6rem);
+  font-size: clamp(1.1rem, 4vw, 1.55rem);
   font-weight: 900;
   color: #fff;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 20px rgba(230,81,0,0.5);
-  letter-spacing: 0.5px;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.45);
 }
 
 .nt-star-count {
   font-size: 1rem;
   letter-spacing: -2px;
-  min-width: 40px;
+  min-width: 44px;
   text-align: right;
 }
 
@@ -180,15 +177,14 @@
 ────────────────────────────────────────── */
 .nt-progress {
   width: 100%;
-  max-width: 540px;
+  max-width: 580px;
   height: 10px;
-  background: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.35);
   border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   position: relative;
   z-index: 1;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
 .nt-progress-fill {
   height: 100%;
@@ -204,19 +200,19 @@
 }
 
 /* ──────────────────────────────────────────
-   Prompt
+   Prompt label
 ────────────────────────────────────────── */
 .nt-prompt {
-  font-size: clamp(1rem, 3.5vw, 1.2rem);
+  font-size: clamp(0.95rem, 3.2vw, 1.15rem);
   font-weight: 800;
   color: #fff;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   text-align: center;
   position: relative;
   z-index: 1;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  text-shadow: 0 1px 6px rgba(0,0,0,0.3);
   background: rgba(0,0,0,0.18);
-  padding: 6px 20px;
+  padding: 5px 20px;
   border-radius: 30px;
   backdrop-filter: blur(4px);
 }
@@ -226,135 +222,232 @@
 ────────────────────────────────────────── */
 .nt-steam-wrap {
   position: absolute;
-  top: 130px;
-  left: 20px;
+  top: 118px;
+  left: 22px;
   display: flex;
-  gap: 4px;
+  gap: 5px;
   z-index: 10;
   pointer-events: none;
 }
 .nt-steam-puff {
-  width: 18px;
-  height: 18px;
-  background: rgba(255,255,255,0.9);
+  width: 20px; height: 20px;
+  background: rgba(255,255,255,0.92);
   border-radius: 50%;
-  animation: steamRise 0.8s ease-out forwards;
+  animation: steamRise 0.85s ease-out forwards;
+  box-shadow: 0 0 8px rgba(255,255,255,0.6);
 }
 @keyframes steamRise {
-  0%   { transform: translateY(0) scale(0.5); opacity: 0.9; }
-  100% { transform: translateY(-50px) scale(2.5); opacity: 0; }
+  0%   { transform: translateY(0) scale(0.4); opacity: 1; }
+  100% { transform: translateY(-60px) scale(3); opacity: 0; }
 }
 
 /* ──────────────────────────────────────────
-   Train wagons
+   Train scene (inline rail + wagons)
 ────────────────────────────────────────── */
-.nt-train {
-  display: flex;
-  align-items: flex-end;
-  gap: 0;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  max-width: 100%;
-  padding: 10px 6px 18px;
+.nt-train-scene {
   position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: 620px;
+  overflow-x: auto;
   scrollbar-width: none;
+  padding: 6px 8px 32px;
 }
-.nt-train::-webkit-scrollbar { display: none; }
+.nt-train-scene::-webkit-scrollbar { display: none; }
 
-.nt-train--moving {
-  animation: trainChug 0.35s ease-in-out 2;
-}
-@keyframes trainChug {
-  0%,100% { transform: translateX(0); }
-  50%      { transform: translateX(6px); }
-}
-
+/* Shaking scene on wrong */
 @keyframes nt-shake {
   0%,100% { transform: translateX(0); }
-  20%     { transform: translateX(-12px) rotate(-1deg); }
-  40%     { transform: translateX(12px) rotate(1deg); }
-  60%     { transform: translateX(-8px) rotate(-0.5deg); }
-  80%     { transform: translateX(8px) rotate(0.5deg); }
+  20%     { transform: translateX(-14px) rotate(-1.5deg); }
+  40%     { transform: translateX(14px) rotate(1.5deg); }
+  60%     { transform: translateX(-8px) rotate(-0.8deg); }
+  80%     { transform: translateX(8px) rotate(0.8deg); }
 }
 .nt-shake { animation: nt-shake 0.45s ease; }
 
-.nt-wagon-wrap {
+/* Chug animation on correct */
+@keyframes trainChug {
+  0%,100% { transform: translateX(0); }
+  25%     { transform: translateX(8px); }
+  75%     { transform: translateX(-4px); }
+}
+.nt-train--moving { animation: trainChug 0.3s ease 3; }
+
+/* Rail line that runs behind wagons */
+.nt-inline-rail {
+  position: absolute;
+  left: 8px; right: 8px;
+  bottom: 26px;
+  height: 8px;
+  background: #5d4037;
+  border-radius: 4px;
+  box-shadow: 0 3px 0 #4e342e;
+}
+.nt-inline-rail::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    #4e342e 0px, #4e342e 10px,
+    transparent 10px, transparent 22px
+  );
+  border-radius: 4px;
+  opacity: 0.5;
+}
+
+.nt-wagons-row {
   display: flex;
   align-items: flex-end;
+  gap: 0;
+  width: max-content;
+  min-width: 100%;
+  justify-content: center;
 }
 
-.nt-link {
-  font-size: 0.85rem;
-  margin: 0 -2px 12px;
-  opacity: 0.6;
-}
-
+/* ──────────────────────────────────────────
+   Individual wagon
+────────────────────────────────────────── */
 .nt-wagon {
   display: flex;
   flex-direction: column;
   align-items: center;
   background: white;
-  border-radius: 16px;
+  border-radius: 14px 14px 8px 8px;
   padding: 8px 10px 6px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.2), 0 2px 6px rgba(0,0,0,0.1);
-  min-width: clamp(56px, 14vw, 72px);
-  border: 3px solid rgba(255,255,255,0.8);
-  transition: border-color 0.3s, background 0.3s;
+  box-shadow:
+    0 6px 18px rgba(0,0,0,0.2),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  min-width: clamp(58px, 15vw, 76px);
+  border: 3px solid rgba(200,200,220,0.6);
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.3s, background 0.3s;
   position: relative;
+  /* Add wagon body depth */
+  background: linear-gradient(160deg, #ffffff 60%, #e8eaf6 100%);
+  margin-bottom: 4px;
 }
-/* Wheels */
-.nt-wagon::after {
-  content: '⚙️⚙️';
-  position: absolute;
-  bottom: -14px;
-  font-size: 0.75rem;
-  opacity: 0.6;
-  letter-spacing: -4px;
+.nt-wagon:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.22);
+}
+.nt-wagon:active {
+  transform: translateY(0) scale(0.95);
 }
 
+/* Locomotive — bigger, distinct color */
+.nt-wagon--loco {
+  background: linear-gradient(160deg, #ff8f00 0%, #e65100 100%);
+  border-color: #bf360c;
+  min-width: clamp(68px, 17vw, 88px);
+  padding: 10px 12px 6px;
+  box-shadow: 0 8px 24px rgba(230,81,0,0.45), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+.nt-wagon--loco .nt-wagon-num { color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.3); }
+.nt-wagon--loco .nt-wagon-icon { font-size: clamp(1.6rem, 5vw, 2.2rem); }
+
+/* Gap wagon */
 .nt-wagon--gap {
-  background: linear-gradient(135deg, #fff9c4, #ffe082);
+  background: linear-gradient(160deg, #fff9c4, #ffe082);
   border-color: #f9a825;
   border-style: dashed;
   animation: wagGlow 1s ease-in-out infinite;
 }
 @keyframes wagGlow {
-  0%,100% { box-shadow: 0 6px 18px rgba(249,168,37,0.4), 0 0 0 0 rgba(249,168,37,0.3); }
-  50%      { box-shadow: 0 8px 28px rgba(249,168,37,0.7), 0 0 0 8px rgba(249,168,37,0); }
+  0%,100% { box-shadow: 0 6px 18px rgba(249,168,37,0.4), 0 0 0 0 rgba(249,168,37,0); }
+  50%      { box-shadow: 0 8px 28px rgba(249,168,37,0.7), 0 0 0 10px rgba(249,168,37,0); }
 }
 
+/* Hint wiggle on gap wagon */
+.nt-wagon--hint {
+  animation: hintWiggle 0.5s ease-in-out !important;
+}
+@keyframes hintWiggle {
+  0%,100% { transform: translateY(0) rotate(0); }
+  20%     { transform: translateY(-6px) rotate(-6deg); }
+  50%     { transform: translateY(-8px) rotate(6deg); }
+  80%     { transform: translateY(-4px) rotate(-3deg); }
+}
+
+/* Filled wagon (correct) */
 .nt-wagon--filled {
-  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-  border-color: #43a047;
-  border-style: solid;
-  animation: wagonFill 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  background: linear-gradient(160deg, #e8f5e9, #c8e6c9) !important;
+  border-color: #43a047 !important;
+  border-style: solid !important;
+  animation: wagonFill 0.5s cubic-bezier(0.34,1.56,0.64,1) !important;
 }
 @keyframes wagonFill {
   0%   { transform: scale(0.6) rotate(-5deg); }
   70%  { transform: scale(1.12) rotate(2deg); }
   100% { transform: scale(1) rotate(0); }
 }
+.nt-wagon--filled .nt-wagon-num { color: #2e7d32 !important; }
 
-.nt-wagon-emoji {
-  font-size: clamp(1.4rem, 4.5vw, 1.8rem);
+/* Tapped flash */
+.nt-wagon--tapped {
+  background: linear-gradient(160deg, #e3f2fd, #bbdefb) !important;
+  border-color: #1565c0 !important;
+  transform: translateY(-6px) scale(1.06) !important;
+}
+
+.nt-wagon-icon {
+  font-size: clamp(1.2rem, 3.8vw, 1.6rem);
   line-height: 1;
+  margin-bottom: 2px;
 }
 
 .nt-wagon-num {
   font-size: clamp(1.1rem, 4vw, 1.5rem);
   font-weight: 900;
   color: #1a237e;
-  margin-top: 2px;
 }
 .nt-wagon--gap .nt-wagon-num {
   color: #e65100;
   font-size: clamp(1.4rem, 5.5vw, 2rem);
-  animation: questionPulse 0.8s ease-in-out infinite;
+  animation: questionPulse 0.9s ease-in-out infinite;
 }
 @keyframes questionPulse {
   0%,100% { transform: scale(1); }
-  50%      { transform: scale(1.15); }
+  50%      { transform: scale(1.2); }
+}
+
+/* Wheels */
+.nt-wagon-wheels {
+  display: flex;
+  gap: 8px;
+  margin-top: 5px;
+}
+.nt-wheel {
+  width: 14px; height: 14px;
+  background: radial-gradient(circle at 38% 38%, #78909c, #37474f);
+  border-radius: 50%;
+  border: 2px solid #263238;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+  position: relative;
+}
+.nt-wheel::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px; height: 4px;
+  background: #b0bec5;
+  border-radius: 50%;
+}
+/* Locomotive wheels bigger */
+.nt-wagon--loco .nt-wheel {
+  width: 18px; height: 18px;
+}
+
+/* Coupler between wagons */
+.nt-coupler {
+  width: 14px;
+  height: 8px;
+  background: linear-gradient(180deg, #9e9e9e, #616161);
+  border-radius: 3px;
+  margin-bottom: 20px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 /* ──────────────────────────────────────────
@@ -363,8 +456,8 @@
 .nt-choices-label {
   font-size: 0.85rem;
   font-weight: 700;
-  color: rgba(255,255,255,0.85);
-  margin: 18px 0 8px;
+  color: rgba(255,255,255,0.9);
+  margin: 14px 0 8px;
   text-shadow: 0 1px 4px rgba(0,0,0,0.3);
   position: relative;
   z-index: 1;
@@ -380,38 +473,41 @@
 }
 
 .nt-choice {
-  width: clamp(78px, 22vw, 96px);
-  height: clamp(78px, 22vw, 96px);
-  background: linear-gradient(145deg, #fff, #f5f5f5);
+  width: clamp(80px, 22vw, 100px);
+  height: clamp(80px, 22vw, 100px);
+  background: linear-gradient(145deg, #fff 60%, #f0f4ff);
   border: 4px solid rgba(255,255,255,0.8);
   border-radius: 24px;
   cursor: pointer;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2), 0 3px 8px rgba(0,0,0,0.12);
-  transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18), 0 3px 8px rgba(0,0,0,0.10);
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.2s, border-color 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
 }
+/* Shine overlay */
 .nt-choice::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 45%;
-  background: rgba(255,255,255,0.4);
-  border-radius: 20px 20px 50% 50%;
+  height: 42%;
+  background: rgba(255,255,255,0.45);
+  border-radius: 20px 20px 60% 60%;
 }
 .nt-choice:hover:not(:disabled) {
-  transform: scale(1.1) translateY(-4px);
-  box-shadow: 0 14px 32px rgba(0,0,0,0.25);
+  transform: scale(1.12) translateY(-5px);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.22);
   border-color: #ffd54f;
 }
-.nt-choice:active:not(:disabled) { transform: scale(0.92); }
+.nt-choice:active:not(:disabled) {
+  transform: scale(0.92);
+}
 .nt-choice:disabled { cursor: default; }
 
 .nt-choice-num {
-  font-size: clamp(1.5rem, 5.5vw, 2rem);
+  font-size: clamp(1.5rem, 6vw, 2.1rem);
   font-weight: 900;
   color: #1a237e;
   position: relative;
@@ -426,12 +522,13 @@
 .nt-choice--correct .nt-choice-num { color: #2e7d32; }
 @keyframes correctBounce {
   0%   { transform: scale(0.7); }
-  60%  { transform: scale(1.15); }
+  60%  { transform: scale(1.18); }
   100% { transform: scale(1); }
 }
 
 .nt-choice--dim:not(.nt-choice--correct) {
-  opacity: 0.45;
+  opacity: 0.4;
+  transform: scale(0.95) !important;
 }
 
 /* ──────────────────────────────────────────
@@ -439,7 +536,7 @@
 ────────────────────────────────────────── */
 .nt-confetti-root {
   position: fixed;
-  bottom: 40%;
+  bottom: 45%;
   left: 0; right: 0;
   height: 0;
   pointer-events: none;
@@ -447,14 +544,13 @@
 }
 .nt-confetti-piece {
   position: absolute;
-  border-radius: 3px;
-  animation: confettiBurst 1s ease-out forwards;
+  animation: confettiBurst 1.1s ease-out forwards;
 }
 @keyframes confettiBurst {
-  0%   { transform: translate(0,0) rotate(0deg) scale(1); opacity: 1; }
+  0%   { transform: translate(0,0) rotate(0deg); opacity: 1; }
   80%  { opacity: 1; }
   100% {
-    transform: translate(var(--vx), var(--vy)) rotate(calc(var(--rot) * 3)) scale(0.5);
+    transform: translate(var(--vx), var(--vy)) rotate(calc(var(--rot) * 4));
     opacity: 0;
   }
 }
@@ -474,20 +570,21 @@
   z-index: 1;
 }
 .nt-done-emoji {
-  font-size: 4.5rem;
+  font-size: 5rem;
   animation: doneFloat 2s ease-in-out infinite;
 }
 @keyframes doneFloat {
   0%,100% { transform: translateY(0) rotate(-5deg); }
-  50%      { transform: translateY(-12px) rotate(5deg); }
+  50%      { transform: translateY(-14px) rotate(5deg); }
 }
 .nt-done h2 {
   font-size: 2.2rem;
   font-weight: 900;
   color: white;
   text-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  margin: 0;
 }
-.nt-done p   { color: rgba(255,255,255,0.9); font-size: 1.1rem; font-weight: 700; }
+.nt-done p   { color: rgba(255,255,255,0.92); font-size: 1.1rem; font-weight: 700; margin: 0; }
 .nt-done-stars { font-size: 2rem; letter-spacing: -2px; }
 
 .nt-btn {
@@ -504,7 +601,7 @@
   color: #1a237e;
   box-shadow: 0 6px 20px rgba(255,143,0,0.5);
 }
-.nt-btn--primary:hover { transform: scale(1.05); box-shadow: 0 8px 28px rgba(255,143,0,0.6); }
+.nt-btn--primary:hover { transform: scale(1.05); }
 .nt-btn--ghost {
   background: rgba(255,255,255,0.2);
   color: white;
