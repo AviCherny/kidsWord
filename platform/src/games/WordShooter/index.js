@@ -240,7 +240,7 @@ export default function WordShooter({ onSuccess, onExit }) {
   if (screen === 'start') return (
     <div className="ws-screen ws-start" dir={dir}>
       <div className="ws-game-title">{t(lang, 'wordShooterTitle').replace('\\n', '\n')}</div>
-      <div className="ws-hero-icon ws-hero-idle">🏎️</div>
+      <div className="ws-hero-icon ws-hero-idle">🔫</div>
       <button className="ws-btn-primary" onClick={() => setScreen('game')}>{t(lang, 'play')}</button>
       <button className="ws-exit-link" onClick={onExit}>←</button>
     </div>
@@ -329,7 +329,7 @@ export default function WordShooter({ onSuccess, onExit }) {
 
       <div className="ws-hero-area">
         <div ref={heroRef} className={`ws-hero-wrap${phase === 'shooting' ? ' ws-hero-shooting' : ' ws-hero-idle-anim'}`}>
-          <span className="ws-hero-emoji">🏎️</span>
+          <span className="ws-hero-emoji">🔫</span>
           {phase === 'shooting' && <span className="ws-chest-burst">✨</span>}
         </div>
       </div>
