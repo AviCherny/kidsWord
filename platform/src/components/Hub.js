@@ -54,14 +54,6 @@ const CATEGORIES = [
         glow: 'rgba(46,125,50,0.4)',
       },
       {
-        id: 'spellingbee',
-        emoji: '🐝',
-        nameKey: 'spellingBeeName',
-        descKey: 'spellingBeeDesc',
-        bg: 'linear-gradient(145deg, #f57f17, #ffca28)',
-        glow: 'rgba(245,127,23,0.4)',
-      },
-      {
         id: 'wordrace',
         emoji: '🏎️',
         nameKey: 'wordRaceName',

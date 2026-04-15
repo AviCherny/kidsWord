@@ -13,7 +13,6 @@ import NumberTrain from './games/NumberTrain';
 import ShapeSorter from './games/ShapeSorter';
 import LegoBuilder from './games/LegoBuilder';
 import LetterMatch from './games/LetterMatch';
-import SpellingBee from './games/SpellingBee';
 import WordRace from './games/WordRace';
 import PicturePuzzle from './games/PicturePuzzle';
 import BubblePop from './games/BubblePop';
@@ -31,7 +30,6 @@ const GAME_COMPONENTS = {
   social:        SocialSkills,
   shooter:       WordShooter,
   lettermatch:   LetterMatch,
-  spellingbee:   SpellingBee,
   wordrace:      WordRace,
   picturepuzzle: PicturePuzzle,
   bubblepop:     BubblePop,
