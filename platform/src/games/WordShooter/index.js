@@ -240,7 +240,7 @@ export default function WordShooter({ onSuccess, onExit }) {
   if (screen === 'start') return (
     <div className="ws-screen ws-start" dir={dir}>
       <div className="ws-game-title">{t(lang, 'wordShooterTitle').replace('\\n', '\n')}</div>
-      <div className="ws-hero-icon ws-hero-idle">🦸</div>
+      <div className="ws-hero-icon ws-hero-idle">🏎️</div>
       <button className="ws-btn-primary" onClick={() => setScreen('game')}>{t(lang, 'play')}</button>
       <button className="ws-exit-link" onClick={onExit}>←</button>
     </div>
@@ -272,6 +272,12 @@ export default function WordShooter({ onSuccess, onExit }) {
 
   return (
     <div className="ws-screen ws-game" dir={dir}>
+      <div className="ws-road-overlay" aria-hidden="true">
+        <div className="ws-road-center" />
+        <div className="ws-road-edge ws-road-edge-left" />
+        <div className="ws-road-edge ws-road-edge-right" />
+      </div>
+
       <div className="ws-hud">
         <span className="ws-hud-stars">🌟 {stars}</span>
         <div className="ws-progress-bar-wrap">
@@ -298,27 +304,32 @@ export default function WordShooter({ onSuccess, onExit }) {
         {round?.objects.map((obj, i) => (
           <div
             key={`${round.target.word}-${i}`}
-            ref={el => objectRefs.current[i] = el}
-            className={[
-              'ws-obj-card', floatClass,
-              obj.isDistractor ? 'ws-obj-distractor' : '',
-              obj.isDistractor && distractorShake ? 'ws-obj-distractor-shake' : '',
-              glowIndex === i ? 'ws-obj-glow' : '',
-              explosionIndex === i && correct === true  ? 'ws-obj-explode-correct' : '',
-              explosionIndex === i && correct === false ? 'ws-obj-explode-wrong' : '',
-            ].join(' ')}
-            style={{ animationDelay: `${i * 0.35}s` }}
-            onClick={() => handleTap(obj, i)}
+            className="ws-obj-lane"
+            style={{ animationDelay: `${i * 0.1}s` }}
           >
-            <span className={`ws-obj-emoji ${EMOJI_ANIM[obj.word] || 'ws-anim-pulse'}`}>{obj.emoji}</span>
-            <span className="ws-obj-label">{objLabel(obj)}</span>
+            <div
+              ref={el => objectRefs.current[i] = el}
+              className={[
+                'ws-obj-card', floatClass,
+                obj.isDistractor ? 'ws-obj-distractor' : '',
+                obj.isDistractor && distractorShake ? 'ws-obj-distractor-shake' : '',
+                glowIndex === i ? 'ws-obj-glow' : '',
+                explosionIndex === i && correct === true  ? 'ws-obj-explode-correct' : '',
+                explosionIndex === i && correct === false ? 'ws-obj-explode-wrong' : '',
+              ].join(' ')}
+              style={{ animationDelay: `${i * 0.35}s` }}
+              onClick={() => handleTap(obj, i)}
+            >
+              <span className={`ws-obj-emoji ${EMOJI_ANIM[obj.word] || 'ws-anim-pulse'}`}>{obj.emoji}</span>
+              <span className="ws-obj-label">{objLabel(obj)}</span>
+            </div>
           </div>
         ))}
       </div>
 
       <div className="ws-hero-area">
         <div ref={heroRef} className={`ws-hero-wrap${phase === 'shooting' ? ' ws-hero-shooting' : ' ws-hero-idle-anim'}`}>
-          <span className="ws-hero-emoji">🦸</span>
+          <span className="ws-hero-emoji">🏎️</span>
           {phase === 'shooting' && <span className="ws-chest-burst">✨</span>}
         </div>
       </div>
