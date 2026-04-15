@@ -54,6 +54,7 @@ export default function App() {
   const [highlight, setHighlight] = useState(null);
   const [locked, setLocked] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  const [hintOn, setHintOn] = useState(true);
   const soundOnRef = useRef(true); // ref so useEffect always reads current value
   const [sides] = useState(randomSides);
   const idleTimer = useRef(null);
@@ -70,11 +71,11 @@ export default function App() {
 
   const resetIdle = useCallback(() => {
     clearTimeout(idleTimer.current);
-    if (locked) return;
+    if (locked || !hintOn) return;
     idleTimer.current = setTimeout(() => {
       setHighlight(bigSide);
     }, 3000);
-  }, [locked, bigSide]);
+  }, [locked, bigSide, hintOn]);
 
   useEffect(() => {
     if (done) {
@@ -107,7 +108,9 @@ export default function App() {
         setPairIndex(i => i + 1);
       }, 700);
     } else {
-      setHighlight(bigSide);
+      if (hintOn) {
+        setHighlight(bigSide);
+      }
       speak(`${pairData.big.name} is bigger!`, soundOn);
       setTimeout(() => {
         setHighlight(null);
@@ -155,6 +158,24 @@ export default function App() {
             ))}
           </div>
           <div className="hud-controls">
+            <button
+              className={`hint-btn ${hintOn ? 'on' : 'off'}`}
+              onClick={() => {
+                setHintOn(h => {
+                  const nextHintOn = !h;
+                  if (!nextHintOn) {
+                    clearTimeout(idleTimer.current);
+                    setHighlight(null);
+                  } else if (!locked) {
+                    resetIdle();
+                  }
+                  return nextHintOn;
+                });
+              }}
+              aria-label={hintOn ? 'Hint on' : 'Hint off'}
+            >
+              Hint
+            </button>
             <button
               className={`sound-btn ${soundOn ? 'on' : 'off'}`}
               onClick={() => setSoundOn(s => !s)}
