@@ -88,11 +88,11 @@ const CATEGORIES = [
       },
       {
         id: 'numbertrain',
-        emoji: '🚂',
+        emoji: '🚂💨',
         nameKey: 'numberTrainName',
         descKey: 'numberTrainDesc',
-        bg: 'linear-gradient(145deg, #1a237e, #5c6bc0)',
-        glow: 'rgba(26,35,126,0.4)',
+        bg: 'linear-gradient(145deg, #e65100, #ff8f00)',
+        glow: 'rgba(230,81,0,0.5)',
       },
       {
         id: 'shapesorter',
