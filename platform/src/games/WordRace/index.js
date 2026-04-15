@@ -25,18 +25,17 @@ const WORDS = [
   { word: 'cow',      emoji: '🐮' },
 ];
 
-const TURBO_BOOST    = 18;   // % per correct word
-const AI_TICK_MS     = 800;  // ms between AI steps
-const AI_STEP        = 2.5;  // % per tick
-const AI_STEP_SLOW   = 0.8;  // % per tick during a challenge
-const CHALLENGE_DELAY = 2500; // ms before first/next challenge
-const FEEDBACK_DELAY  = 1500; // ms to show feedback before next round
-const WINS_REQUIRED   = 12;   // correct words = auto-win
+const TURBO_BOOST    = 18;
+const AI_TICK_MS     = 800;
+const AI_STEP        = 2.5;
+const AI_STEP_SLOW   = 0.8;
+const CHALLENGE_DELAY = 2500;
+const FEEDBACK_DELAY  = 1500;
+const WINS_REQUIRED   = 12;
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const HAS_SPEECH = !!SpeechRecognition;
 
-// Levenshtein distance — used for fuzzy matching
 function levenshtein(a, b) {
   const m = a.length, n = b.length;
   const dp = Array.from({ length: m + 1 }, (_, i) =>
@@ -55,7 +54,6 @@ function levenshtein(a, b) {
 function wordMatches(heard, target) {
   const h = heard.toLowerCase().trim();
   const t = target.toLowerCase().trim();
-  // exact substring match or close enough
   if (h.includes(t) || t.includes(h)) return true;
   const words = h.split(/\s+/);
   return words.some(w => levenshtein(w, t) <= 2);
@@ -76,7 +74,101 @@ function getFallbackChoices(target, all) {
   return shuffle([target, ...distractors]);
 }
 
-// ─── Intro Screen ──────────────────────────────────────────────────────────────
+// ─── Confetti ───────────────────────────────────────────────────────────────────
+const CONFETTI_COLORS = ['#ffeb3b','#ff9800','#f44336','#e91e63','#9c27b0','#2196f3','#00bcd4','#4caf50'];
+
+function Confetti({ id }) {
+  const pieces = Array.from({ length: 22 }, (_, i) => {
+    const angle = (i / 22) * 2 * Math.PI + (Math.random() - 0.5) * 0.8;
+    const dist  = 60 + Math.random() * 80;
+    const tx    = Math.round(Math.cos(angle) * dist);
+    const ty    = Math.round(Math.sin(angle) * dist);
+    const r     = Math.round(Math.random() * 540 - 270);
+    const size  = Math.round(6 + Math.random() * 6);
+    const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
+    const isSquare = i % 2 === 0;
+    return { tx, ty, r, size, color, isSquare, delay: (i * 0.018).toFixed(3) };
+  });
+
+  return (
+    <div className="wr-confetti-wrap" key={id}>
+      {pieces.map((p, i) => (
+        <div
+          key={i}
+          className="wr-confetti-piece"
+          style={{
+            '--tx': `${p.tx}px`,
+            '--ty': `${p.ty}px`,
+            '--r':  `${p.r}deg`,
+            width:  `${p.size}px`,
+            height: `${p.size}px`,
+            background: p.color,
+            borderRadius: p.isSquare ? '2px' : '50%',
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Speed Lines ────────────────────────────────────────────────────────────────
+const LINE_POSITIONS = ['15%', '28%', '48%', '66%', '80%'];
+const LINE_DELAYS    = ['0s', '0.03s', '0.06s', '0.04s', '0.02s'];
+
+function SpeedLines({ active }) {
+  if (!active) return null;
+  return (
+    <div className="wr-speed-lines">
+      {LINE_POSITIONS.map((top, i) => (
+        <div
+          key={i}
+          className="wr-speed-line"
+          style={{ top, animationDelay: LINE_DELAYS[i] }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Countdown Screen ───────────────────────────────────────────────────────────
+function CountdownScreen({ onDone }) {
+  const [count, setCount] = useState(3);
+  const onDoneRef = useRef(onDone);
+  useEffect(() => { onDoneRef.current = onDone; }, [onDone]);
+
+  useEffect(() => {
+    if (count > 1) {
+      const t = setTimeout(() => setCount(c => c - 1), 900);
+      return () => clearTimeout(t);
+    } else if (count === 1) {
+      const t = setTimeout(() => setCount(0), 900);
+      return () => clearTimeout(t);
+    } else {
+      // count === 0 = "GO!"
+      const t = setTimeout(() => onDoneRef.current(), 600);
+      return () => clearTimeout(t);
+    }
+  }, [count]);
+
+  const label  = count === 0 ? 'GO!' : String(count);
+  const colors = { 3: '#f44336', 2: '#ff9800', 1: '#66bb6a', 0: '#ffffff' };
+  const color  = colors[count] || '#ffffff';
+
+  return (
+    <div className="wr-countdown">
+      <div
+        key={label}
+        className="wr-countdown-number"
+        style={{ color }}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
+// ─── Intro Screen ───────────────────────────────────────────────────────────────
 function IntroScreen({ onStart }) {
   return (
     <div className="wr-intro">
@@ -116,20 +208,26 @@ function IntroScreen({ onStart }) {
 }
 
 // ─── Challenge Card ─────────────────────────────────────────────────────────────
-function ChallengeCard({ wordObj, subPhase, onMic, onFallback, fallbackChoices, onReplay }) {
+function ChallengeCard({ wordObj, subPhase, onMic, onFallback, fallbackChoices, onReplay, onSkip }) {
   const isListening = subPhase === 'listening';
   const isCorrect   = subPhase === 'correct';
   const isWrong     = subPhase === 'wrong';
 
+  let cardClass = 'wr-challenge';
+  if (isCorrect)  cardClass += ' wr-challenge--correct';
+  if (isWrong)    cardClass += ' wr-challenge--wrong';
+  if (isListening) cardClass += ' wr-challenge--listening';
+  if (!isCorrect && !isWrong && !isListening) cardClass += ' wr-challenge--idle';
+
   return (
-    <div className={`wr-challenge ${isCorrect ? 'wr-challenge--correct' : ''} ${isWrong ? 'wr-challenge--wrong' : ''}`}>
+    <div className={cardClass}>
       <div className="wr-challenge-emoji">{wordObj.emoji}</div>
       <div className="wr-challenge-word">{wordObj.word}</div>
       <button className="wr-challenge-replay" onClick={onReplay} aria-label="Replay word">
         🔊
       </button>
 
-      {isCorrect && <div className="wr-feedback-turbo">🚀 TURBO BOOST!</div>}
+      {isCorrect && <div className="wr-feedback-turbo">🔥 TURBO BOOST! 🔥</div>}
       {isWrong   && <div className="wr-feedback-wrong">Try again! 💪</div>}
 
       {!isCorrect && !isWrong && (
@@ -149,7 +247,7 @@ function ChallengeCard({ wordObj, subPhase, onMic, onFallback, fallbackChoices, 
                 <span>Listening...</span>
               </>
             ) : (
-              '🎤 Say it!'
+              <span style={{ fontSize: '32px' }}>🎤</span>
             )}
           </button>
         ) : (
@@ -166,33 +264,44 @@ function ChallengeCard({ wordObj, subPhase, onMic, onFallback, fallbackChoices, 
           </div>
         )
       )}
+
+      {!isCorrect && (
+        <button
+          className="wr-skip-btn"
+          onClick={onSkip}
+          disabled={isListening || isCorrect || isWrong}
+        >
+          Skip →
+        </button>
+      )}
     </div>
   );
 }
 
 // ─── Main Game ──────────────────────────────────────────────────────────────────
 export default function WordRace({ onSuccess, onExit }) {
-  const [screen, setScreen]       = useState('intro');   // intro | race | done
+  const [screen, setScreen]       = useState('intro');   // intro | countdown | race | done
   const [playerPos, setPlayerPos] = useState(0);
   const [aiPos, setAiPos]         = useState(0);
-  const [subPhase, setSubPhase]   = useState('driving'); // driving | challenge | listening | correct | wrong
+  const [subPhase, setSubPhase]   = useState('driving');
   const [currentWord, setCurrentWord] = useState(null);
   const [fallbackChoices, setFallbackChoices] = useState([]);
   const [correctCount, setCorrectCount] = useState(0);
-  const [winner, setWinner]       = useState(null);     // 'player' | 'ai'
+  const [winner, setWinner]       = useState(null);
   const [steerClass, setSteerClass] = useState('');
   const [turboActive, setTurboActive] = useState(false);
+  const [confettiId, setConfettiId] = useState(0);
+  const [showFlash, setShowFlash]   = useState(false);
 
-  const recogRef       = useRef(null);
-  const currentWordRef = useRef(null);
-  const subPhaseRef    = useRef('driving');
-  const playerPosRef   = useRef(0);
-  const aiPosRef       = useRef(0);
+  const recogRef        = useRef(null);
+  const currentWordRef  = useRef(null);
+  const subPhaseRef     = useRef('driving');
+  const playerPosRef    = useRef(0);
+  const aiPosRef        = useRef(0);
   const correctCountRef = useRef(0);
-  const doneRef        = useRef(false);
-  const wordDeckRef    = useRef([]);
+  const doneRef         = useRef(false);
+  const wordDeckRef     = useRef([]);
 
-  // Keep refs in sync with state
   useEffect(() => { subPhaseRef.current = subPhase; }, [subPhase]);
   useEffect(() => { playerPosRef.current = playerPos; }, [playerPos]);
   useEffect(() => { aiPosRef.current = aiPos; }, [aiPos]);
@@ -248,7 +357,6 @@ export default function WordRace({ onSuccess, onExit }) {
     speak(word.word, 'en');
   }, []);
 
-  // Driving timer — triggers challenge after delay
   useEffect(() => {
     if (screen !== 'race' || subPhase !== 'driving') return;
     const t = setTimeout(presentChallenge, CHALLENGE_DELAY);
@@ -273,7 +381,7 @@ export default function WordRace({ onSuccess, onExit }) {
       handleResult(matched);
     };
     recog.onerror = () => handleResult(false);
-    recog.onend = () => {
+    recog.onend   = () => {
       if (subPhaseRef.current === 'listening') handleResult(false);
     };
 
@@ -287,11 +395,15 @@ export default function WordRace({ onSuccess, onExit }) {
       speak('Amazing!', 'en');
       setSubPhase('correct');
       setTurboActive(true);
+      setConfettiId(id => id + 1);
+      setShowFlash(true);
+      setTimeout(() => setShowFlash(false), 500);
+
       const newCount = correctCountRef.current + 1;
       const newPos   = Math.min(playerPosRef.current + TURBO_BOOST, 100);
       setCorrectCount(newCount);
       setPlayerPos(newPos);
-      playerPosRef.current = newPos;
+      playerPosRef.current  = newPos;
       correctCountRef.current = newCount;
 
       if (!checkWin(newPos, aiPosRef.current, newCount)) {
@@ -309,6 +421,11 @@ export default function WordRace({ onSuccess, onExit }) {
     }
   }
 
+  function handleSkip() {
+    setAiPos(p => Math.min(p + 5, 100));
+    setSubPhase('driving');
+  }
+
   function handleFallback(choice) {
     if (subPhaseRef.current !== 'challenge') return;
     handleResult(choice.word === currentWordRef.current?.word);
@@ -318,7 +435,6 @@ export default function WordRace({ onSuccess, onExit }) {
     if (currentWordRef.current) speak(currentWordRef.current.word, 'en');
   }
 
-  // Arrow key / space / enter support
   useEffect(() => {
     if (screen !== 'race') return;
     function onKey(e) {
@@ -340,7 +456,7 @@ export default function WordRace({ onSuccess, onExit }) {
   function startRace() {
     doneRef.current = false;
     wordDeckRef.current = shuffle([...WORDS]);
-    setScreen('race');
+    setScreen('countdown');
     setPlayerPos(0);
     setAiPos(0);
     setCorrectCount(0);
@@ -348,19 +464,44 @@ export default function WordRace({ onSuccess, onExit }) {
     setSubPhase('driving');
     setCurrentWord(null);
     setTurboActive(false);
-    playerPosRef.current = 0;
-    aiPosRef.current = 0;
+    setConfettiId(0);
+    setShowFlash(false);
+    playerPosRef.current  = 0;
+    aiPosRef.current      = 0;
     correctCountRef.current = 0;
-    subPhaseRef.current = 'driving';
+    subPhaseRef.current   = 'driving';
   }
 
-  // ── Screens ──────────────────────────────────────────────────────────────────
+  // ── Screens ───────────────────────────────────────────────────────────────────
 
   if (screen === 'intro') {
     return (
       <div className="wr-root">
+        <div className="wr-bg-stars" />
         <button className="wr-back" onClick={onExit}>←</button>
         <IntroScreen onStart={startRace} />
+      </div>
+    );
+  }
+
+  if (screen === 'countdown') {
+    return (
+      <div className="wr-root">
+        <div className="wr-bg-stars" />
+        {/* Faint race track behind countdown */}
+        <div className="wr-track-wrap wr-track-wrap--faint">
+          <div className="wr-lane">
+            <span className="wr-lane-label">You</span>
+            <div className="wr-road wr-road--paused"><div className="wr-car wr-car--player" style={{ left: '0%' }}>🏎️</div></div>
+            <span className="wr-flag">🏁</span>
+          </div>
+          <div className="wr-lane">
+            <span className="wr-lane-label">AI</span>
+            <div className="wr-road wr-road--paused"><div className="wr-car wr-car--ai" style={{ left: '0%' }}>🤖</div></div>
+            <span className="wr-flag">🏁</span>
+          </div>
+        </div>
+        <CountdownScreen onDone={() => setScreen('race')} />
       </div>
     );
   }
@@ -369,6 +510,7 @@ export default function WordRace({ onSuccess, onExit }) {
     const won = winner === 'player';
     return (
       <div className="wr-root">
+        <div className="wr-bg-stars" />
         <div className="wr-done">
           <div className="wr-done-emoji">{won ? '🏆' : '😅'}</div>
           <h2 className="wr-done-title">{won ? 'You Win!' : 'So Close!'}</h2>
@@ -387,9 +529,18 @@ export default function WordRace({ onSuccess, onExit }) {
 
   // Race screen
   const showChallenge = ['challenge','listening','correct','wrong'].includes(subPhase);
+  const roadMoving    = subPhase === 'driving';
 
   return (
     <div className="wr-root" tabIndex={-1}>
+      <div className="wr-bg-stars" />
+
+      {/* Flash on correct */}
+      {showFlash && <div className="wr-flash" />}
+
+      {/* Speed lines on turbo */}
+      <SpeedLines active={turboActive} />
+
       {/* Header */}
       <div className="wr-header">
         <button className="wr-back" onClick={onExit}>←</button>
@@ -398,16 +549,20 @@ export default function WordRace({ onSuccess, onExit }) {
       </div>
 
       {/* Race Track */}
-      <div className="wr-track-wrap">
+      <div className="wr-track-wrap" style={{ position: 'relative' }}>
+        {/* Confetti */}
+        {confettiId > 0 && <Confetti id={confettiId} />}
+
         {/* Player lane */}
         <div className="wr-lane">
           <span className="wr-lane-label">You</span>
-          <div className="wr-road">
+          <div className={`wr-road ${roadMoving ? '' : 'wr-road--paused'}`}>
             <div
               className={`wr-car wr-car--player ${steerClass} ${turboActive ? 'wr-car--turbo' : ''}`}
               style={{ left: `calc(${playerPos}% * 0.88)` }}
             >
               🏎️
+              {subPhase === 'driving' && <span className="wr-exhaust">💨</span>}
               {turboActive && <span className="wr-turbo-trail">💨</span>}
             </div>
           </div>
@@ -417,7 +572,7 @@ export default function WordRace({ onSuccess, onExit }) {
         {/* AI lane */}
         <div className="wr-lane">
           <span className="wr-lane-label">AI</span>
-          <div className="wr-road">
+          <div className={`wr-road ${roadMoving ? '' : 'wr-road--paused'}`}>
             <div
               className="wr-car wr-car--ai"
               style={{ left: `calc(${aiPos}% * 0.88)` }}
@@ -438,6 +593,7 @@ export default function WordRace({ onSuccess, onExit }) {
           onFallback={handleFallback}
           fallbackChoices={fallbackChoices}
           onReplay={handleReplay}
+          onSkip={handleSkip}
         />
       )}
 
