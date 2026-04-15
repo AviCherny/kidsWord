@@ -240,7 +240,7 @@ export default function WordShooter({ onSuccess, onExit }) {
   if (screen === 'start') return (
     <div className="ws-screen ws-start" dir={dir}>
       <div className="ws-game-title">{t(lang, 'wordShooterTitle').replace('\\n', '\n')}</div>
-      <div className="ws-hero-icon ws-hero-idle">🔫</div>
+      <div className="ws-hero-icon ws-hero-idle"><Cannon /></div>
       <button className="ws-btn-primary" onClick={() => setScreen('game')}>{t(lang, 'play')}</button>
       <button className="ws-exit-link" onClick={onExit}>←</button>
     </div>
@@ -329,8 +329,7 @@ export default function WordShooter({ onSuccess, onExit }) {
 
       <div className="ws-hero-area">
         <div ref={heroRef} className={`ws-hero-wrap${phase === 'shooting' ? ' ws-hero-shooting' : ' ws-hero-idle-anim'}`}>
-          <span className="ws-hero-emoji">🔫</span>
-          {phase === 'shooting' && <span className="ws-chest-burst">✨</span>}
+          <Cannon shooting={phase === 'shooting'} />
         </div>
       </div>
 
@@ -352,6 +351,56 @@ function Sidekick({ word, lang, showEnglish }) {
       </div>
       <span className="ws-sidekick-emoji">🤖</span>
     </div>
+  );
+}
+
+function Cannon({ shooting }) {
+  const spokes = [0, 60, 120];
+  return (
+    <svg
+      className={`ws-cannon${shooting ? ' ws-cannon-fire' : ''}`}
+      width="160" height="130" viewBox="0 0 160 130"
+      aria-hidden="true"
+    >
+      {/* Barrel — angled slightly right, pointing upward */}
+      <g transform="translate(72, 72) rotate(12)">
+        <rect x="-14" y="-62" width="28" height="66" rx="9" fill="#2e2e2e" stroke="#111" strokeWidth="2.5"/>
+        {/* ring bands */}
+        <rect x="-15" y="-64" width="30" height="11" rx="5" fill="#222" stroke="#111" strokeWidth="2"/>
+        <rect x="-14" y="-34" width="28" height="7" rx="3" fill="#444"/>
+        <rect x="-14" y="-12" width="28" height="7" rx="3" fill="#444"/>
+        {/* muzzle flash ring when firing */}
+        {shooting && <circle cx="0" cy="-64" r="14" fill="rgba(255,200,50,0.85)" className="ws-cannon-flash"/>}
+      </g>
+
+      {/* Body / carriage */}
+      <ellipse cx="72" cy="90" rx="50" ry="21" fill="#8B4513" stroke="#5D2E0C" strokeWidth="3"/>
+
+      {/* Axle */}
+      <rect x="12" y="95" width="116" height="10" rx="5" fill="#5D2E0C"/>
+
+      {/* Left wheel */}
+      <circle cx="32" cy="100" r="26" fill="#7B3F00" stroke="#4A2000" strokeWidth="4"/>
+      <circle cx="32" cy="100" r="10" fill="#4A2000"/>
+      {spokes.map(a => {
+        const r = a * Math.PI / 180;
+        return <line key={a}
+          x1={32 + 10 * Math.cos(r)} y1={100 + 10 * Math.sin(r)}
+          x2={32 + 23 * Math.cos(r)} y2={100 + 23 * Math.sin(r)}
+          stroke="#4A2000" strokeWidth="4" strokeLinecap="round"/>;
+      })}
+
+      {/* Right wheel */}
+      <circle cx="112" cy="100" r="26" fill="#7B3F00" stroke="#4A2000" strokeWidth="4"/>
+      <circle cx="112" cy="100" r="10" fill="#4A2000"/>
+      {spokes.map(a => {
+        const r = a * Math.PI / 180;
+        return <line key={a}
+          x1={112 + 10 * Math.cos(r)} y1={100 + 10 * Math.sin(r)}
+          x2={112 + 23 * Math.cos(r)} y2={100 + 23 * Math.sin(r)}
+          stroke="#4A2000" strokeWidth="4" strokeLinecap="round"/>;
+      })}
+    </svg>
   );
 }
 

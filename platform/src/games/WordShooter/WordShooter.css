@@ -272,9 +272,11 @@
   align-items: center;
 }
 
-.ws-hero-emoji { font-size: clamp(5rem, 22vw, 9.5rem); display: block; }
-.ws-hero-idle-anim .ws-hero-emoji { animation: ws-hero-bob 2.5s ease-in-out infinite; }
-.ws-hero-shooting .ws-hero-emoji  { animation: ws-hero-shoot-bounce 0.35s ease; }
+.ws-cannon { display: block; width: clamp(120px, 40vw, 200px); height: auto; }
+.ws-hero-idle-anim .ws-cannon { animation: ws-hero-bob 2.5s ease-in-out infinite; }
+.ws-cannon-fire { animation: ws-cannon-recoil 0.35s ease forwards !important; }
+.ws-cannon-flash { animation: ws-flash-pop 0.3s ease forwards; }
+.ws-hero-icon .ws-cannon { width: clamp(100px, 35vw, 160px); }
 
 .ws-chest-burst {
   position: absolute;
@@ -415,6 +417,18 @@
   0%   { transform: scale(1) rotate(0deg); }
   30%  { transform: scale(1.12) rotate(-4deg); }
   100% { transform: scale(1) rotate(0deg); }
+}
+
+@keyframes ws-cannon-recoil {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  25%  { transform: translate(-6px, 4px) rotate(-3deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@keyframes ws-flash-pop {
+  0%   { opacity: 1; transform: scale(0.6); }
+  60%  { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1.5); }
 }
 
 @keyframes ws-burst-out {
