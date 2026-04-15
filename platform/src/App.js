@@ -4,6 +4,7 @@ import Hub from './components/Hub';
 import CreatureCelebration from './components/CreatureCelebration';
 import StickerReveal from './components/StickerReveal';
 import StickerCollection from './components/StickerCollection';
+import LanguageSwitchButton from './components/LanguageSwitchButton';
 import BigVsSmall from './games/BigVsSmall';
 import MemoryGame from './games/MemoryGame';
 import SocialSkills from './games/SocialSkills';
@@ -106,6 +107,9 @@ export default function App() {
       )}
       {ActiveGame && (
         <div className="game-wrapper">
+          <div className="game-topbar">
+            <LanguageSwitchButton />
+          </div>
           <ActiveGame
             onSuccess={handleSuccess}
             onExit={handleExit}

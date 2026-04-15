@@ -4,6 +4,7 @@ import { t } from '../i18n/translations';
 import { TOTAL_STICKERS } from '../data/stickers';
 import ParentSettings from './ParentSettings';
 import { getSettings } from '../lib/settings';
+import LanguageSwitchButton from './LanguageSwitchButton';
 
 const CATEGORIES = [
   {
@@ -175,7 +176,7 @@ const CATEGORIES = [
 const MASCOTS = ['🌟', '🦊', '🐸', '🦄', '🐻', '🌈', '🎯'];
 
 export default function Hub({ onLaunch, earnedCount, onOpenCollection, onSettingsChange }) {
-  const { lang, setLang, dir } = useLanguage();
+  const { lang, dir } = useLanguage();
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState(getSettings);
   const [gearHeld, setGearHeld] = useState(false);
@@ -232,14 +233,17 @@ export default function Hub({ onLaunch, earnedCount, onOpenCollection, onSetting
             {isRTL ? 'מה רוצים לשחק היום?' : 'What do you want to play?'}
           </p>
         </div>
-        <button
-          className="hub-collection-btn"
-          onClick={onOpenCollection}
-          aria-label={isRTL ? 'אוסף מדבקות' : 'Sticker collection'}
-        >
-          <span className="hub-collection-icon">🌿</span>
-          <span className="hub-collection-count">{earnedCount}/{TOTAL_STICKERS}</span>
-        </button>
+        <div className="hub-header-actions">
+          <LanguageSwitchButton className="hub-header-lang-btn" compact />
+          <button
+            className="hub-collection-btn"
+            onClick={onOpenCollection}
+            aria-label={isRTL ? 'אוסף מדבקות' : 'Sticker collection'}
+          >
+            <span className="hub-collection-icon">🌿</span>
+            <span className="hub-collection-count">{earnedCount}/{TOTAL_STICKERS}</span>
+          </button>
+        </div>
       </header>
 
       {/* Sticker progress bar */}
@@ -313,14 +317,6 @@ export default function Hub({ onLaunch, earnedCount, onOpenCollection, onSetting
 
       {/* Footer */}
       <footer className="hub-footer">
-        <button
-          className="hub-lang-btn"
-          onClick={() => setLang(lang === 'he' ? 'en' : 'he')}
-          aria-label={isRTL ? 'Switch to English' : 'עברית'}
-        >
-          {lang === 'he' ? '🇬🇧 EN' : '🇮🇱 עב'}
-        </button>
-
         <button
           className={`hub-gear-btn ${gearHeld ? 'hub-gear-btn--held' : ''}`}
           onPointerDown={handleGearDown}

@@ -21,6 +21,49 @@ body {
 
 .game-wrapper {
   min-height: 100dvh;
+  position: relative;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 64px);
+}
+
+.game-topbar {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 14px);
+  inset-inline-end: 16px;
+  z-index: 90;
+  pointer-events: none;
+}
+
+.game-topbar .lang-switch-btn {
+  pointer-events: auto;
+}
+
+.lang-switch-btn {
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  background: rgba(49, 53, 84, 0.88);
+  color: #fff;
+  border-radius: 14px;
+  padding: 10px 14px;
+  min-width: 58px;
+  min-height: 46px;
+  font-size: 0.95rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(16, 21, 48, 0.28);
+  backdrop-filter: blur(10px);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.12s, background 0.18s, box-shadow 0.18s;
+}
+
+.lang-switch-btn:active {
+  transform: scale(0.95);
+}
+
+.lang-switch-btn--compact {
+  min-width: 52px;
+  min-height: 42px;
+  padding: 9px 12px;
+  font-size: 0.88rem;
 }
 
 /* ── Hub ────────────────────────────────────────────────────────────────────── */
@@ -95,6 +138,19 @@ body {
   color: rgba(45, 27, 105, 0.5);
   font-weight: 600;
   margin-top: 2px;
+}
+
+.hub-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.hub-header-lang-btn {
+  background: rgba(45, 27, 105, 0.9);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 18px rgba(45, 27, 105, 0.2);
 }
 
 .hub-collection-btn {
