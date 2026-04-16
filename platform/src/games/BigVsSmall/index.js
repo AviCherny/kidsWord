@@ -1,75 +1,144 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './BigVsSmall.css';
 import { useLanguage } from '../../context/LanguageContext';
 import { t } from '../../i18n/translations';
 import { speak } from '../../speak';
 import StarBar from '../../components/StarBar';
+import { getGameDifficulty, saveGameDifficulty } from '../../lib/settings';
 
 const ROUNDS_PER_LEVEL = 5;
+const GAME_ID = 'bigvssmall';
 
-// Pool of rounds per level — sampled randomly each session
+const makeItem = (emoji, name, heName) => ({ emoji, name, heName });
+const makeRound = (big, ...others) => ({ big, others });
+
+const EASY_PAIRS = [
+  [makeItem('🐘', 'Elephant', 'פיל'), makeItem('🐭', 'Mouse', 'עכבר')],
+  [makeItem('🦒', 'Giraffe', "ג'ירף"), makeItem('🐹', 'Hamster', 'אוגר')],
+  [makeItem('🐻', 'Bear', 'דוב'), makeItem('🐝', 'Bee', 'דבורה')],
+  [makeItem('🐄', 'Cow', 'פרה'), makeItem('🐸', 'Frog', 'צפרדע')],
+  [makeItem('🦁', 'Lion', 'אריה'), makeItem('🐜', 'Ant', 'נמלה')],
+  [makeItem('🐊', 'Crocodile', 'תנין'), makeItem('🦋', 'Butterfly', 'פרפר')],
+  [makeItem('🦛', 'Hippo', 'היפופוטם'), makeItem('🐞', 'Ladybug', 'פרת משה רבנו')],
+  [makeItem('🏠', 'House', 'בית'), makeItem('🍎', 'Apple', 'תפוח')],
+  [makeItem('🚌', 'Bus', 'אוטובוס'), makeItem('🐝', 'Bee', 'דבורה')],
+  [makeItem('🌳', 'Tree', 'עץ'), makeItem('🍄', 'Mushroom', 'פטריה')],
+  [makeItem('🐋', 'Whale', 'לווייתן'), makeItem('🐟', 'Fish', 'דג')],
+  [makeItem('✈️', 'Plane', 'מטוס'), makeItem('🐦', 'Bird', 'ציפור')],
+  [makeItem('🚢', 'Ship', 'אנייה'), makeItem('🛶', 'Canoe', 'קאנו')],
+  [makeItem('🏔️', 'Mountain', 'הר'), makeItem('🌼', 'Daisy', 'חרצית')],
+  [makeItem('🏟️', 'Stadium', 'אצטדיון'), makeItem('📦', 'Box', 'קופסה')],
+  [makeItem('🌋', 'Volcano', 'הר געש'), makeItem('🌱', 'Seedling', 'שתיל')],
+  [makeItem('🚒', 'Fire Truck', 'כבאית'), makeItem('🛴', 'Scooter', 'קורקינט')],
+  [makeItem('🚂', 'Train', 'רכבת'), makeItem('🪀', 'Yo-yo', 'יו-יו')],
+  [makeItem('🏰', 'Castle', 'טירה'), makeItem('🧸', 'Teddy Bear', 'דובי')],
+  [makeItem('🦣', 'Mammoth', 'מאמות'), makeItem('🐛', 'Caterpillar', 'זחל')],
+];
+
+const MEDIUM_ROUNDS = [
+  makeRound(makeItem('🐘', 'Elephant', 'פיל'), makeItem('🐕', 'Dog', 'כלב'), makeItem('🐝', 'Bee', 'דבורה')),
+  makeRound(makeItem('🦏', 'Rhino', 'קרנף'), makeItem('🐰', 'Rabbit', 'ארנב'), makeItem('🐞', 'Ladybug', 'פרת משה רבנו')),
+  makeRound(makeItem('🦛', 'Hippo', 'היפופוטם'), makeItem('🦊', 'Fox', 'שועל'), makeItem('🐌', 'Snail', 'חילזון')),
+  makeRound(makeItem('🐊', 'Crocodile', 'תנין'), makeItem('🐿️', 'Squirrel', 'סנאי'), makeItem('🪱', 'Worm', 'תולעת')),
+  makeRound(makeItem('🦓', 'Zebra', 'זברה'), makeItem('🐱', 'Cat', 'חתול'), makeItem('🐭', 'Mouse', 'עכבר')),
+  makeRound(makeItem('🐻', 'Bear', 'דוב'), makeItem('🐹', 'Hamster', 'אוגר'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('🦒', 'Giraffe', "ג'ירף"), makeItem('🐸', 'Frog', 'צפרדע'), makeItem('🦋', 'Butterfly', 'פרפר')),
+  makeRound(makeItem('🚌', 'Bus', 'אוטובוס'), makeItem('🚲', 'Bike', 'אופניים'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('🌳', 'Tree', 'עץ'), makeItem('🌸', 'Flower', 'פרח'), makeItem('🌱', 'Seedling', 'שתיל')),
+  makeRound(makeItem('🏠', 'House', 'בית'), makeItem('📚', 'Book', 'ספר'), makeItem('🍎', 'Apple', 'תפוח')),
+  makeRound(makeItem('🐋', 'Whale', 'לווייתן'), makeItem('🐠', 'Fish', 'דג קטן'), makeItem('🦐', 'Shrimp', 'שרימפס')),
+  makeRound(makeItem('✈️', 'Plane', 'מטוס'), makeItem('🚗', 'Car', 'מכונית'), makeItem('🐦', 'Bird', 'ציפור')),
+  makeRound(makeItem('🚢', 'Ship', 'אנייה'), makeItem('🚤', 'Boat', 'סירה'), makeItem('🐟', 'Fish', 'דג')),
+  makeRound(makeItem('🏔️', 'Mountain', 'הר'), makeItem('🏡', 'Cottage', 'קוטג׳'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('🏟️', 'Stadium', 'אצטדיון'), makeItem('🎪', 'Tent', 'אוהל'), makeItem('📦', 'Box', 'קופסה')),
+  makeRound(makeItem('🌋', 'Volcano', 'הר געש'), makeItem('⛰️', 'Hill', 'גבעה'), makeItem('🌵', 'Cactus', 'קקטוס')),
+  makeRound(makeItem('🚒', 'Fire Truck', 'כבאית'), makeItem('🛴', 'Scooter', 'קורקינט'), makeItem('⚽', 'Ball', 'כדור')),
+  makeRound(makeItem('🚂', 'Train', 'רכבת'), makeItem('🚲', 'Bike', 'אופניים'), makeItem('🪀', 'Yo-yo', 'יו-יו')),
+  makeRound(makeItem('🏰', 'Castle', 'טירה'), makeItem('🪑', 'Chair', 'כיסא'), makeItem('🧸', 'Teddy Bear', 'דובי')),
+  makeRound(makeItem('🦣', 'Mammoth', 'מאמות'), makeItem('🐺', 'Wolf', 'זאב'), makeItem('🐛', 'Caterpillar', 'זחל')),
+];
+
+const HARD_ROUNDS = [
+  makeRound(makeItem('🐘', 'Elephant', 'פיל'), makeItem('🦁', 'Lion', 'אריה'), makeItem('🐱', 'Cat', 'חתול'), makeItem('🐭', 'Mouse', 'עכבר')),
+  makeRound(makeItem('🦒', 'Giraffe', "ג'ירף"), makeItem('🐕', 'Dog', 'כלב'), makeItem('🐇', 'Rabbit', 'ארנב'), makeItem('🐝', 'Bee', 'דבורה')),
+  makeRound(makeItem('🦛', 'Hippo', 'היפופוטם'), makeItem('🐺', 'Wolf', 'זאב'), makeItem('🐹', 'Hamster', 'אוגר'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('🐻', 'Bear', 'דוב'), makeItem('🦊', 'Fox', 'שועל'), makeItem('🐸', 'Frog', 'צפרדע'), makeItem('🐌', 'Snail', 'חילזון')),
+  makeRound(makeItem('🦏', 'Rhino', 'קרנף'), makeItem('🦌', 'Deer', 'אייל'), makeItem('🐿️', 'Squirrel', 'סנאי'), makeItem('🐞', 'Ladybug', 'פרת משה רבנו')),
+  makeRound(makeItem('🐊', 'Crocodile', 'תנין'), makeItem('🦔', 'Hedgehog', 'קיפוד'), makeItem('🐰', 'Rabbit', 'ארנב'), makeItem('🦋', 'Butterfly', 'פרפר')),
+  makeRound(makeItem('🦓', 'Zebra', 'זברה'), makeItem('🐱', 'Cat', 'חתול'), makeItem('🐹', 'Hamster', 'אוגר'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('🚌', 'Bus', 'אוטובוס'), makeItem('🚗', 'Car', 'מכונית'), makeItem('🛴', 'Scooter', 'קורקינט'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('🌳', 'Tree', 'עץ'), makeItem('🌵', 'Cactus', 'קקטוס'), makeItem('🌸', 'Flower', 'פרח'), makeItem('🌱', 'Seedling', 'שתיל')),
+  makeRound(makeItem('🏠', 'House', 'בית'), makeItem('🪑', 'Chair', 'כיסא'), makeItem('📚', 'Book', 'ספר'), makeItem('🍎', 'Apple', 'תפוח')),
+  makeRound(makeItem('🐋', 'Whale', 'לווייתן'), makeItem('🐬', 'Dolphin', 'דולפין'), makeItem('🐟', 'Fish', 'דג'), makeItem('🦐', 'Shrimp', 'שרימפס')),
+  makeRound(makeItem('✈️', 'Plane', 'מטוס'), makeItem('🚗', 'Car', 'מכונית'), makeItem('🐦', 'Bird', 'ציפור'), makeItem('🪰', 'Fly', 'זבוב')),
+  makeRound(makeItem('🚢', 'Ship', 'אנייה'), makeItem('🚤', 'Boat', 'סירה'), makeItem('🏊', 'Swimmer', 'שחיין'), makeItem('🐟', 'Fish', 'דג')),
+  makeRound(makeItem('🏔️', 'Mountain', 'הר'), makeItem('🏠', 'House', 'בית'), makeItem('🚲', 'Bike', 'אופניים'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('🏟️', 'Stadium', 'אצטדיון'), makeItem('🏠', 'House', 'בית'), makeItem('🎪', 'Tent', 'אוהל'), makeItem('📦', 'Box', 'קופסה')),
+  makeRound(makeItem('🌋', 'Volcano', 'הר געש'), makeItem('⛰️', 'Hill', 'גבעה'), makeItem('🌵', 'Cactus', 'קקטוס'), makeItem('🌱', 'Seedling', 'שתיל')),
+  makeRound(makeItem('🚒', 'Fire Truck', 'כבאית'), makeItem('🚙', 'Jeep', 'ג׳יפ'), makeItem('🛴', 'Scooter', 'קורקינט'), makeItem('⚽', 'Ball', 'כדור')),
+  makeRound(makeItem('🚂', 'Train', 'רכבת'), makeItem('🚗', 'Car', 'מכונית'), makeItem('🚲', 'Bike', 'אופניים'), makeItem('🪀', 'Yo-yo', 'יו-יו')),
+  makeRound(makeItem('🏰', 'Castle', 'טירה'), makeItem('🏡', 'Cottage', 'קוטג׳'), makeItem('🪑', 'Chair', 'כיסא'), makeItem('🧸', 'Teddy Bear', 'דובי')),
+  makeRound(makeItem('🦣', 'Mammoth', 'מאמות'), makeItem('🐺', 'Wolf', 'זאב'), makeItem('🐇', 'Rabbit', 'ארנב'), makeItem('🐛', 'Caterpillar', 'זחל')),
+];
+
+const EXPERT_ROUNDS = [
+  makeRound(makeItem('🚌', 'Bus', 'אוטובוס'), makeItem('🚗', 'Car', 'מכונית'), makeItem('🚲', 'Bike', 'אופניים'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('🌳', 'Tree', 'עץ'), makeItem('🍄', 'Mushroom', 'פטריה'), makeItem('🌸', 'Flower', 'פרח'), makeItem('🌱', 'Seedling', 'שתיל')),
+  makeRound(makeItem('🏠', 'House', 'בית'), makeItem('🪑', 'Chair', 'כיסא'), makeItem('📚', 'Book', 'ספר'), makeItem('🍎', 'Apple', 'תפוח')),
+  makeRound(makeItem('🐋', 'Whale', 'לווייתן'), makeItem('🐕', 'Dog', 'כלב'), makeItem('🐭', 'Mouse', 'עכבר'), makeItem('🐝', 'Bee', 'דבורה')),
+  makeRound(makeItem('🏔️', 'Mountain', 'הר'), makeItem('🏠', 'House', 'בית'), makeItem('🚲', 'Bike', 'אופניים'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('✈️', 'Plane', 'מטוס'), makeItem('🚗', 'Car', 'מכונית'), makeItem('🐦', 'Bird', 'ציפור'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('🚢', 'Ship', 'אנייה'), makeItem('🚤', 'Boat', 'סירה'), makeItem('🏊', 'Swimmer', 'שחיין'), makeItem('🐟', 'Fish', 'דג')),
+  makeRound(makeItem('🦣', 'Mammoth', 'מאמות'), makeItem('🐺', 'Wolf', 'זאב'), makeItem('🐇', 'Rabbit', 'ארנב'), makeItem('🐛', 'Caterpillar', 'זחל')),
+  makeRound(makeItem('🏟️', 'Stadium', 'אצטדיון'), makeItem('🏠', 'House', 'בית'), makeItem('🎪', 'Tent', 'אוהל'), makeItem('📦', 'Box', 'קופסה')),
+  makeRound(makeItem('🌋', 'Volcano', 'הר געש'), makeItem('⛰️', 'Hill', 'גבעה'), makeItem('🌵', 'Cactus', 'קקטוס'), makeItem('🌱', 'Seedling', 'שתיל')),
+  makeRound(makeItem('🚒', 'Fire Truck', 'כבאית'), makeItem('🚕', 'Taxi', 'מונית'), makeItem('🛴', 'Scooter', 'קורקינט'), makeItem('⚽', 'Ball', 'כדור')),
+  makeRound(makeItem('🚂', 'Train', 'רכבת'), makeItem('🚲', 'Bike', 'אופניים'), makeItem('🛼', 'Skates', 'גלגיליות'), makeItem('🪀', 'Yo-yo', 'יו-יו')),
+  makeRound(makeItem('🏰', 'Castle', 'טירה'), makeItem('🏡', 'Cottage', 'קוטג׳'), makeItem('🧸', 'Teddy Bear', 'דובי'), makeItem('📦', 'Box', 'קופסה')),
+  makeRound(makeItem('🐘', 'Elephant', 'פיל'), makeItem('🐎', 'Horse', 'סוס'), makeItem('🐈', 'Cat', 'חתול'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('🦒', 'Giraffe', "ג'ירף"), makeItem('🦌', 'Deer', 'אייל'), makeItem('🐿️', 'Squirrel', 'סנאי'), makeItem('🐝', 'Bee', 'דבורה')),
+  makeRound(makeItem('🦛', 'Hippo', 'היפופוטם'), makeItem('🐕', 'Dog', 'כלב'), makeItem('🐇', 'Rabbit', 'ארנב'), makeItem('🐞', 'Ladybug', 'פרת משה רבנו')),
+  makeRound(makeItem('🐊', 'Crocodile', 'תנין'), makeItem('🦎', 'Lizard', 'לטאה'), makeItem('🐸', 'Frog', 'צפרדע'), makeItem('🪱', 'Worm', 'תולעת')),
+  makeRound(makeItem('🦏', 'Rhino', 'קרנף'), makeItem('🐄', 'Cow', 'פרה'), makeItem('🐈', 'Cat', 'חתול'), makeItem('🐜', 'Ant', 'נמלה')),
+  makeRound(makeItem('🌲', 'Pine Tree', 'עץ אורן'), makeItem('🌿', 'Herb', 'עשב'), makeItem('🍀', 'Clover', 'תלתן'), makeItem('🌱', 'Seedling', 'שתיל')),
+  makeRound(makeItem('🏢', 'Building', 'בניין'), makeItem('🚪', 'Door', 'דלת'), makeItem('📘', 'Notebook', 'מחברת'), makeItem('🔑', 'Key', 'מפתח')),
+];
+
 const LEVEL_POOLS = [
-  // Level 1 — 2 items, very obvious size difference
-  { label: { he: 'קל', en: 'Easy' }, rounds: [
-    { big: { emoji:'🐘', name:'Elephant', heName:'פיל'    }, others:[{ emoji:'🐭', name:'Mouse',   heName:'עכבר'   }] },
-    { big: { emoji:'🦒', name:'Giraffe',  heName:"ג'ירף"  }, others:[{ emoji:'🐹', name:'Hamster', heName:'אוגר'   }] },
-    { big: { emoji:'🐻', name:'Bear',     heName:'דוב'    }, others:[{ emoji:'🐝', name:'Bee',     heName:'דבורה'  }] },
-    { big: { emoji:'🐄', name:'Cow',      heName:'פרה'    }, others:[{ emoji:'🐸', name:'Frog',    heName:'צפרדע'  }] },
-    { big: { emoji:'🦁', name:'Lion',     heName:'אריה'   }, others:[{ emoji:'🐜', name:'Ant',     heName:'נמלה'   }] },
-    { big: { emoji:'🐊', name:'Crocodile',heName:'תנין'   }, others:[{ emoji:'🦋', name:'Butterfly',heName:'פרפר'  }] },
-    { big: { emoji:'🦛', name:'Hippo',    heName:'היפופוטם'},others:[{ emoji:'🐞', name:'Ladybug', heName:'פרת משה רבנו'}] },
-    { big: { emoji:'🏠', name:'House',    heName:'בית'    }, others:[{ emoji:'🍎', name:'Apple',   heName:'תפוח'   }] },
-    { big: { emoji:'🚌', name:'Bus',      heName:'אוטובוס'}, others:[{ emoji:'🐝', name:'Bee',     heName:'דבורה'  }] },
-    { big: { emoji:'🌳', name:'Tree',     heName:'עץ'     }, others:[{ emoji:'🍄', name:'Mushroom',heName:'פטריה' }] },
-  ]},
-  // Level 2 — 3 items
-  { label: { he: 'בינוני', en: 'Medium' }, rounds: [
-    { big: { emoji:'🐘', name:'Elephant',  heName:'פיל'        }, others:[{ emoji:'🐕',  name:'Dog',      heName:'כלב'           }, { emoji:'🐝', name:'Bee',     heName:'דבורה'         }] },
-    { big: { emoji:'🦏', name:'Rhino',     heName:'קרנף'       }, others:[{ emoji:'🐰',  name:'Rabbit',   heName:'ארנב'          }, { emoji:'🐞', name:'Ladybug', heName:'פרת משה רבנו' }] },
-    { big: { emoji:'🦛', name:'Hippo',     heName:'היפופוטם'   }, others:[{ emoji:'🦊',  name:'Fox',      heName:'שועל'          }, { emoji:'🐌', name:'Snail',   heName:'חילזון'        }] },
-    { big: { emoji:'🐊', name:'Crocodile', heName:'תנין'       }, others:[{ emoji:'🐿️', name:'Squirrel', heName:'סנאי'          }, { emoji:'🪱', name:'Worm',    heName:'תולעת'         }] },
-    { big: { emoji:'🦓', name:'Zebra',     heName:'זברה'       }, others:[{ emoji:'🐱',  name:'Cat',      heName:'חתול'          }, { emoji:'🐭', name:'Mouse',   heName:'עכבר'          }] },
-    { big: { emoji:'🐻', name:'Bear',      heName:'דוב'        }, others:[{ emoji:'🐹',  name:'Hamster',  heName:'אוגר'          }, { emoji:'🐜', name:'Ant',     heName:'נמלה'          }] },
-    { big: { emoji:'🦒', name:'Giraffe',   heName:"ג'ירף"      }, others:[{ emoji:'🐸',  name:'Frog',     heName:'צפרדע'         }, { emoji:'🦋', name:'Butterfly',heName:'פרפר'         }] },
-    { big: { emoji:'🚌', name:'Bus',       heName:'אוטובוס'    }, others:[{ emoji:'🚲',  name:'Bike',     heName:'אופניים'       }, { emoji:'🐜', name:'Ant',     heName:'נמלה'          }] },
-    { big: { emoji:'🌳', name:'Tree',      heName:'עץ'         }, others:[{ emoji:'🌸',  name:'Flower',   heName:'פרח'           }, { emoji:'🌱', name:'Seedling',heName:'שתיל'          }] },
-    { big: { emoji:'🏠', name:'House',     heName:'בית'        }, others:[{ emoji:'📚',  name:'Book',     heName:'ספר'           }, { emoji:'🍎', name:'Apple',   heName:'תפוח'          }] },
-  ]},
-  // Level 3 — 4 animals
-  { label: { he: 'קשה', en: 'Hard' }, rounds: [
-    { big: { emoji:'🐘', name:'Elephant', heName:'פיל'      }, others:[{ emoji:'🦁', name:'Lion',    heName:'אריה'  }, { emoji:'🐱', name:'Cat',      heName:'חתול'          }, { emoji:'🐭', name:'Mouse',   heName:'עכבר'          }] },
-    { big: { emoji:'🦒', name:'Giraffe',  heName:"ג'ירף"    }, others:[{ emoji:'🐕', name:'Dog',     heName:'כלב'   }, { emoji:'🐇', name:'Rabbit',   heName:'ארנב'          }, { emoji:'🐝', name:'Bee',     heName:'דבורה'         }] },
-    { big: { emoji:'🦛', name:'Hippo',    heName:'היפופוטם' }, others:[{ emoji:'🐺', name:'Wolf',    heName:'זאב'   }, { emoji:'🐹', name:'Hamster',  heName:'אוגר'          }, { emoji:'🐜', name:'Ant',     heName:'נמלה'          }] },
-    { big: { emoji:'🐻', name:'Bear',     heName:'דוב'      }, others:[{ emoji:'🦊', name:'Fox',     heName:'שועל'  }, { emoji:'🐸', name:'Frog',     heName:'צפרדע'         }, { emoji:'🐌', name:'Snail',   heName:'חילזון'        }] },
-    { big: { emoji:'🦏', name:'Rhino',    heName:'קרנף'     }, others:[{ emoji:'🦌', name:'Deer',    heName:'אייל'  }, { emoji:'🐿️',name:'Squirrel', heName:'סנאי'          }, { emoji:'🐞', name:'Ladybug', heName:'פרת משה רבנו' }] },
-    { big: { emoji:'🐊', name:'Crocodile',heName:'תנין'     }, others:[{ emoji:'🦔', name:'Hedgehog',heName:'קיפוד' }, { emoji:'🐰', name:'Rabbit',   heName:'ארנב'          }, { emoji:'🦋', name:'Butterfly',heName:'פרפר'         }] },
-    { big: { emoji:'🦓', name:'Zebra',    heName:'זברה'     }, others:[{ emoji:'🐱', name:'Cat',     heName:'חתול'  }, { emoji:'🐹', name:'Hamster',  heName:'אוגר'          }, { emoji:'🐜', name:'Ant',     heName:'נמלה'          }] },
-    { big: { emoji:'🚌', name:'Bus',      heName:'אוטובוס'  }, others:[{ emoji:'🚗', name:'Car',     heName:'מכונית'}, { emoji:'🛴', name:'Scooter',  heName:'קורקינט'       }, { emoji:'🐜', name:'Ant',     heName:'נמלה'          }] },
-    { big: { emoji:'🌳', name:'Tree',     heName:'עץ'       }, others:[{ emoji:'🌵', name:'Cactus',  heName:'קקטוס' }, { emoji:'🌸', name:'Flower',   heName:'פרח'           }, { emoji:'🌱', name:'Seedling',heName:'שתיל'          }] },
-    { big: { emoji:'🏠', name:'House',    heName:'בית'      }, others:[{ emoji:'🪑', name:'Chair',   heName:'כיסא'  }, { emoji:'📚', name:'Book',     heName:'ספר'           }, { emoji:'🍎', name:'Apple',   heName:'תפוח'          }] },
-  ]},
-  // Level 4 — 4 items, tricky mixed categories
-  { label: { he: 'מאתגר', en: 'Expert' }, rounds: [
-    { big: { emoji:'🚌', name:'Bus',      heName:'אוטובוס' }, others:[{ emoji:'🚗', name:'Car',      heName:'מכונית'  }, { emoji:'🚲', name:'Bike',     heName:'אופניים' }, { emoji:'🐜', name:'Ant',      heName:'נמלה'   }] },
-    { big: { emoji:'🌳', name:'Tree',     heName:'עץ'      }, others:[{ emoji:'🍄', name:'Mushroom', heName:'פטריה'   }, { emoji:'🌸', name:'Flower',   heName:'פרח'     }, { emoji:'🌱', name:'Seedling', heName:'שתיל'   }] },
-    { big: { emoji:'🏠', name:'House',    heName:'בית'     }, others:[{ emoji:'🪑', name:'Chair',    heName:'כיסא'    }, { emoji:'📚', name:'Book',     heName:'ספר'     }, { emoji:'🍎', name:'Apple',    heName:'תפוח'   }] },
-    { big: { emoji:'🐋', name:'Whale',    heName:'לווייתן' }, others:[{ emoji:'🐕', name:'Dog',      heName:'כלב'     }, { emoji:'🐭', name:'Mouse',    heName:'עכבר'    }, { emoji:'🐝', name:'Bee',      heName:'דבורה'  }] },
-    { big: { emoji:'🏔️', name:'Mountain', heName:'הר'     }, others:[{ emoji:'🏠', name:'House',    heName:'בית'     }, { emoji:'🚲', name:'Bike',     heName:'אופניים' }, { emoji:'🐜', name:'Ant',      heName:'נמלה'   }] },
-    { big: { emoji:'✈️',  name:'Plane',   heName:'מטוס'   }, others:[{ emoji:'🚗', name:'Car',      heName:'מכונית'  }, { emoji:'🐦', name:'Bird',     heName:'ציפור'   }, { emoji:'🐜', name:'Ant',      heName:'נמלה'   }] },
-    { big: { emoji:'🚢', name:'Ship',     heName:'אנייה'   }, others:[{ emoji:'🚤', name:'Boat',     heName:'סירה'    }, { emoji:'🏊', name:'Swimmer',  heName:'שחיין'   }, { emoji:'🐟', name:'Fish',     heName:'דג'     }] },
-    { big: { emoji:'🦣', name:'Mammoth',  heName:'מאמות'   }, others:[{ emoji:'🐺', name:'Wolf',     heName:'זאב'     }, { emoji:'🐇', name:'Rabbit',   heName:'ארנב'    }, { emoji:'🐛', name:'Caterpillar',heName:'זחל' }] },
-    { big: { emoji:'🏟️', name:'Stadium',  heName:'אצטדיון'}, others:[{ emoji:'🏠', name:'House',    heName:'בית'     }, { emoji:'🎪', name:'Tent',     heName:'אוהל'    }, { emoji:'📦', name:'Box',      heName:'קופסה'  }] },
-    { big: { emoji:'🌋', name:'Volcano',  heName:'הר געש'  }, others:[{ emoji:'⛰️', name:'Hill',    heName:'גבעה'    }, { emoji:'🌵', name:'Cactus',   heName:'קקטוס'   }, { emoji:'🌱', name:'Seedling', heName:'שתיל'   }] },
-  ]},
+  {
+    label: { he: 'קל', en: 'Easy' },
+    rounds: EASY_PAIRS.map(([big, small]) => makeRound(big, small)),
+  },
+  { label: { he: 'בינוני', en: 'Medium' }, rounds: MEDIUM_ROUNDS },
+  { label: { he: 'קשה', en: 'Hard' }, rounds: HARD_ROUNDS },
+  { label: { he: 'מאתגר', en: 'Expert' }, rounds: EXPERT_ROUNDS },
+];
+
+const DIFFICULTY_PATHS = {
+  1: [0, 1, 2, 3],
+  2: [0, 2, 2, 3],
+  3: [1, 2, 2, 3],
+  4: [1, 2, 3, 3],
+};
+
+const CARD_PALETTES = [
+  { bg: 'linear-gradient(180deg, #ffffff 0%, #fff8ef 100%)', border: '#ffd39d', shadow: 'rgba(255, 152, 61, 0.18)' },
+  { bg: 'linear-gradient(180deg, #ffffff 0%, #f6fbff 100%)', border: '#b7dbff', shadow: 'rgba(74, 144, 226, 0.18)' },
+  { bg: 'linear-gradient(180deg, #ffffff 0%, #f5fff5 100%)', border: '#bde6b3', shadow: 'rgba(90, 178, 92, 0.18)' },
+  { bg: 'linear-gradient(180deg, #ffffff 0%, #fff7fb 100%)', border: '#f3c1da', shadow: 'rgba(225, 110, 160, 0.18)' },
 ];
 
 function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [copy[i], copy[j]] = [copy[j], copy[i]];
   }
-  return a;
+  return copy;
+}
+
+function randomBetween(min, max) {
+  return min + Math.random() * (max - min);
 }
 
 function sampleRounds(pool) {
@@ -77,12 +146,42 @@ function sampleRounds(pool) {
 }
 
 function buildDisplayItems(round) {
-  return shuffle([{ ...round.big, isBig: true }, ...round.others.map(o => ({ ...o, isBig: false }))]);
+  const itemCount = round.others.length + 1;
+  const bigScale = itemCount === 2 ? randomBetween(1.28, 1.44) : randomBetween(1.14, 1.28);
+  const smallMin = itemCount === 2 ? 0.68 : 0.72;
+  const smallMax = itemCount === 2 ? 0.86 : 0.92;
+
+  return shuffle([
+    { ...round.big, isBig: true },
+    ...round.others.map((item) => ({ ...item, isBig: false })),
+  ]).map((item, index) => {
+    const palette = CARD_PALETTES[(index + Math.floor(Math.random() * CARD_PALETTES.length)) % CARD_PALETTES.length];
+    const emojiScale = item.isBig ? bigScale : randomBetween(smallMin, smallMax);
+    const nameScale = item.isBig ? randomBetween(1.02, 1.12) : randomBetween(0.9, 1.01);
+    return {
+      ...item,
+      visualStyle: {
+        '--bvs-card-bg': palette.bg,
+        '--bvs-card-border': palette.border,
+        '--bvs-card-shadow': palette.shadow,
+        '--bvs-emoji-scale': emojiScale.toFixed(2),
+        '--bvs-name-scale': nameScale.toFixed(2),
+        '--bvs-tilt': '0deg',
+        '--bvs-bob': '0px',
+      },
+    };
+  });
+}
+
+function buildStageRounds(difficulty) {
+  const path = DIFFICULTY_PATHS[difficulty] || DIFFICULTY_PATHS[1];
+  return path.map((poolIdx) => sampleRounds(LEVEL_POOLS[poolIdx].rounds));
 }
 
 export default function BigVsSmall({ onSuccess, onExit }) {
-  const { lang, dir } = useLanguage();
-  const [levelIdx, setLevelIdx] = useState(0);
+  const { lang, setLang, dir } = useLanguage();
+  const [difficulty, setDifficulty] = useState(() => getGameDifficulty(GAME_ID, 1));
+  const [stageIdx, setStageIdx] = useState(0);
   const [roundIdx, setRoundIdx] = useState(0);
   const [stars, setStars] = useState(0);
   const [balloons, setBalloons] = useState(0);
@@ -90,108 +189,124 @@ export default function BigVsSmall({ onSuccess, onExit }) {
   const [highlight, setHighlight] = useState(null);
   const [locked, setLocked] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
+  const [hintOn, setHintOn] = useState(true);
   const [showLevelUp, setShowLevelUp] = useState(false);
 
-  // Sample a fresh random set of rounds per level per session
-  const [levelRounds, setLevelRounds] = useState(() =>
-    LEVEL_POOLS.map(lp => sampleRounds(lp.rounds))
-  );
-
-  const [displayItems, setDisplayItems] = useState(() =>
-    buildDisplayItems(levelRounds[0][0])
-  );
+  const difficultyPath = DIFFICULTY_PATHS[difficulty] || DIFFICULTY_PATHS[1];
+  const [stageRounds, setStageRounds] = useState(() => buildStageRounds(getGameDifficulty(GAME_ID, 1)));
+  const [displayItems, setDisplayItems] = useState(() => buildDisplayItems(stageRounds[0][0]));
 
   const soundOnRef = useRef(true);
   const idleTimer = useRef(null);
 
-  const done = levelIdx >= LEVEL_POOLS.length;
-  const totalRounds = LEVEL_POOLS.length * ROUNDS_PER_LEVEL;
-  const bigIdx = displayItems.findIndex(item => item.isBig);
+  const done = stageIdx >= difficultyPath.length;
+  const totalRounds = difficultyPath.length * ROUNDS_PER_LEVEL;
+  const bigIdx = displayItems.findIndex((item) => item.isBig);
+  const currentPoolIdx = done ? difficultyPath[difficultyPath.length - 1] : difficultyPath[stageIdx];
 
-  useEffect(() => { soundOnRef.current = soundOn; }, [soundOn]);
+  useEffect(() => {
+    soundOnRef.current = soundOn;
+  }, [soundOn]);
+
+  useEffect(() => {
+    setStageRounds(buildStageRounds(difficulty));
+    setStageIdx(0);
+    setRoundIdx(0);
+    setStars(0);
+    setBalloons(0);
+    setWinner(null);
+    setHighlight(null);
+    setLocked(false);
+    setShowLevelUp(false);
+  }, [difficulty]);
 
   const resetIdle = useCallback(() => {
     clearTimeout(idleTimer.current);
-    if (locked || done) return;
+    if (locked || done || !hintOn) return;
     idleTimer.current = setTimeout(() => setHighlight(bigIdx), 3000);
-  }, [locked, done, bigIdx]);
+  }, [locked, done, bigIdx, hintOn]);
 
   useEffect(() => {
     if (done) {
       if (soundOnRef.current) speak(t(lang, 'amazing'), lang);
       return;
     }
-    const round = levelRounds[levelIdx][roundIdx];
+
+    const round = stageRounds[stageIdx][roundIdx];
     setDisplayItems(buildDisplayItems(round));
     setWinner(null);
     setHighlight(null);
     setLocked(false);
+
     if (soundOnRef.current) speak(t(lang, 'whoIsBigger'), lang);
-  }, [levelIdx, roundIdx, done, lang, levelRounds]);
+  }, [stageIdx, roundIdx, done, lang, stageRounds]);
 
   useEffect(() => {
     resetIdle();
     return () => clearTimeout(idleTimer.current);
-  }, [resetIdle, levelIdx, roundIdx]);
+  }, [resetIdle, stageIdx, roundIdx]);
 
-  function jumpToLevel(idx) {
-    if (idx === levelIdx) return;
-    // Resample rounds for variety when manually switching
-    setLevelRounds(LEVEL_POOLS.map(lp => sampleRounds(lp.rounds)));
-    setLevelIdx(idx);
-    setRoundIdx(0);
-    setWinner(null);
-    setHighlight(null);
-    setLocked(false);
+  function handleDifficultyChange(nextDifficulty) {
+    if (nextDifficulty === difficulty) return;
+    setDifficulty(saveGameDifficulty(GAME_ID, nextDifficulty));
   }
 
   function handleTap(idx) {
     if (locked) return;
+
     clearTimeout(idleTimer.current);
     setLocked(true);
 
-    const capLevelIdx = levelIdx;
+    const capStageIdx = stageIdx;
     const capRoundIdx = roundIdx;
 
     if (displayItems[idx].isBig) {
       setWinner(idx);
       const newStars = stars + 1;
       setStars(newStars);
-      if (newStars % 5 === 0) setBalloons(b => b + 1);
+
+      if (newStars % 5 === 0) setBalloons((count) => count + 1);
       if (soundOnRef.current) speak(t(lang, 'correct'), lang);
 
       setTimeout(() => {
-        const rounds = levelRounds[capLevelIdx];
+        const rounds = stageRounds[capStageIdx];
         if (capRoundIdx + 1 < rounds.length) {
           setRoundIdx(capRoundIdx + 1);
-        } else if (capLevelIdx + 1 < LEVEL_POOLS.length) {
+        } else if (capStageIdx + 1 < difficultyPath.length) {
           setShowLevelUp(true);
           setTimeout(() => {
             setShowLevelUp(false);
-            setLevelIdx(capLevelIdx + 1);
+            setStageIdx(capStageIdx + 1);
             setRoundIdx(0);
           }, 1500);
         } else {
-          setLevelIdx(LEVEL_POOLS.length);
+          setStageIdx(difficultyPath.length);
         }
       }, 700);
-    } else {
-      setHighlight(bigIdx);
-      const bigItem = displayItems[bigIdx];
-      const msg = lang === 'he'
-        ? `${bigItem.heName} יותר גדול`
-        : `${bigItem.name} is bigger`;
-      if (soundOnRef.current) speak(msg, lang);
-      setTimeout(() => {
-        setHighlight(null);
-        setLocked(false);
-      }, 2000);
+      return;
     }
+
+    if (hintOn) {
+      setHighlight(bigIdx);
+    }
+    const bigItem = displayItems[bigIdx];
+    const msg = lang === 'he' ? `${bigItem.heName} יותר גדול` : `${bigItem.name} is bigger`;
+
+    if (soundOnRef.current) speak(msg, lang);
+    setTimeout(() => {
+      setHighlight(null);
+      setLocked(false);
+    }, 2000);
+  }
+
+  function handleReadAloud(item) {
+    const text = lang === 'he' ? item.heName : item.name;
+    speak(text, lang);
   }
 
   const starsInCycle = stars % 5 === 0 && stars > 0 ? 5 : stars % 5;
-  const itemCount = done ? 2 : displayItems.length;
-  const levelNum = levelIdx + 1;
+  const itemCount = done ? LEVEL_POOLS[currentPoolIdx].rounds[0].others.length + 1 : displayItems.length;
+  const stageNum = stageIdx + 1;
 
   if (done) {
     return (
@@ -211,10 +326,16 @@ export default function BigVsSmall({ onSuccess, onExit }) {
           {balloons > 0 && <div className="bvs-win-balloons">{'🎈'.repeat(balloons)}</div>}
         </div>
         <button className="bvs-collect-btn" onClick={onSuccess}>{t(lang, 'collectSticker')}</button>
-        <button className="bvs-play-again" onClick={() => {
-          setLevelRounds(LEVEL_POOLS.map(lp => sampleRounds(lp.rounds)));
-          setLevelIdx(0); setRoundIdx(0); setStars(0); setBalloons(0);
-        }}>
+        <button
+          className="bvs-play-again"
+          onClick={() => {
+            setStageRounds(buildStageRounds(difficulty));
+            setStageIdx(0);
+            setRoundIdx(0);
+            setStars(0);
+            setBalloons(0);
+          }}
+        >
           {t(lang, 'playAgain')}
         </button>
         <button className="bvs-exit-link" onClick={onExit}>←</button>
@@ -229,7 +350,7 @@ export default function BigVsSmall({ onSuccess, onExit }) {
           <div className="bvs-levelup-box">
             <span className="bvs-levelup-star">🌟</span>
             <span className="bvs-levelup-text">
-              {lang === 'he' ? `שלב ${levelNum + 1}` : `Level ${levelNum + 1}`}
+              {lang === 'he' ? `שלב ${stageNum + 1}` : `Stage ${stageNum + 1}`}
             </span>
           </div>
         </div>
@@ -240,8 +361,33 @@ export default function BigVsSmall({ onSuccess, onExit }) {
           <StarBar starsInCycle={starsInCycle} balloons={balloons} />
           <div className="bvs-hud-controls">
             <button
+              className="bvs-lang-btn"
+              onClick={() => setLang(lang === 'he' ? 'en' : 'he')}
+              aria-label={lang === 'he' ? 'Switch to English' : 'עברית'}
+            >
+              {lang === 'he' ? 'EN' : 'עב'}
+            </button>
+            <button
+              className={`bvs-hint-btn${hintOn ? ' on' : ' off'}`}
+              onClick={() => {
+                setHintOn((current) => {
+                  const next = !current;
+                  if (!next) {
+                    clearTimeout(idleTimer.current);
+                    setHighlight(null);
+                  } else if (!locked && !done) {
+                    resetIdle();
+                  }
+                  return next;
+                });
+              }}
+              aria-label={hintOn ? 'Hint on' : 'Hint off'}
+            >
+              {lang === 'he' ? 'רמז' : 'Hint'}
+            </button>
+            <button
               className={`bvs-sound-btn${soundOn ? ' on' : ''}`}
-              onClick={() => setSoundOn(s => !s)}
+              onClick={() => setSoundOn((current) => !current)}
               aria-label={soundOn ? 'Sound on' : 'Sound off'}
             >
               {soundOn ? '🔊' : '🔇'}
@@ -251,16 +397,16 @@ export default function BigVsSmall({ onSuccess, onExit }) {
         </div>
       </header>
 
-      {/* Level selector */}
       <div className="bvs-level-picker">
-        {LEVEL_POOLS.map((lp, i) => (
+        {LEVEL_POOLS.map((pool, i) => (
           <button
-            key={i}
-            className={`bvs-level-pill${i === levelIdx ? ' active' : ''}`}
-            onClick={() => jumpToLevel(i)}
+            key={pool.label.en}
+            className={`bvs-level-pill${i + 1 === difficulty ? ' active' : ''}`}
+            onClick={() => handleDifficultyChange(i + 1)}
+            aria-pressed={i + 1 === difficulty}
           >
             <span className="bvs-level-pill-stars">{'⭐'.repeat(i + 1)}</span>
-            <span className="bvs-level-pill-label">{lp.label[lang] || lp.label.en}</span>
+            <span className="bvs-level-pill-label">{pool.label[lang] || pool.label.en}</span>
           </button>
         ))}
       </div>
@@ -271,15 +417,29 @@ export default function BigVsSmall({ onSuccess, onExit }) {
         {displayItems.map((item, idx) => {
           const name = lang === 'he' ? item.heName : item.name;
           return (
-            <button
-              key={idx}
-              className={`bvs-animal-btn${winner === idx ? ' grow' : ''}${highlight === idx ? ' pulse' : ''}`}
-              onClick={() => handleTap(idx)}
-              aria-label={name}
+            <div
+              key={`${name}-${idx}`}
+              className={`bvs-card-shell${item.isBig ? ' is-big' : ' is-small'}`}
+              style={item.visualStyle}
             >
-              <span className="bvs-animal-emoji">{item.emoji}</span>
-              <span className="bvs-animal-name">{name}</span>
-            </button>
+              <button
+                className={`bvs-animal-btn${winner === idx ? ' grow' : ''}${highlight === idx ? ' pulse' : ''}${item.isBig ? ' is-big' : ' is-small'}`}
+                onClick={() => handleTap(idx)}
+                aria-label={name}
+              >
+                <span className="bvs-read-slot" aria-hidden="true" />
+                <span className="bvs-animal-emoji">{item.emoji}</span>
+                <span className="bvs-animal-name">{name}</span>
+              </button>
+              <button
+                className="bvs-read-btn"
+                onClick={() => handleReadAloud(item)}
+                aria-label={lang === 'he' ? `השמע ${name}` : `Read ${name}`}
+                type="button"
+              >
+                {lang === 'he' ? 'הקרא' : 'Read'}
+              </button>
+            </div>
           );
         })}
       </div>

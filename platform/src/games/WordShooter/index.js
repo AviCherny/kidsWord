@@ -4,6 +4,9 @@ import { LEVELS, DISTRACTOR_POOL } from './levels';
 import { useLanguage } from '../../context/LanguageContext';
 import { t } from '../../i18n/translations';
 import { speak } from '../../speak';
+import { getGameDifficulty, saveGameDifficulty } from '../../lib/settings';
+
+const GAME_ID = 'shooter';
 
 function shuffle(arr) {
   const a = [...arr];
@@ -80,7 +83,8 @@ const EMOJI_ANIM = {
 export default function WordShooter({ onSuccess, onExit }) {
   const { lang, dir } = useLanguage();
   const [screen, setScreen] = useState('start');
-  const [levelIndex, setLevelIndex] = useState(0);
+  const [difficulty, setDifficulty] = useState(() => getGameDifficulty(GAME_ID, 1));
+  const [levelIndex, setLevelIndex] = useState(() => getGameDifficulty(GAME_ID, 1) - 1);
   const [correctCount, setCorrectCount] = useState(0);
   const [stars, setStars] = useState(0);
 
@@ -105,6 +109,20 @@ export default function WordShooter({ onSuccess, onExit }) {
   const lastTargetRef = useRef(null);
   const wordDeckRef = useRef([]);
   const level = LEVELS[levelIndex];
+
+  function handleDifficultyChange(nextDifficulty) {
+    if (nextDifficulty === difficulty) return;
+    const savedDifficulty = saveGameDifficulty(GAME_ID, nextDifficulty);
+    setDifficulty(savedDifficulty);
+    setLevelIndex(savedDifficulty - 1);
+    setCorrectCount(0);
+  }
+
+  function startGame() {
+    setLevelIndex(difficulty - 1);
+    setCorrectCount(0);
+    setScreen('game');
+  }
 
   const objLabel = (obj) => {
     if (obj.isDistractor) return showEnglish ? obj.label : (lang === 'he' ? (obj.heLabel || obj.label) : obj.label);
@@ -241,7 +259,21 @@ export default function WordShooter({ onSuccess, onExit }) {
     <div className="ws-screen ws-start" dir={dir}>
       <div className="ws-game-title">{t(lang, 'wordShooterTitle').replace('\\n', '\n')}</div>
       <div className="ws-hero-icon ws-hero-idle"><Cannon /></div>
-      <button className="ws-btn-primary" onClick={() => setScreen('game')}>{t(lang, 'play')}</button>
+      <div className="ws-level-picker" role="group" aria-label="Word Shooter level">
+        {LEVELS.map((item, idx) => (
+          <button
+            key={item.id}
+            className={`ws-level-pill${difficulty === idx + 1 ? ' active' : ''}`}
+            onClick={() => handleDifficultyChange(idx + 1)}
+            aria-pressed={difficulty === idx + 1}
+            type="button"
+          >
+            <span className="ws-level-pill-stars">{'⭐'.repeat(idx + 1)}</span>
+            <span className="ws-level-pill-label">{t(lang, item.nameKey)}</span>
+          </button>
+        ))}
+      </div>
+      <button className="ws-btn-primary" onClick={startGame}>{t(lang, 'play')}</button>
       <button className="ws-exit-link" onClick={onExit}>←</button>
     </div>
   );
@@ -261,7 +293,7 @@ export default function WordShooter({ onSuccess, onExit }) {
       <div className="ws-big-emoji">🏆</div>
       <div className="ws-result-title">{t(lang, 'youWin')}</div>
       <div className="ws-stars-total">🌟 {stars} {t(lang, 'totalStars')}</div>
-      <button className="ws-btn-primary" onClick={() => { setStars(0); setLevelIndex(0); setCorrectCount(0); setScreen('start'); }}>
+      <button className="ws-btn-primary" onClick={() => { setStars(0); setLevelIndex(difficulty - 1); setCorrectCount(0); setScreen('start'); }}>
         {t(lang, 'playAgain')}
       </button>
       <button className="ws-exit-link" onClick={onExit}>←</button>

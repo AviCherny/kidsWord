@@ -100,7 +100,69 @@ const CUSTOM_AUDIO = {
   'מטריה':   'Umbrella.m4a',
   'מחבת':    'Pan.m4a',
   'עט':      'Pen.m4a',
+
+  // English words used by WordRace
+  elephant: 'Elephant.m4a',
+  dog: 'Dog.m4a',
+  cat: 'Cat.m4a',
+  fish: 'Fish.m4a',
+  duck: 'Duck.m4a',
+  bear: 'Bear.m4a',
+  frog: 'Frog.m4a',
+  tiger: 'Tiger.m4a',
+  rabbit: 'Rabbit.m4a',
+  monkey: 'Monkey.m4a',
+  turtle: 'Turtle.m4a',
+  apple: 'Apple.m4a',
+  cake: 'Cake.m4a',
+  rocket: 'Rocket.m4a',
+  train: 'Train.m4a',
+  ball: 'Ball.m4a',
+  drum: 'Drum.m4a',
+  hat: 'Hat.m4a',
+  bird: 'Bird.m4a',
+  cow: 'Cow.m4a',
 };
+
+const CUSTOM_AUDIO_GAIN = 2.2;
+
+let sharedAudioContext = null;
+
+function getAudioContext() {
+  if (typeof window === 'undefined') return null;
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!sharedAudioContext) sharedAudioContext = new AudioCtx();
+  if (sharedAudioContext.state === 'suspended') {
+    sharedAudioContext.resume().catch(() => {});
+  }
+  return sharedAudioContext;
+}
+
+function playCustomAudio(filename, onEnd) {
+  const audio = new Audio(`/audio/${filename}`);
+  audio.preload = 'auto';
+  audio.volume = 1.0;
+
+  if (onEnd) audio.onended = onEnd;
+
+  const ctx = getAudioContext();
+  if (!ctx) {
+    audio.play().catch(() => { if (onEnd) onEnd(); });
+    return;
+  }
+
+  try {
+    const source = ctx.createMediaElementSource(audio);
+    const gain = ctx.createGain();
+    gain.gain.value = CUSTOM_AUDIO_GAIN;
+    source.connect(gain);
+    gain.connect(ctx.destination);
+    audio.play().catch(() => { if (onEnd) onEnd(); });
+  } catch (e) {
+    audio.play().catch(() => { if (onEnd) onEnd(); });
+  }
+}
 
 // Shared TTS — language-aware, web-only (no Capacitor)
 export function speak(text, lang, onEnd) {
@@ -108,10 +170,7 @@ export function speak(text, lang, onEnd) {
 
   if (CUSTOM_AUDIO[text]) {
     try {
-      const audio = new Audio(`/audio/${CUSTOM_AUDIO[text]}`);
-      audio.volume = 1.0;
-      if (onEnd) audio.onended = onEnd;
-      audio.play().catch(() => { if (onEnd) onEnd(); });
+      playCustomAudio(CUSTOM_AUDIO[text], onEnd);
     } catch (e) {
       if (onEnd) onEnd();
     }

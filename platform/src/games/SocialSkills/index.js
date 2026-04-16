@@ -17,7 +17,6 @@ export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
   const [showIdlePrompt, setShowIdlePrompt] = useState(false);
   const [showContinueBtn, setShowContinueBtn] = useState(false);
   const [locked, setLocked] = useState(false);
-  const [displayOrder, setDisplayOrder] = useState([0, 1]);
   const [soundOn, setSoundOn] = useState(true);
   const soundOnRef = useRef(true);
   const [facilitator, setFacilitator] = useState(!!facilitatorMode);
@@ -32,6 +31,9 @@ export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
   useEffect(() => { soundOnRef.current = soundOn; }, [soundOn]);
 
   const situationText = lang === 'he' ? scenario.situation : scenario.situationEn;
+  const promptText = lang === 'he'
+    ? (scenario.prompt || t(lang, 'whatDoIDo'))
+    : (scenario.promptEn || t(lang, 'whatDoIDo'));
   const ttsFull = lang === 'he' ? scenario.tts : scenario.ttsFallback;
   const lessonText = lang === 'he' ? scenario.lesson : scenario.lessonFallback;
   const optionText = (opt) => lang === 'he' ? opt.text : opt.textEn;
@@ -62,7 +64,6 @@ export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
     setShowContinueBtn(false);
     setLocked(false);
     setVideoError(false);
-    setDisplayOrder(Math.random() < 0.5 ? [0, 1] : [1, 0]);
 
     const opts = scenario.options;
     const opt0 = lang === 'he' ? opts[0].text : opts[0].textEn;
@@ -267,12 +268,11 @@ export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
       </div>
 
       <p className={`ss-prompt${showIdlePrompt ? ' ss-prompt-nudge' : ''}`}>
-        {showIdlePrompt ? t(lang, 'tapOne') : t(lang, 'whatDoIDo')}
+        {showIdlePrompt ? t(lang, 'tapOne') : promptText}
       </p>
 
       <div className="ss-options">
-        {displayOrder.map(i => {
-          const opt = scenario.options[i];
+        {scenario.options.map((opt) => {
           const isBest = opt.quality === 'best';
           const isChosen = tapped === opt.quality;
           const isHinted = showHint && isBest;

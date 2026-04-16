@@ -105,10 +105,10 @@ const CATEGORIES = [
     accent: '#c62828',
     games: [
       {
-        id: 'pawpatrol',
-        emoji: '🐾🚒',
-        nameKey: 'pawPatrolName',
-        descKey: 'pawPatrolDesc',
+        id: 'rescuedog',
+        emoji: '🐶🦺',
+        nameKey: 'rescueDogName',
+        descKey: 'rescueDogDesc',
         bg: 'linear-gradient(145deg, #1565c0, #42a5f5)',
         glow: 'rgba(21,101,192,0.4)',
       },

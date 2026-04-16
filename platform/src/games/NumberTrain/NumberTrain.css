@@ -13,7 +13,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 12px 170px;
+  padding: 0 12px 190px;
   font-family: 'Nunito', 'Segoe UI', Arial, sans-serif;
   overflow: hidden;
   position: relative;
@@ -83,7 +83,7 @@
 
 .nt-hills {
   position: absolute;
-  bottom: 56px;
+  bottom: 0;
   left: 0; right: 0;
   height: 80px;
   background:
@@ -93,39 +93,6 @@
     radial-gradient(ellipse 110px 50px at 90% 100%, #5dbf61 99%, transparent 100%);
 }
 
-.nt-track {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 56px;
-  background: #795548;
-  overflow: hidden;
-}
-.nt-track::before,
-.nt-track::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0;
-  height: 7px;
-  background: #5d4037;
-  border-radius: 3px;
-}
-.nt-track::before { top: 12px; }
-.nt-track::after  { top: 26px; }
-
-.nt-track-ties {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    #4e342e 0px, #4e342e 20px,
-    transparent 20px, transparent 40px
-  );
-  animation: trackScroll 0.9s linear infinite;
-}
-@keyframes trackScroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-40px); }
-}
 
 /* ──────────────────────────────────────────
    Header
@@ -197,6 +164,76 @@
 @keyframes shimmer {
   from { background-position: 0% 0; }
   to   { background-position: 200% 0; }
+}
+
+.nt-difficulty {
+  width: 100%;
+  max-width: 580px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.nt-difficulty-label {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.92);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.25);
+}
+
+.nt-difficulty-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.nt-difficulty-pill {
+  min-width: 78px;
+  border: 2px solid rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.16);
+  color: #fff;
+  border-radius: 18px;
+  padding: 8px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.nt-difficulty-pill:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.16);
+}
+
+.nt-difficulty-pill:active {
+  transform: scale(0.96);
+}
+
+.nt-difficulty-pill.active {
+  background: linear-gradient(135deg, rgba(255,213,79,0.95), rgba(255,143,0,0.92));
+  border-color: rgba(255,255,255,0.92);
+  color: #4a2300;
+}
+
+.nt-difficulty-pill-num {
+  font-size: 1.1rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.nt-difficulty-pill-text {
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1.1;
 }
 
 /* ──────────────────────────────────────────
@@ -273,13 +310,16 @@
    Train scene (inline rail + wagons)
 ────────────────────────────────────────── */
 .nt-train-scene {
-  position: relative;
-  z-index: 1;
+  position: absolute;
+  bottom: 68px;
+  left: 0; right: 0;
+  margin: 0 auto;
+  z-index: 2;
   width: 100%;
   max-width: 620px;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 6px 8px 32px;
+  padding: 6px 8px 0;
 }
 .nt-train-scene::-webkit-scrollbar { display: none; }
 
@@ -301,28 +341,6 @@
 }
 .nt-train--moving { animation: trainChug 0.3s ease 3; }
 
-/* Rail line that runs behind wagons */
-.nt-inline-rail {
-  position: absolute;
-  left: 8px; right: 8px;
-  bottom: 26px;
-  height: 8px;
-  background: #5d4037;
-  border-radius: 4px;
-  box-shadow: 0 3px 0 #4e342e;
-}
-.nt-inline-rail::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    #4e342e 0px, #4e342e 10px,
-    transparent 10px, transparent 22px
-  );
-  border-radius: 4px;
-  opacity: 0.5;
-}
 
 .nt-wagons-row {
   display: flex;
@@ -364,10 +382,22 @@
 }
 
 
+/* Colorful wagons — each position gets its own colour, cycles every 6 */
+.nt-wagons-row > button:nth-of-type(1)  { background: linear-gradient(160deg,#ffcdd2,#ef9a9a); border-color:#ef5350; }
+.nt-wagons-row > button:nth-of-type(2)  { background: linear-gradient(160deg,#fff9c4,#fff176); border-color:#fdd835; }
+.nt-wagons-row > button:nth-of-type(3)  { background: linear-gradient(160deg,#c8e6c9,#a5d6a7); border-color:#43a047; }
+.nt-wagons-row > button:nth-of-type(4)  { background: linear-gradient(160deg,#bbdefb,#90caf9); border-color:#1e88e5; }
+.nt-wagons-row > button:nth-of-type(5)  { background: linear-gradient(160deg,#e1bee7,#ce93d8); border-color:#8e24aa; }
+.nt-wagons-row > button:nth-of-type(6)  { background: linear-gradient(160deg,#ffe0b2,#ffcc80); border-color:#fb8c00; }
+.nt-wagons-row > button:nth-of-type(7)  { background: linear-gradient(160deg,#ffcdd2,#ef9a9a); border-color:#ef5350; }
+.nt-wagons-row > button:nth-of-type(8)  { background: linear-gradient(160deg,#fff9c4,#fff176); border-color:#fdd835; }
+.nt-wagons-row > button:nth-of-type(9)  { background: linear-gradient(160deg,#c8e6c9,#a5d6a7); border-color:#43a047; }
+.nt-wagons-row > button:nth-of-type(10) { background: linear-gradient(160deg,#bbdefb,#90caf9); border-color:#1e88e5; }
+
 /* Gap wagon */
 .nt-wagon--gap {
-  background: linear-gradient(160deg, #fff9c4, #ffe082);
-  border-color: #f9a825;
+  background: linear-gradient(160deg, #fff9c4, #ffe082) !important;
+  border-color: #f9a825 !important;
   border-style: dashed;
   animation: wagGlow 1s ease-in-out infinite;
 }
@@ -615,3 +645,18 @@
   border: 2px solid rgba(255,255,255,0.5);
 }
 .nt-btn:active { transform: scale(0.95); }
+
+@media (max-width: 640px) {
+  .nt-root {
+    padding-bottom: 210px;
+  }
+
+  .nt-difficulty-pills {
+    gap: 8px;
+  }
+
+  .nt-difficulty-pill {
+    min-width: 68px;
+    padding: 7px 8px;
+  }
+}

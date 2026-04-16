@@ -26,6 +26,53 @@
   gap: 6px;
 }
 
+.bvs-lang-btn {
+  border: 2px solid rgba(255,140,0,0.3);
+  background: rgba(255,140,0,0.08);
+  color: #a65300;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 999px;
+  line-height: 1;
+  min-width: 46px;
+  transition: transform 0.15s, background 0.2s, border-color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bvs-lang-btn:active {
+  transform: scale(0.95);
+}
+
+.bvs-hint-btn {
+  border: 2px solid #d7dce5;
+  background: #ffffff;
+  color: #44506a;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 999px;
+  line-height: 1;
+  transition: transform 0.15s, background 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bvs-hint-btn.on {
+  background: #fff4cf;
+  border-color: #f6c453;
+  color: #7a5400;
+}
+
+.bvs-hint-btn.off {
+  opacity: 0.6;
+}
+
+.bvs-hint-btn:active {
+  transform: scale(0.95);
+}
+
 .bvs-sound-btn {
   background: rgba(255,140,0,0.1);
   border: 2px solid rgba(255,140,0,0.3);
@@ -134,15 +181,22 @@
   max-width: 520px;
   flex-wrap: wrap;
 }
-.bvs-arena--4 .bvs-animal-btn {
+.bvs-arena--4 .bvs-card-shell {
   flex: 0 0 calc(50% - 6px);
-  min-height: 160px;
+}
+
+.bvs-card-shell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
 }
 
 .bvs-animal-btn {
   flex: 1;
-  background: #fff;
-  border: 3px solid #ffd0a0;
+  background: var(--bvs-card-bg, #fff);
+  border: 3px solid var(--bvs-card-border, #ffd0a0);
   border-radius: 24px;
   display: flex;
   flex-direction: column;
@@ -155,16 +209,25 @@
   min-height: 200px;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  box-shadow: 0 4px 16px rgba(255,140,0,0.12);
+  box-shadow: 0 10px 24px var(--bvs-card-shadow, rgba(255,140,0,0.12));
+  transform: rotate(var(--bvs-tilt, 0deg)) translateY(var(--bvs-bob, 0px));
 }
 
-.bvs-animal-btn:active { background: #fff3e0; }
+.bvs-animal-btn:active {
+  background: #fff3e0;
+  transform: rotate(var(--bvs-tilt, 0deg)) translateY(var(--bvs-bob, 0px)) scale(0.97);
+}
+
+.bvs-animal-btn.is-big {
+  z-index: 1;
+}
 
 .bvs-animal-emoji {
   font-size: clamp(56px, 14vw, 90px);
   line-height: 1;
   transition: transform 0.3s ease;
   display: block;
+  transform: scale(var(--bvs-emoji-scale, 1));
 }
 
 .bvs-arena--3 .bvs-animal-emoji,
@@ -176,6 +239,49 @@
   font-size: clamp(14px, 3.5vw, 20px);
   font-weight: 700;
   color: #5d3a1a;
+  transform: scale(var(--bvs-name-scale, 1));
+  transform-origin: center top;
+  text-align: center;
+}
+
+.bvs-read-slot {
+  position: absolute;
+  top: 14px;
+  inset-inline-end: 14px;
+  width: 52px;
+  height: 52px;
+  pointer-events: none;
+}
+
+.bvs-read-btn {
+  position: absolute;
+  top: 14px;
+  inset-inline-end: 14px;
+  width: 52px;
+  height: 52px;
+  border: 3px solid rgba(255, 140, 0, 0.28);
+  background: rgba(255, 255, 255, 0.96);
+  color: transparent;
+  border-radius: 50%;
+  padding: 0;
+  font-size: 0;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 2;
+  box-shadow: 0 6px 14px rgba(255, 140, 0, 0.16);
+}
+
+.bvs-read-btn::before {
+  content: '🔊';
+  font-size: 24px;
+  line-height: 1;
+  color: #c96b00;
+}
+
+.bvs-read-btn:active {
+  transform: scale(0.96);
+  background: #fff3e0;
 }
 
 /* Level-up overlay */
@@ -212,7 +318,7 @@
 }
 
 .bvs-animal-btn.grow .bvs-animal-emoji {
-  transform: scale(1.35);
+  transform: scale(calc(var(--bvs-emoji-scale, 1) * 1.18));
 }
 
 /* Incorrect hint */

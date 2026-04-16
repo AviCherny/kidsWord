@@ -5,6 +5,7 @@ const DEFAULTS = {
   sound: true,
   facilitator: false,
   hiddenGames: [],
+  gameDifficulties: {},
 };
 
 export function getSettings() {
@@ -29,4 +30,22 @@ export function verifyPin(pin) {
 
 export function isSoundEnabled() {
   return getSettings().sound !== false;
+}
+
+export function getGameDifficulty(gameId, fallback = 1) {
+  const difficulty = getSettings().gameDifficulties?.[gameId];
+  return Number.isInteger(difficulty) && difficulty >= 1 && difficulty <= 4
+    ? difficulty
+    : fallback;
+}
+
+export function saveGameDifficulty(gameId, difficulty) {
+  const safeDifficulty = Math.min(4, Math.max(1, Math.round(difficulty)));
+  const current = getSettings();
+  const gameDifficulties = {
+    ...(current.gameDifficulties || {}),
+    [gameId]: safeDifficulty,
+  };
+  saveSettings({ gameDifficulties });
+  return safeDifficulty;
 }

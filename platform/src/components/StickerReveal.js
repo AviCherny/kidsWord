@@ -9,6 +9,9 @@ export default function StickerReveal({ sticker, earnedCount, isNew, onDone }) {
   useEffect(() => {
     // Slight delay so the overlay fades in after creature exits
     const t = setTimeout(() => setVisible(true), 80);
+    // Play sticker sound when reveal appears
+    const audio = new Audio('/audio/medabeka.m4a');
+    audio.play().catch(() => {});
     return () => clearTimeout(t);
   }, []);
 

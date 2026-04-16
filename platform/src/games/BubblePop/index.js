@@ -64,6 +64,25 @@ function makeQuestion(levelCfg) {
   return { a, b, op, answer };
 }
 
+// Build a shuffled deck of unique questions for a level (no back-to-back repeats)
+function buildDeck(levelCfg) {
+  const pool = [];
+  const seen = new Set();
+  let attempts = 0;
+  while (pool.length < QUESTIONS_PER_LEVEL * 3 && attempts < 200) {
+    attempts++;
+    const q = makeQuestion(levelCfg);
+    const key = `${q.a}${q.op}${q.b}`;
+    if (!seen.has(key)) { seen.add(key); pool.push(q); }
+  }
+  // Fisher-Yates shuffle
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  return pool;
+}
+
 function makeDistractors(answer, count) {
   const set = new Set([answer]);
   const candidates = [];
@@ -148,8 +167,9 @@ function PopBurst({ pop }) {
 export default function BubblePop({ onSuccess, onExit }) {
   const [levelIdx, setLevelIdx] = useState(0);
   const [qCount,   setQCount]   = useState(0);
-  const [question, setQuestion] = useState(() => makeQuestion(LEVELS[0]));
-  const [bubbles,  setBubbles]  = useState(() => makeBubbles(makeQuestion(LEVELS[0]).answer));
+  const deckRef = useRef(buildDeck(LEVELS[0]));
+  const [question, setQuestion] = useState(() => deckRef.current[0]);
+  const [bubbles,  setBubbles]  = useState(() => makeBubbles(deckRef.current[0].answer));
   const [stars,    setStars]    = useState(0);
   const [done,     setDone]     = useState(false);
   const [combo,    setCombo]    = useState(0);
@@ -173,14 +193,15 @@ export default function BubblePop({ onSuccess, onExit }) {
         return;
       }
       speak(`Level ${nextLvl + 1}! Keep going!`, 'en');
+      deckRef.current = buildDeck(LEVELS[nextLvl]);
       setLevelIdx(nextLvl);
       setQCount(0);
-      const q = makeQuestion(LEVELS[nextLvl]);
+      const q = deckRef.current[0];
       setQuestion(q);
       setBubbles(makeBubbles(q.answer));
     } else {
       setQCount(nextQ);
-      const q = makeQuestion(LEVELS[lvl]);
+      const q = deckRef.current[nextQ] || makeQuestion(LEVELS[lvl]);
       setQuestion(q);
       setBubbles(makeBubbles(q.answer));
     }

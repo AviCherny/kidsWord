@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { speak } from '../../speak';
+import { getGameDifficulty, saveGameDifficulty } from '../../lib/settings';
 import './NumberTrain.css';
 
 // ─── Strings ────────────────────────────────────────────────────────────────
@@ -15,6 +16,8 @@ const S = {
     sticker:     'קבל מדבקה 🌟',
     back:        'חזור',
     tapHint:     'לחץ על קרון לשמוע מספר',
+    difficulty:  'רמת קושי',
+    difficultyNames: ['קל', 'בינוני', 'מתקדם', 'קשה'],
   },
   en: {
     prompt:      'Find the missing number!',
@@ -26,6 +29,8 @@ const S = {
     sticker:     'Collect Sticker 🌟',
     back:        'Back',
     tapHint:     'Tap a wagon to hear its number',
+    difficulty:  'Difficulty',
+    difficultyNames: ['Easy', 'Medium', 'Advanced', 'Hard'],
   },
 };
 
@@ -105,26 +110,71 @@ function playWrongBuzz() {
 }
 
 // ─── Round builder ───────────────────────────────────────────────────────────
-function buildRound(levelIdx) {
-  const configs = [
-    { start: 1,   step: 1,  len: 5, gapIdx: 3 },
-    { start: 2,   step: 2,  len: 5, gapIdx: 2 },
-    { start: 5,   step: 5,  len: 5, gapIdx: 1 },
-    { start: 10,  step: 10, len: 6, gapIdx: 4 },
-    { start: 1,   step: 3,  len: 5, gapIdx: 2 },
-    { start: 3,   step: 4,  len: 6, gapIdx: 3 },
-    { start: 100, step: 10, len: 5, gapIdx: 3 },
-    { start: 0,   step: 7,  len: 5, gapIdx: 2 },
-  ];
-  const cfg    = configs[levelIdx % configs.length];
+const DIFFICULTY_PRESETS = [
+  [
+    { start: 1, step: 1, len: 4, gapIdx: 1, choiceCount: 2 },
+    { start: 1, step: 1, len: 5, gapIdx: 2, choiceCount: 2 },
+    { start: 2, step: 1, len: 5, gapIdx: 3, choiceCount: 2 },
+    { start: 3, step: 1, len: 5, gapIdx: 1, choiceCount: 3 },
+    { start: 1, step: 2, len: 4, gapIdx: 2, choiceCount: 3 },
+    { start: 2, step: 2, len: 5, gapIdx: 1, choiceCount: 3 },
+    { start: 4, step: 2, len: 5, gapIdx: 3, choiceCount: 3 },
+    { start: 5, step: 2, len: 6, gapIdx: 2, choiceCount: 3 },
+  ],
+  [
+    { start: 1, step: 2, len: 5, gapIdx: 2, choiceCount: 3 },
+    { start: 2, step: 2, len: 6, gapIdx: 3, choiceCount: 3 },
+    { start: 5, step: 5, len: 4, gapIdx: 1, choiceCount: 3 },
+    { start: 10, step: 5, len: 5, gapIdx: 3, choiceCount: 3 },
+    { start: 3, step: 3, len: 5, gapIdx: 2, choiceCount: 3 },
+    { start: 6, step: 3, len: 6, gapIdx: 4, choiceCount: 4 },
+    { start: 10, step: 10, len: 5, gapIdx: 2, choiceCount: 4 },
+    { start: 15, step: 10, len: 5, gapIdx: 3, choiceCount: 4 },
+  ],
+  [
+    { start: 1, step: 3, len: 5, gapIdx: 2, choiceCount: 4 },
+    { start: 3, step: 4, len: 6, gapIdx: 3, choiceCount: 4 },
+    { start: 5, step: 5, len: 6, gapIdx: 4, choiceCount: 4 },
+    { start: 12, step: 6, len: 5, gapIdx: 1, choiceCount: 4 },
+    { start: 20, step: 10, len: 5, gapIdx: 2, choiceCount: 4 },
+    { start: 35, step: 5, len: 6, gapIdx: 4, choiceCount: 4 },
+    { start: 50, step: 10, len: 6, gapIdx: 3, choiceCount: 4 },
+    { start: 100, step: 10, len: 5, gapIdx: 3, choiceCount: 4 },
+  ],
+  [
+    { start: 0, step: 7, len: 5, gapIdx: 2, choiceCount: 4 },
+    { start: 4, step: 6, len: 6, gapIdx: 4, choiceCount: 4 },
+    { start: 8, step: 8, len: 5, gapIdx: 1, choiceCount: 4 },
+    { start: 12, step: 12, len: 5, gapIdx: 3, choiceCount: 4 },
+    { start: 25, step: 15, len: 5, gapIdx: 2, choiceCount: 4 },
+    { start: 40, step: 20, len: 6, gapIdx: 4, choiceCount: 4 },
+    { start: 90, step: 25, len: 5, gapIdx: 1, choiceCount: 4 },
+    { start: 120, step: 30, len: 6, gapIdx: 3, choiceCount: 4 },
+  ],
+];
+
+function shuffle(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function buildRound(levelIdx, difficulty) {
+  const presets = DIFFICULTY_PRESETS[difficulty - 1] || DIFFICULTY_PRESETS[0];
+  const cfg = presets[levelIdx % presets.length];
   const seq    = Array.from({ length: cfg.len }, (_, i) => cfg.start + i * cfg.step);
   const answer = seq[cfg.gapIdx];
   const wrongs = [];
-  for (let d = 1; wrongs.length < 3; d++) {
-    if (!seq.includes(answer + d)) wrongs.push(answer + d);
-    if (!seq.includes(answer - d) && answer - d >= 0) wrongs.push(answer - d);
+  for (let d = 1; wrongs.length < Math.max(5, cfg.choiceCount + 1); d++) {
+    const plus = answer + (d * cfg.step);
+    const minus = answer - (d * cfg.step);
+    if (!seq.includes(plus)) wrongs.push(plus);
+    if (!seq.includes(minus) && minus >= 0) wrongs.push(minus);
   }
-  const choices = [answer, ...wrongs.slice(0, 2)].sort(() => Math.random() - 0.5);
+  const choices = shuffle([answer, ...wrongs.slice(0, cfg.choiceCount - 1)]);
   return { seq, gapIdx: cfg.gapIdx, answer, choices };
 }
 
@@ -241,11 +291,13 @@ function Locomotive({ moving, showSteam }) {
 
 // ─── Main component ──────────────────────────────────────────────────────────
 const MAX_LEVELS = 8;
+const GAME_ID = 'numbertrain';
 
 export default function NumberTrain({ onSuccess, onExit }) {
   const { lang } = useLanguage();
   const s = S[lang] || S.en;
 
+  const [difficulty,  setDifficulty]   = useState(() => getGameDifficulty(GAME_ID, 1));
   const [levelIdx,     setLevelIdx]     = useState(0);
   const [round,        setRound]        = useState(null);
   const [feedback,     setFeedback]     = useState(null); // null | 'correct' | 'wrong'
@@ -259,21 +311,44 @@ export default function NumberTrain({ onSuccess, onExit }) {
   const [gapHint,      setGapHint]      = useState(false);
   const hintTimer = useRef(null);
 
-  const startRound = useCallback((idx) => {
-    setRound(buildRound(idx));
+  const resetGame = useCallback((nextDifficulty) => {
+    setLevelIdx(0);
+    setRound(buildRound(0, nextDifficulty));
+    setStars(0);
+    setDone(false);
     setFeedback(null);
+    setShake(false);
     setShowConfetti(false);
     setShowSteam(false);
+    setTrainMoving(false);
+    setTappedWagon(null);
     setGapHint(false);
     clearTimeout(hintTimer.current);
-    // Speak prompt after short delay
     setTimeout(() => speak(lang === 'he' ? 'מצא את המספר החסר' : 'Find the missing number!', lang), 200);
-    // Gap hint wiggle after 4s of no answer
     hintTimer.current = setTimeout(() => setGapHint(true), 4000);
   }, [lang]);
 
-  useEffect(() => { startRound(0); }, [startRound]);
+  const startRound = useCallback((idx, nextDifficulty = difficulty) => {
+    setRound(buildRound(idx, nextDifficulty));
+    setFeedback(null);
+    setShowConfetti(false);
+    setShowSteam(false);
+    setTrainMoving(false);
+    setTappedWagon(null);
+    setGapHint(false);
+    clearTimeout(hintTimer.current);
+    setTimeout(() => speak(lang === 'he' ? 'מצא את המספר החסר' : 'Find the missing number!', lang), 200);
+    hintTimer.current = setTimeout(() => setGapHint(true), 4000);
+  }, [difficulty, lang]);
+
+  useEffect(() => { resetGame(difficulty); }, [difficulty, resetGame]);
   useEffect(() => () => clearTimeout(hintTimer.current), []);
+
+  function handleDifficultyChange(nextDifficulty) {
+    if (nextDifficulty === difficulty) return;
+    const saved = saveGameDifficulty(GAME_ID, nextDifficulty);
+    setDifficulty(saved);
+  }
 
   function handleWagonTap(num, idx, isGap) {
     if (isGap) {
@@ -311,7 +386,7 @@ export default function NumberTrain({ onSuccess, onExit }) {
               setTrainMoving(false);
               const next = levelIdx + 1;
               if (next >= MAX_LEVELS) { setDone(true); }
-              else { setLevelIdx(next); startRound(next); }
+              else { setLevelIdx(next); startRound(next, difficulty); }
             }, 1200);
           }, 100);
         });
@@ -382,6 +457,24 @@ export default function NumberTrain({ onSuccess, onExit }) {
       {/* Progress */}
       <div className="nt-progress">
         <div className="nt-progress-fill" style={{ width: `${progress}%` }} />
+      </div>
+
+      <div className="nt-difficulty" role="group" aria-label={s.difficulty}>
+        <span className="nt-difficulty-label">{s.difficulty}</span>
+        <div className="nt-difficulty-pills">
+          {[1, 2, 3, 4].map((value) => (
+            <button
+              key={value}
+              className={`nt-difficulty-pill${value === difficulty ? ' active' : ''}`}
+              onClick={() => handleDifficultyChange(value)}
+              aria-pressed={value === difficulty}
+              type="button"
+            >
+              <span className="nt-difficulty-pill-num">{value}</span>
+              <span className="nt-difficulty-pill-text">{s.difficultyNames[value - 1]}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <p className="nt-prompt">

@@ -87,6 +87,65 @@
   transition: width 0.4s ease;
 }
 
+.lm-difficulty {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.lm-difficulty-label {
+  font-size: 14px;
+  font-weight: 800;
+  color: #2e7d32;
+}
+
+.lm-difficulty-pills {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lm-difficulty-pill {
+  border: 2px solid #b7dfb9;
+  background: rgba(255,255,255,0.92);
+  color: #2e7d32;
+  border-radius: 16px;
+  padding: 8px 6px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.lm-difficulty-pill:active {
+  transform: scale(0.96);
+}
+
+.lm-difficulty-pill.active {
+  background: linear-gradient(180deg, #43a047, #2e7d32);
+  border-color: #2e7d32;
+  color: #fff;
+}
+
+.lm-difficulty-pill-num {
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.lm-difficulty-pill-text {
+  font-size: 11px;
+  font-weight: 800;
+}
+
 /* ── Display card ────────────────────────────────── */
 .lm-display {
   background: white;
@@ -118,44 +177,23 @@
 }
 
 /* ── Animal mouth animation ──────────────────────── */
-/*
-  The emoji is rendered twice:
-    - Top layer: clipped to the upper 58% (eyes, nose, ears) — stays still
-    - Bottom layer: clipped to the lower 42% (mouth area) — slides down = "opens"
-  The gap created between them simulates a talking mouth.
-*/
+/* No splitting — whole emoji pulses with a scaleY rhythm that reads as talking */
 .lm-animal-wrap {
-  position: relative;
   display: inline-block;
+}
+
+.lm-animal-talking {
+  display: block;
   font-size: 80px;
   line-height: 1;
-  width: 1em;
-  height: 1em;
+  transform-origin: center bottom;
+  animation: lmTalking 0.4s ease-in-out infinite;
 }
 
-.lm-animal-layer {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  font-size: inherit;
-  line-height: 1;
-}
-
-.lm-animal-top {
-  clip-path: polygon(0 0, 100% 0, 100% 58%, 0 58%);
-}
-
-.lm-animal-bottom {
-  clip-path: polygon(0 58%, 100% 58%, 100% 100%, 0 100%);
-  animation: lmMouthOpen 0.55s ease-in-out infinite;
-}
-
-@keyframes lmMouthOpen {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(7px); }
+@keyframes lmTalking {
+  0%, 100% { transform: scaleY(1)    translateY(0);   }
+  30%       { transform: scaleY(0.88) translateY(4px); }
+  60%       { transform: scaleY(1.04) translateY(-1px);}
 }
 
 /* ── Prompt ──────────────────────────────────────── */
@@ -330,3 +368,9 @@
 .lm-btn:active { transform: scale(0.95); }
 .lm-btn--primary { background: #43a047; color: white; }
 .lm-btn--ghost   { background: rgba(0,0,0,0.06); color: #555; }
+
+@media (max-width: 520px) {
+  .lm-difficulty-pills {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

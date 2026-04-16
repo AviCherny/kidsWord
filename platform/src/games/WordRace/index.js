@@ -1,48 +1,142 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 import { speak } from '../../speak';
 import './WordRace.css';
 
 const WORDS = [
-  { word: 'elephant', emoji: '🐘' },
-  { word: 'dog',      emoji: '🐶' },
-  { word: 'cat',      emoji: '🐱' },
-  { word: 'fish',     emoji: '🐟' },
-  { word: 'duck',     emoji: '🦆' },
-  { word: 'bear',     emoji: '🐻' },
-  { word: 'frog',     emoji: '🐸' },
-  { word: 'tiger',    emoji: '🐯' },
-  { word: 'rabbit',   emoji: '🐰' },
-  { word: 'monkey',   emoji: '🐵' },
-  { word: 'turtle',   emoji: '🐢' },
-  { word: 'apple',    emoji: '🍎' },
-  { word: 'cake',     emoji: '🎂' },
-  { word: 'rocket',   emoji: '🚀' },
-  { word: 'train',    emoji: '🚂' },
-  { word: 'ball',     emoji: '⚽' },
-  { word: 'drum',     emoji: '🥁' },
-  { word: 'hat',      emoji: '🎩' },
-  { word: 'bird',     emoji: '🐦' },
-  { word: 'cow',      emoji: '🐮' },
+  { en: 'elephant', he: 'פיל', emoji: '🐘' },
+  { en: 'dog', he: 'כלב', emoji: '🐶' },
+  { en: 'cat', he: 'חתול', emoji: '🐱' },
+  { en: 'fish', he: 'דג', emoji: '🐟' },
+  { en: 'duck', he: 'ברווז', emoji: '🦆' },
+  { en: 'bear', he: 'דוב', emoji: '🐻' },
+  { en: 'frog', he: 'צפרדע', emoji: '🐸' },
+  { en: 'tiger', he: 'נמר', emoji: '🐯' },
+  { en: 'rabbit', he: 'ארנב', emoji: '🐰' },
+  { en: 'monkey', he: 'קוף', emoji: '🐵' },
+  { en: 'turtle', he: 'צב', emoji: '🐢' },
+  { en: 'apple', he: 'תפוח', emoji: '🍎' },
+  { en: 'cake', he: 'עוגה', emoji: '🎂' },
+  { en: 'rocket', he: 'רקטה', emoji: '🚀' },
+  { en: 'train', he: 'רכבת', emoji: '🚂' },
+  { en: 'ball', he: 'כדור', emoji: '⚽' },
+  { en: 'drum', he: 'תוף', emoji: '🥁' },
+  { en: 'hat', he: 'כובע', emoji: '🎩' },
+  { en: 'bird', he: 'ציפור', emoji: '🐦' },
+  { en: 'cow', he: 'פרה', emoji: '🐮' },
 ];
 
-const TURBO_BOOST    = 18;
-const AI_TICK_MS     = 800;
-const AI_STEP        = 2.5;
-const AI_STEP_SLOW   = 0.8;
+const COPY = {
+  he: {
+    title: 'מירוץ מילים',
+    subtitle: 'שומעים, אומרים, ומאיצים',
+    start: 'מתחילים',
+    how1: 'שומעים מילה',
+    how2: 'אומרים בקול',
+    how3: 'מקבלים טורבו',
+    micFallback: 'אין מיקרופון זמין. אפשר לבחור את הכרטיס הנכון.',
+    you: 'את/ה',
+    ai: 'מחשב',
+    listening: 'מקשיב...',
+    micLabel: 'אמרו את המילה',
+    coachIdleTitle: 'המשימה הבאה',
+    coachIdleText: 'לחצו על הרמקול כדי לשמוע שוב, ואז אמרו את המילה.',
+    coachListeningTitle: 'אני מקשיב',
+    coachListeningText: 'אמרו את המילה בקול ברור וקצר.',
+    coachWrongTitle: 'לא נקלט טוב',
+    coachWrongText: 'אפשר לנסות שוב, או לבחור את הכרטיס הנכון.',
+    coachCorrectTitle: 'מעולה!',
+    coachCorrectText: 'קיבלתם טורבו.',
+    heard: 'מה שמעתי',
+    noClearWord: 'לא שמעתי מילה ברורה',
+    turbo: 'טורבו!',
+    tryAgain: 'נסו שוב',
+    skip: 'דלג',
+    challengeSoon: 'האתגר הבא מגיע...',
+    win: 'ניצחתם!',
+    lose: 'כמעט הצלחתם',
+    winSub: 'עניתם נכון והקדמתם את המחשב.',
+    loseSub: 'המחשב ניצח הפעם. רוצים עוד סיבוב?',
+    collect: 'קבלו מדבקה',
+    playAgain: 'שחקו שוב',
+    back: 'חזרה',
+    score: 'מילים',
+  },
+  en: {
+    title: 'Word Race',
+    subtitle: 'Hear it, say it, boost ahead',
+    start: 'Start Race',
+    how1: 'Hear a word',
+    how2: 'Say it out loud',
+    how3: 'Get turbo',
+    micFallback: 'No microphone available. You can pick the right card instead.',
+    you: 'You',
+    ai: 'AI',
+    listening: 'Listening...',
+    micLabel: 'Say the word',
+    coachIdleTitle: 'Your next word',
+    coachIdleText: 'Tap the speaker to hear it again, then say the word.',
+    coachListeningTitle: 'I am listening',
+    coachListeningText: 'Say the word clearly and briefly.',
+    coachWrongTitle: 'Not clear enough',
+    coachWrongText: 'Try the mic again, or pick the right card.',
+    coachCorrectTitle: 'Perfect!',
+    coachCorrectText: 'Turbo boost unlocked.',
+    heard: 'I heard',
+    noClearWord: 'No clear word',
+    turbo: 'Turbo!',
+    tryAgain: 'Try again',
+    skip: 'Skip',
+    challengeSoon: 'Next challenge coming...',
+    win: 'You Win!',
+    lose: 'So Close!',
+    winSub: 'You answered correctly and passed the AI.',
+    loseSub: 'The AI won this round. Want another race?',
+    collect: 'Collect Sticker',
+    playAgain: 'Play Again',
+    back: 'Back',
+    score: 'Words',
+  },
+};
+
+const WORD_ALIASES = {
+  elephant: ['elefant', 'elifant'],
+  rabbit: ['rabit'],
+  tiger: ['tigar'],
+  monkey: ['monkee'],
+  turtle: ['turtel'],
+  rocket: ['rockit'],
+};
+
+const TURBO_BOOST = 18;
+const AI_TICK_MS = 800;
+const AI_STEP = 2.5;
+const AI_STEP_SLOW = 0.8;
 const CHALLENGE_DELAY = 2500;
-const FEEDBACK_DELAY  = 1500;
-const WINS_REQUIRED   = 12;
+const FEEDBACK_DELAY = 1500;
+const WINS_REQUIRED = 12;
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const HAS_SPEECH = !!SpeechRecognition;
+const CONFETTI_COLORS = ['#ffcf53', '#ff8b5e', '#ff5f7a', '#6dd3ff', '#53e0a1', '#c38bff'];
+
+function normalizeSpokenText(text, lang) {
+  const pattern = lang === 'he' ? /[^א-ת\s]/g : /[^a-z\s]/g;
+  return (text || '')
+    .toLowerCase()
+    .replace(pattern, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
 
 function levenshtein(a, b) {
-  const m = a.length, n = b.length;
+  const m = a.length;
+  const n = b.length;
   const dp = Array.from({ length: m + 1 }, (_, i) =>
     Array.from({ length: n + 1 }, (_, j) => (i === 0 ? j : j === 0 ? i : 0))
   );
-  for (let i = 1; i <= m; i++) {
-    for (let j = 1; j <= n; j++) {
+  for (let i = 1; i <= m; i += 1) {
+    for (let j = 1; j <= n; j += 1) {
       dp[i][j] = a[i - 1] === b[j - 1]
         ? dp[i - 1][j - 1]
         : 1 + Math.min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
@@ -51,60 +145,76 @@ function levenshtein(a, b) {
   return dp[m][n];
 }
 
-function wordMatches(heard, target) {
-  const h = heard.toLowerCase().trim();
-  const t = target.toLowerCase().trim();
-  if (h.includes(t) || t.includes(h)) return true;
-  const words = h.split(/\s+/);
-  return words.some(w => levenshtein(w, t) <= 2);
+function getWordText(wordObj, lang) {
+  return lang === 'he' ? wordObj.he : wordObj.en;
+}
+
+function getSpeechLang(lang) {
+  return lang === 'he' ? 'he-IL' : 'en-US';
+}
+
+function wordMatches(heard, target, lang) {
+  const normalizedHeard = normalizeSpokenText(heard, lang);
+  const normalizedTarget = normalizeSpokenText(target, lang);
+  if (!normalizedHeard || !normalizedTarget) return false;
+  if (normalizedHeard.includes(normalizedTarget) || normalizedTarget.includes(normalizedHeard)) return true;
+
+  const acceptable = lang === 'he'
+    ? [normalizedTarget]
+    : [normalizedTarget, ...(WORD_ALIASES[normalizedTarget] || [])];
+
+  return normalizedHeard.split(/\s+/).some((word) =>
+    acceptable.some((candidate) =>
+      word === candidate ||
+      word.startsWith(candidate) ||
+      candidate.startsWith(word) ||
+      levenshtein(word, candidate) <= Math.min(2, Math.floor(candidate.length / 3))
+    )
+  );
 }
 
 function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
+  const clone = [...arr];
+  for (let i = clone.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [clone[i], clone[j]] = [clone[j], clone[i]];
   }
-  return a;
+  return clone;
 }
 
 function getFallbackChoices(target, all) {
-  const others = all.filter(w => w.word !== target.word);
-  const distractors = shuffle(others).slice(0, 2);
-  return shuffle([target, ...distractors]);
+  const others = all.filter((item) => item.en !== target.en);
+  return shuffle([target, ...shuffle(others).slice(0, 2)]);
 }
 
-// ─── Confetti ───────────────────────────────────────────────────────────────────
-const CONFETTI_COLORS = ['#ffeb3b','#ff9800','#f44336','#e91e63','#9c27b0','#2196f3','#00bcd4','#4caf50'];
-
 function Confetti({ id }) {
-  const pieces = Array.from({ length: 22 }, (_, i) => {
-    const angle = (i / 22) * 2 * Math.PI + (Math.random() - 0.5) * 0.8;
-    const dist  = 60 + Math.random() * 80;
-    const tx    = Math.round(Math.cos(angle) * dist);
-    const ty    = Math.round(Math.sin(angle) * dist);
-    const r     = Math.round(Math.random() * 540 - 270);
-    const size  = Math.round(6 + Math.random() * 6);
-    const color = CONFETTI_COLORS[i % CONFETTI_COLORS.length];
-    const isSquare = i % 2 === 0;
-    return { tx, ty, r, size, color, isSquare, delay: (i * 0.018).toFixed(3) };
+  const pieces = Array.from({ length: 20 }, (_, i) => {
+    const angle = (i / 20) * Math.PI * 2 + (Math.random() - 0.5) * 0.6;
+    const dist = 50 + Math.random() * 90;
+    return {
+      tx: Math.round(Math.cos(angle) * dist),
+      ty: Math.round(Math.sin(angle) * dist),
+      r: Math.round(Math.random() * 480 - 240),
+      size: Math.round(6 + Math.random() * 5),
+      color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      delay: (i * 0.02).toFixed(3),
+    };
   });
 
   return (
     <div className="wr-confetti-wrap" key={id}>
-      {pieces.map((p, i) => (
+      {pieces.map((piece, index) => (
         <div
-          key={i}
+          key={index}
           className="wr-confetti-piece"
           style={{
-            '--tx': `${p.tx}px`,
-            '--ty': `${p.ty}px`,
-            '--r':  `${p.r}deg`,
-            width:  `${p.size}px`,
-            height: `${p.size}px`,
-            background: p.color,
-            borderRadius: p.isSquare ? '2px' : '50%',
-            animationDelay: `${p.delay}s`,
+            '--tx': `${piece.tx}px`,
+            '--ty': `${piece.ty}px`,
+            '--r': `${piece.r}deg`,
+            width: `${piece.size}px`,
+            height: `${piece.size}px`,
+            background: piece.color,
+            animationDelay: `${piece.delay}s`,
           }}
         />
       ))}
@@ -112,157 +222,166 @@ function Confetti({ id }) {
   );
 }
 
-// ─── Speed Lines ────────────────────────────────────────────────────────────────
-const LINE_POSITIONS = ['15%', '28%', '48%', '66%', '80%'];
-const LINE_DELAYS    = ['0s', '0.03s', '0.06s', '0.04s', '0.02s'];
-
-function SpeedLines({ active }) {
-  if (!active) return null;
-  return (
-    <div className="wr-speed-lines">
-      {LINE_POSITIONS.map((top, i) => (
-        <div
-          key={i}
-          className="wr-speed-line"
-          style={{ top, animationDelay: LINE_DELAYS[i] }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ─── Countdown Screen ───────────────────────────────────────────────────────────
 function CountdownScreen({ onDone }) {
   const [count, setCount] = useState(3);
-  const onDoneRef = useRef(onDone);
-  useEffect(() => { onDoneRef.current = onDone; }, [onDone]);
 
   useEffect(() => {
     if (count > 1) {
-      const t = setTimeout(() => setCount(c => c - 1), 900);
-      return () => clearTimeout(t);
-    } else if (count === 1) {
-      const t = setTimeout(() => setCount(0), 900);
-      return () => clearTimeout(t);
-    } else {
-      // count === 0 = "GO!"
-      const t = setTimeout(() => onDoneRef.current(), 600);
-      return () => clearTimeout(t);
+      const timer = setTimeout(() => setCount((current) => current - 1), 900);
+      return () => clearTimeout(timer);
     }
-  }, [count]);
-
-  const label  = count === 0 ? 'GO!' : String(count);
-  const colors = { 3: '#f44336', 2: '#ff9800', 1: '#66bb6a', 0: '#ffffff' };
-  const color  = colors[count] || '#ffffff';
+    if (count === 1) {
+      const timer = setTimeout(() => setCount(0), 900);
+      return () => clearTimeout(timer);
+    }
+    const timer = setTimeout(() => onDone(), 600);
+    return () => clearTimeout(timer);
+  }, [count, onDone]);
 
   return (
     <div className="wr-countdown">
-      <div
-        key={label}
-        className="wr-countdown-number"
-        style={{ color }}
-      >
-        {label}
+      <div key={count} className="wr-countdown-number">
+        {count === 0 ? 'GO!' : count}
       </div>
     </div>
   );
 }
 
-// ─── Intro Screen ───────────────────────────────────────────────────────────────
-function IntroScreen({ onStart }) {
+function IntroScreen({ copy, onStart }) {
   return (
     <div className="wr-intro">
-      <div className="wr-intro-title">
-        <span className="wr-intro-he">מרוץ מילים</span>
-        <span className="wr-intro-en">Word Race</span>
+      <div className="wr-intro-badge">{copy.title}</div>
+      <h1 className="wr-intro-title">{copy.title}</h1>
+      <p className="wr-intro-subtitle">{copy.subtitle}</p>
+
+      <div className="wr-intro-preview">
+        <div className="wr-intro-preview-car">🏎️</div>
+        <div className="wr-intro-preview-track" />
       </div>
 
-      <div className="wr-intro-car">🏎️</div>
-
-      <div className="wr-intro-steps">
-        <div className="wr-intro-step wr-intro-step--1">
-          <div className="wr-intro-step-icon">🔊</div>
-          <div className="wr-intro-step-text">I say a word</div>
+      <div className="wr-intro-grid">
+        <div className="wr-intro-card">
+          <span className="wr-intro-card-icon">🔊</span>
+          <span>{copy.how1}</span>
         </div>
-        <div className="wr-intro-arrow">→</div>
-        <div className="wr-intro-step wr-intro-step--2">
-          <div className="wr-intro-step-icon">🎤</div>
-          <div className="wr-intro-step-text">You say it!</div>
+        <div className="wr-intro-card">
+          <span className="wr-intro-card-icon">🎙️</span>
+          <span>{copy.how2}</span>
         </div>
-        <div className="wr-intro-arrow">→</div>
-        <div className="wr-intro-step wr-intro-step--3">
-          <div className="wr-intro-step-icon">🚀</div>
-          <div className="wr-intro-step-text">TURBO!</div>
+        <div className="wr-intro-card">
+          <span className="wr-intro-card-icon">⚡</span>
+          <span>{copy.how3}</span>
         </div>
       </div>
 
-      {!HAS_SPEECH && (
-        <div className="wr-intro-warning">⚠️ No microphone — tap the right word instead</div>
-      )}
+      {!HAS_SPEECH && <div className="wr-intro-warning">{copy.micFallback}</div>}
 
       <button className="wr-btn wr-btn--start" onClick={onStart}>
-        Start Race! 🏁
+        {copy.start}
       </button>
     </div>
   );
 }
 
-// ─── Challenge Card ─────────────────────────────────────────────────────────────
-function ChallengeCard({ wordObj, subPhase, onMic, onFallback, fallbackChoices, onReplay, onSkip }) {
+function ChallengeCard({
+  copy,
+  lang,
+  wordObj,
+  subPhase,
+  onMic,
+  onFallback,
+  fallbackChoices,
+  onReplay,
+  onSkip,
+  heardText,
+  failedAttempts,
+}) {
   const isListening = subPhase === 'listening';
-  const isCorrect   = subPhase === 'correct';
-  const isWrong     = subPhase === 'wrong';
+  const isCorrect = subPhase === 'correct';
+  const isWrong = subPhase === 'wrong';
+  const showFallback = !isCorrect && (!HAS_SPEECH || failedAttempts > 0 || isWrong);
+
+  let coachTitle = copy.coachIdleTitle;
+  let coachText = copy.coachIdleText;
+  if (isListening) {
+    coachTitle = copy.coachListeningTitle;
+    coachText = copy.coachListeningText;
+  } else if (isWrong) {
+    coachTitle = copy.coachWrongTitle;
+    coachText = copy.coachWrongText;
+  } else if (isCorrect) {
+    coachTitle = copy.coachCorrectTitle;
+    coachText = copy.coachCorrectText;
+  }
 
   let cardClass = 'wr-challenge';
-  if (isCorrect)  cardClass += ' wr-challenge--correct';
-  if (isWrong)    cardClass += ' wr-challenge--wrong';
+  if (isCorrect) cardClass += ' wr-challenge--correct';
+  if (isWrong) cardClass += ' wr-challenge--wrong';
   if (isListening) cardClass += ' wr-challenge--listening';
   if (!isCorrect && !isWrong && !isListening) cardClass += ' wr-challenge--idle';
 
   return (
     <div className={cardClass}>
-      <div className="wr-challenge-emoji">{wordObj.emoji}</div>
-      <div className="wr-challenge-word">{wordObj.word}</div>
-      <button className="wr-challenge-replay" onClick={onReplay} aria-label="Replay word">
-        🔊
-      </button>
+      <div className="wr-coach">
+        <div className="wr-coach-label">{coachTitle}</div>
+        <div className="wr-coach-text">{coachText}</div>
+      </div>
 
-      {isCorrect && <div className="wr-feedback-turbo">🔥 TURBO BOOST! 🔥</div>}
-      {isWrong   && <div className="wr-feedback-wrong">Try again! 💪</div>}
+      <div className="wr-challenge-stage">
+        <div className="wr-challenge-emoji">{wordObj.emoji}</div>
+        <div className="wr-challenge-word">{getWordText(wordObj, lang)}</div>
+        <button className="wr-challenge-replay" onClick={onReplay} aria-label="Replay word">
+          🔊
+        </button>
+      </div>
 
-      {!isCorrect && !isWrong && (
-        HAS_SPEECH ? (
-          <button
-            className={`wr-mic-btn ${isListening ? 'wr-mic-btn--listening' : ''}`}
-            onClick={onMic}
-            disabled={isListening}
-          >
-            {isListening ? (
-              <>
-                <span className="wr-mic-waves">
-                  <span className="wr-bar wr-bar--1" />
-                  <span className="wr-bar wr-bar--2" />
-                  <span className="wr-bar wr-bar--3" />
-                </span>
-                <span>Listening...</span>
-              </>
-            ) : (
-              <span style={{ fontSize: '32px' }}>🎤</span>
-            )}
-          </button>
-        ) : (
-          <div className="wr-fallback-btns">
-            {fallbackChoices.map((choice, i) => (
-              <button
-                key={i}
-                className="wr-fallback-btn"
-                onClick={() => onFallback(choice)}
-              >
-                {choice.emoji} {choice.word}
-              </button>
-            ))}
-          </div>
-        )
+      {isCorrect && <div className="wr-feedback-turbo">{copy.turbo}</div>}
+      {isWrong && <div className="wr-feedback-wrong">{copy.tryAgain}</div>}
+
+      {!isCorrect && HAS_SPEECH && (
+        <button
+          className={`wr-mic-btn ${isListening ? 'wr-mic-btn--listening' : ''}`}
+          onClick={onMic}
+          disabled={isListening}
+        >
+          {isListening ? (
+            <>
+              <span className="wr-mic-waves">
+                <span className="wr-bar wr-bar--1" />
+                <span className="wr-bar wr-bar--2" />
+                <span className="wr-bar wr-bar--3" />
+              </span>
+              <span>{copy.listening}</span>
+            </>
+          ) : (
+            <>
+              <span className="wr-mic-icon">🎙️</span>
+              <span>{copy.micLabel}</span>
+            </>
+          )}
+        </button>
+      )}
+
+      {heardText && !isCorrect && (
+        <div className="wr-heard">
+          <span className="wr-heard-label">{copy.heard}</span>
+          <strong>{heardText}</strong>
+        </div>
+      )}
+
+      {showFallback && (
+        <div className="wr-fallback-btns">
+          {fallbackChoices.map((choice) => (
+            <button
+              key={choice.en}
+              className="wr-fallback-btn"
+              onClick={() => onFallback(choice)}
+            >
+              <span>{choice.emoji}</span>
+              <span>{getWordText(choice, lang)}</span>
+            </button>
+          ))}
+        </div>
       )}
 
       {!isCorrect && (
@@ -271,58 +390,67 @@ function ChallengeCard({ wordObj, subPhase, onMic, onFallback, fallbackChoices, 
           onClick={onSkip}
           disabled={isListening || isCorrect || isWrong}
         >
-          Skip →
+          {copy.skip}
         </button>
       )}
     </div>
   );
 }
 
-// ─── Main Game ──────────────────────────────────────────────────────────────────
 export default function WordRace({ onSuccess, onExit }) {
-  const [screen, setScreen]       = useState('intro');   // intro | countdown | race | done
+  const { lang, dir, setLang } = useLanguage();
+  const copy = COPY[lang] || COPY.en;
+
+  const [screen, setScreen] = useState('intro');
   const [playerPos, setPlayerPos] = useState(0);
-  const [aiPos, setAiPos]         = useState(0);
-  const [subPhase, setSubPhase]   = useState('driving');
+  const [aiPos, setAiPos] = useState(0);
+  const [subPhase, setSubPhase] = useState('driving');
   const [currentWord, setCurrentWord] = useState(null);
   const [fallbackChoices, setFallbackChoices] = useState([]);
   const [correctCount, setCorrectCount] = useState(0);
-  const [winner, setWinner]       = useState(null);
-  const [steerClass, setSteerClass] = useState('');
+  const [winner, setWinner] = useState(null);
+  const [heardText, setHeardText] = useState('');
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const [turboActive, setTurboActive] = useState(false);
   const [confettiId, setConfettiId] = useState(0);
-  const [showFlash, setShowFlash]   = useState(false);
+  const [showFlash, setShowFlash] = useState(false);
 
-  const recogRef        = useRef(null);
-  const currentWordRef  = useRef(null);
-  const subPhaseRef     = useRef('driving');
-  const playerPosRef    = useRef(0);
-  const aiPosRef        = useRef(0);
+  const recogRef = useRef(null);
+  const currentWordRef = useRef(null);
+  const subPhaseRef = useRef('driving');
+  const playerPosRef = useRef(0);
+  const aiPosRef = useRef(0);
   const correctCountRef = useRef(0);
-  const doneRef         = useRef(false);
-  const wordDeckRef     = useRef([]);
+  const doneRef = useRef(false);
+  const wordDeckRef = useRef([]);
 
   useEffect(() => { subPhaseRef.current = subPhase; }, [subPhase]);
   useEffect(() => { playerPosRef.current = playerPos; }, [playerPos]);
   useEffect(() => { aiPosRef.current = aiPos; }, [aiPos]);
   useEffect(() => { correctCountRef.current = correctCount; }, [correctCount]);
 
-  function nextWordFromDeck() {
+  const nextWordFromDeck = useCallback(() => {
     if (wordDeckRef.current.length === 0) {
       wordDeckRef.current = shuffle([...WORDS]);
     }
     return wordDeckRef.current.pop();
-  }
+  }, []);
 
-  function checkWin(pp, ap, cc) {
+  const replayCurrentWord = useCallback(() => {
+    const word = currentWordRef.current;
+    if (!word) return;
+    speak(getWordText(word, lang), lang);
+  }, [lang]);
+
+  function checkWin(nextPlayerPos, nextAiPos, nextCorrectCount) {
     if (doneRef.current) return false;
-    if (pp >= 100 || cc >= WINS_REQUIRED) {
+    if (nextPlayerPos >= 100 || nextCorrectCount >= WINS_REQUIRED) {
       doneRef.current = true;
       setWinner('player');
       setScreen('done');
       return true;
     }
-    if (ap >= 100) {
+    if (nextAiPos >= 100) {
       doneRef.current = true;
       setWinner('ai');
       setScreen('done');
@@ -331,127 +459,119 @@ export default function WordRace({ onSuccess, onExit }) {
     return false;
   }
 
-  // AI ticker
   useEffect(() => {
-    if (screen !== 'race') return;
+    if (screen !== 'race') return undefined;
     const interval = setInterval(() => {
       if (doneRef.current) return;
-      const step = ['challenge','listening','correct','wrong'].includes(subPhaseRef.current)
+      const step = ['challenge', 'listening', 'correct', 'wrong'].includes(subPhaseRef.current)
         ? AI_STEP_SLOW
         : AI_STEP;
-      const next = Math.min(aiPosRef.current + step, 100);
-      aiPosRef.current = next;
-      setAiPos(next);
-      checkWin(playerPosRef.current, next, correctCountRef.current);
+      const nextAiPos = Math.min(aiPosRef.current + step, 100);
+      aiPosRef.current = nextAiPos;
+      setAiPos(nextAiPos);
+      checkWin(playerPosRef.current, nextAiPos, correctCountRef.current);
     }, AI_TICK_MS);
     return () => clearInterval(interval);
-  }, [screen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [screen]);
 
   const presentChallenge = useCallback(() => {
     if (doneRef.current) return;
     const word = nextWordFromDeck();
     currentWordRef.current = word;
     setCurrentWord(word);
-    setSubPhase('challenge');
     setFallbackChoices(getFallbackChoices(word, WORDS));
-    speak(word.word, 'en');
-  }, []);
+    setHeardText('');
+    setFailedAttempts(0);
+    setSubPhase('challenge');
+    speak(getWordText(word, lang), lang);
+  }, [lang, nextWordFromDeck]);
 
   useEffect(() => {
-    if (screen !== 'race' || subPhase !== 'driving') return;
-    const t = setTimeout(presentChallenge, CHALLENGE_DELAY);
-    return () => clearTimeout(t);
+    if (screen !== 'race' || subPhase !== 'driving') return undefined;
+    const timer = setTimeout(presentChallenge, CHALLENGE_DELAY);
+    return () => clearTimeout(timer);
   }, [screen, subPhase, presentChallenge]);
+
+  function handleResult(correct) {
+    if (doneRef.current) return;
+
+    if (correct) {
+      setHeardText('');
+      setFailedAttempts(0);
+      setSubPhase('correct');
+      setTurboActive(true);
+      setConfettiId((value) => value + 1);
+      setShowFlash(true);
+      speak(lang === 'he' ? 'כל הכבוד!' : 'Amazing!', lang);
+
+      const nextCorrectCount = correctCountRef.current + 1;
+      const nextPlayerPos = Math.min(playerPosRef.current + TURBO_BOOST, 100);
+      setCorrectCount(nextCorrectCount);
+      setPlayerPos(nextPlayerPos);
+      playerPosRef.current = nextPlayerPos;
+      correctCountRef.current = nextCorrectCount;
+
+      setTimeout(() => setShowFlash(false), 500);
+
+      if (!checkWin(nextPlayerPos, aiPosRef.current, nextCorrectCount)) {
+        setTimeout(() => {
+          setTurboActive(false);
+          setSubPhase('driving');
+        }, FEEDBACK_DELAY);
+      }
+      return;
+    }
+
+    setFailedAttempts((value) => value + 1);
+    setSubPhase('wrong');
+    replayCurrentWord();
+    setTimeout(() => setSubPhase('challenge'), FEEDBACK_DELAY);
+  }
 
   function startListening() {
     if (!HAS_SPEECH) return;
     if (recogRef.current) {
-      try { recogRef.current.abort(); } catch (e) {}
+      try { recogRef.current.abort(); } catch (error) {}
     }
+
+    setHeardText('');
     const recog = new SpeechRecognition();
-    recog.lang = 'en-US';
+    recog.lang = getSpeechLang(lang);
     recog.interimResults = false;
     recog.maxAlternatives = 3;
     recogRef.current = recog;
 
-    recog.onresult = (e) => {
-      const transcripts = Array.from(e.results[0]).map(r => r.transcript);
-      const target = currentWordRef.current?.word || '';
-      const matched = transcripts.some(t => wordMatches(t, target));
-      handleResult(matched);
+    recog.onresult = (event) => {
+      const transcripts = Array.from(event.results[0]).map((result) => result.transcript);
+      const targetText = getWordText(currentWordRef.current || { en: '', he: '' }, lang);
+      const normalized = normalizeSpokenText(transcripts[0] || '', lang);
+      setHeardText(normalized || copy.noClearWord);
+      handleResult(transcripts.some((text) => wordMatches(text, targetText, lang)));
     };
-    recog.onerror = () => handleResult(false);
-    recog.onend   = () => {
-      if (subPhaseRef.current === 'listening') handleResult(false);
+    recog.onerror = () => {
+      setHeardText(copy.noClearWord);
+      handleResult(false);
+    };
+    recog.onend = () => {
+      if (subPhaseRef.current === 'listening') {
+        setHeardText((current) => current || copy.noClearWord);
+        handleResult(false);
+      }
     };
 
     setSubPhase('listening');
     recog.start();
   }
 
-  function handleResult(correct) {
-    if (doneRef.current) return;
-    if (correct) {
-      speak('Amazing!', 'en');
-      setSubPhase('correct');
-      setTurboActive(true);
-      setConfettiId(id => id + 1);
-      setShowFlash(true);
-      setTimeout(() => setShowFlash(false), 500);
-
-      const newCount = correctCountRef.current + 1;
-      const newPos   = Math.min(playerPosRef.current + TURBO_BOOST, 100);
-      setCorrectCount(newCount);
-      setPlayerPos(newPos);
-      playerPosRef.current  = newPos;
-      correctCountRef.current = newCount;
-
-      if (!checkWin(newPos, aiPosRef.current, newCount)) {
-        setTimeout(() => {
-          setTurboActive(false);
-          setSubPhase('driving');
-        }, FEEDBACK_DELAY);
-      }
-    } else {
-      speak(currentWordRef.current?.word || '', 'en');
-      setSubPhase('wrong');
-      setTimeout(() => {
-        setSubPhase('challenge');
-      }, FEEDBACK_DELAY);
-    }
-  }
-
   function handleSkip() {
-    setAiPos(p => Math.min(p + 5, 100));
+    setAiPos((value) => Math.min(value + 5, 100));
     setSubPhase('driving');
   }
 
   function handleFallback(choice) {
-    if (subPhaseRef.current !== 'challenge') return;
-    handleResult(choice.word === currentWordRef.current?.word);
+    if (!['challenge', 'wrong'].includes(subPhaseRef.current)) return;
+    handleResult(choice.en === currentWordRef.current?.en);
   }
-
-  function handleReplay() {
-    if (currentWordRef.current) speak(currentWordRef.current.word, 'en');
-  }
-
-  useEffect(() => {
-    if (screen !== 'race') return;
-    function onKey(e) {
-      if (e.key === 'ArrowLeft') {
-        setSteerClass('wr-car--steer-left');
-        setTimeout(() => setSteerClass(''), 300);
-      } else if (e.key === 'ArrowRight') {
-        setSteerClass('wr-car--steer-right');
-        setTimeout(() => setSteerClass(''), 300);
-      } else if ((e.key === ' ' || e.key === 'Enter') && subPhaseRef.current === 'challenge') {
-        e.preventDefault();
-        startListening();
-      }
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [screen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function startRace() {
     doneRef.current = false;
@@ -463,41 +583,52 @@ export default function WordRace({ onSuccess, onExit }) {
     setWinner(null);
     setSubPhase('driving');
     setCurrentWord(null);
+    setHeardText('');
+    setFailedAttempts(0);
     setTurboActive(false);
     setConfettiId(0);
     setShowFlash(false);
-    playerPosRef.current  = 0;
-    aiPosRef.current      = 0;
+    playerPosRef.current = 0;
+    aiPosRef.current = 0;
     correctCountRef.current = 0;
-    subPhaseRef.current   = 'driving';
+    subPhaseRef.current = 'driving';
   }
 
-  // ── Screens ───────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      if (recogRef.current) {
+        try { recogRef.current.abort(); } catch (error) {}
+      }
+    };
+  }, []);
 
   if (screen === 'intro') {
     return (
-      <div className="wr-root">
+      <div className="wr-root" dir={dir}>
         <div className="wr-bg-stars" />
-        <button className="wr-back" onClick={onExit}>←</button>
-        <IntroScreen onStart={startRace} />
+        <button className="wr-back" onClick={onExit}>{dir === 'rtl' ? '→' : '←'}</button>
+        <IntroScreen copy={copy} onStart={startRace} />
       </div>
     );
   }
 
   if (screen === 'countdown') {
     return (
-      <div className="wr-root">
+      <div className="wr-root" dir={dir}>
         <div className="wr-bg-stars" />
-        {/* Faint race track behind countdown */}
         <div className="wr-track-wrap wr-track-wrap--faint">
           <div className="wr-lane">
-            <span className="wr-lane-label">You</span>
-            <div className="wr-road wr-road--paused"><div className="wr-car wr-car--player" style={{ left: '0%' }}>🏎️</div></div>
+            <span className="wr-lane-label">{copy.you}</span>
+            <div className="wr-road wr-road--paused">
+              <div className="wr-car" style={{ left: '0%' }}>🏎️</div>
+            </div>
             <span className="wr-flag">🏁</span>
           </div>
           <div className="wr-lane">
-            <span className="wr-lane-label">AI</span>
-            <div className="wr-road wr-road--paused"><div className="wr-car wr-car--ai" style={{ left: '0%' }}>🤖</div></div>
+            <span className="wr-lane-label">{copy.ai}</span>
+            <div className="wr-road wr-road--paused">
+              <div className="wr-car" style={{ left: '0%' }}>🤖</div>
+            </div>
             <span className="wr-flag">🏁</span>
           </div>
         </div>
@@ -509,101 +640,109 @@ export default function WordRace({ onSuccess, onExit }) {
   if (screen === 'done') {
     const won = winner === 'player';
     return (
-      <div className="wr-root">
+      <div className="wr-root" dir={dir}>
         <div className="wr-bg-stars" />
         <div className="wr-done">
-          <div className="wr-done-emoji">{won ? '🏆' : '😅'}</div>
-          <h2 className="wr-done-title">{won ? 'You Win!' : 'So Close!'}</h2>
-          <p className="wr-done-sub">
-            {won ? 'Amazing Voice! 🎤🚀' : 'The AI won this time — try again!'}
-          </p>
-          {won
-            ? <button className="wr-btn wr-btn--primary" onClick={onSuccess}>Collect Sticker 🌟</button>
-            : <button className="wr-btn wr-btn--primary" onClick={startRace}>Try Again 🔄</button>
-          }
-          <button className="wr-btn wr-btn--ghost" onClick={onExit}>Back</button>
+          <div className="wr-done-emoji">{won ? '🏆' : '🙂'}</div>
+          <h2 className="wr-done-title">{won ? copy.win : copy.lose}</h2>
+          <p className="wr-done-sub">{won ? copy.winSub : copy.loseSub}</p>
+          {won ? (
+            <button className="wr-btn wr-btn--primary" onClick={onSuccess}>{copy.collect}</button>
+          ) : (
+            <button className="wr-btn wr-btn--primary" onClick={startRace}>{copy.playAgain}</button>
+          )}
+          <button className="wr-btn wr-btn--ghost" onClick={onExit}>{copy.back}</button>
         </div>
       </div>
     );
   }
 
-  // Race screen
-  const showChallenge = ['challenge','listening','correct','wrong'].includes(subPhase);
-  const roadMoving    = subPhase === 'driving';
+  const showChallenge = ['challenge', 'listening', 'correct', 'wrong'].includes(subPhase);
+  const roadMoving = subPhase === 'driving';
 
   return (
-    <div className="wr-root" tabIndex={-1}>
+    <div className="wr-root" dir={dir}>
       <div className="wr-bg-stars" />
-
-      {/* Flash on correct */}
       {showFlash && <div className="wr-flash" />}
 
-      {/* Speed lines on turbo */}
-      <SpeedLines active={turboActive} />
-
-      {/* Header */}
       <div className="wr-header">
-        <button className="wr-back" onClick={onExit}>←</button>
-        <h1 className="wr-title">🏎️ Word Race</h1>
-        <div className="wr-score">{correctCount} / {WINS_REQUIRED}</div>
+        <button className="wr-back" onClick={onExit}>{dir === 'rtl' ? '→' : '←'}</button>
+        <div className="wr-header-main">
+          <div className="wr-header-title">{copy.title}</div>
+          <div className="wr-header-subtitle">{copy.score}</div>
+        </div>
+        <div className="wr-header-actions">
+          <button
+            className="wr-lang-btn"
+            onClick={() => setLang(lang === 'he' ? 'en' : 'he')}
+            aria-label={lang === 'he' ? 'Switch to English' : 'לעבור לעברית'}
+          >
+            {lang === 'he' ? 'EN' : 'עב'}
+          </button>
+          <div className="wr-score">{correctCount} / {WINS_REQUIRED}</div>
+        </div>
       </div>
 
-      {/* Race Track */}
-      <div className="wr-track-wrap" style={{ position: 'relative' }}>
-        {/* Confetti */}
+      <div className="wr-track-wrap">
         {confettiId > 0 && <Confetti id={confettiId} />}
 
-        {/* Player lane */}
+        <div className="wr-track-topline">
+          <div className="wr-track-topline-item">
+            <span className="wr-track-topline-dot wr-track-topline-dot--you" />
+            <span>{copy.you}</span>
+          </div>
+          <div className="wr-track-topline-item">
+            <span className="wr-track-topline-dot wr-track-topline-dot--ai" />
+            <span>{copy.ai}</span>
+          </div>
+        </div>
+
         <div className="wr-lane">
-          <span className="wr-lane-label">You</span>
+          <span className="wr-lane-label">{copy.you}</span>
           <div className={`wr-road ${roadMoving ? '' : 'wr-road--paused'}`}>
             <div
-              className={`wr-car wr-car--player ${steerClass} ${turboActive ? 'wr-car--turbo' : ''}`}
+              className={`wr-car ${turboActive ? 'wr-car--turbo' : ''}`}
               style={{ left: `calc(${playerPos}% * 0.88)` }}
             >
               🏎️
               {subPhase === 'driving' && <span className="wr-exhaust">💨</span>}
-              {turboActive && <span className="wr-turbo-trail">💨</span>}
+              {turboActive && <span className="wr-turbo-trail">✨</span>}
             </div>
           </div>
           <span className="wr-flag">🏁</span>
         </div>
 
-        {/* AI lane */}
         <div className="wr-lane">
-          <span className="wr-lane-label">AI</span>
+          <span className="wr-lane-label">{copy.ai}</span>
           <div className={`wr-road ${roadMoving ? '' : 'wr-road--paused'}`}>
-            <div
-              className="wr-car wr-car--ai"
-              style={{ left: `calc(${aiPos}% * 0.88)` }}
-            >
-              🤖
-            </div>
+            <div className="wr-car" style={{ left: `calc(${aiPos}% * 0.88)` }}>🤖</div>
           </div>
           <span className="wr-flag">🏁</span>
         </div>
       </div>
 
-      {/* Challenge card */}
       {showChallenge && currentWord && (
         <ChallengeCard
+          copy={copy}
+          lang={lang}
           wordObj={currentWord}
           subPhase={subPhase}
           onMic={startListening}
           onFallback={handleFallback}
           fallbackChoices={fallbackChoices}
-          onReplay={handleReplay}
+          onReplay={replayCurrentWord}
           onSkip={handleSkip}
+          heardText={heardText}
+          failedAttempts={failedAttempts}
         />
       )}
 
-      {/* Driving hint */}
       {!showChallenge && (
         <div className="wr-driving-hint">
           <span className="wr-driving-dot" />
           <span className="wr-driving-dot" />
           <span className="wr-driving-dot" />
-          <span className="wr-driving-text">Word challenge coming…</span>
+          <span className="wr-driving-text">{copy.challengeSoon}</span>
         </div>
       )}
     </div>

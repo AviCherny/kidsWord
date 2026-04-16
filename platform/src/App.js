@@ -17,7 +17,7 @@ import LetterMatch from './games/LetterMatch';
 import WordRace from './games/WordRace';
 import PicturePuzzle from './games/PicturePuzzle';
 import BubblePop from './games/BubblePop';
-import PawPatrol from './games/PawPatrol';
+import RescueDog from './games/RescueDog';
 import SpiderMan from './games/SpiderMan';
 import PJMasks from './games/PJMasks';
 import Sonic from './games/Sonic';
@@ -38,7 +38,7 @@ const GAME_COMPONENTS = {
   numbertrain:   NumberTrain,
   shapesorter:   ShapeSorter,
   lego:          LegoBuilder,
-  pawpatrol:     PawPatrol,
+  rescuedog:     RescueDog,
   spiderman:     SpiderMan,
   pjmasks:       PJMasks,
   sonic:         Sonic,

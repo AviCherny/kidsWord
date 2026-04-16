@@ -34,8 +34,8 @@ export const T = {
     bubblePopName: 'פוצץ בועות',
     bubblePopDesc: 'פוצץ את הבועות הנכונות!',
     // Character games
-    pawPatrolName: 'משמר הכפה',
-    pawPatrolDesc: 'שלח את הגור הנכון!',
+    rescueDogName: 'כלב חילוץ',
+    rescueDogDesc: 'מצאו את האדם שמתחבא ועזרו לו!',
     spiderManName: 'ספיידרמן',
     spiderManDesc: 'ארוג מילים עם קורי עכביש!',
     pjMasksName: 'מסכות הפיג\'מה',
@@ -136,8 +136,8 @@ export const T = {
     bubblePopName: 'Bubble Pop',
     bubblePopDesc: 'Pop the right bubbles!',
     // Character games
-    pawPatrolName: 'Paw Patrol',
-    pawPatrolDesc: 'Send the right pup to help!',
+    rescueDogName: 'Rescue Dog',
+    rescueDogDesc: 'Tap the right hiding spot to find the survivor!',
     spiderManName: 'Spider-Man',
     spiderManDesc: 'Spell words with web power!',
     pjMasksName: 'PJ Masks',
