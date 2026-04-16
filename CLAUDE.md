@@ -108,3 +108,16 @@ idle → speaking → waiting → shooting → feedback
 - New branch for every task: `feat/`, `fix/`, `experiment/`
 - Push when done — don't wait to be asked
 - Never work directly on `main`
+ 
+## Task Diff Hygiene
+- Keep the final task diff clean and minimal.
+- Before finishing, remove obsolete files created by the old implementation if they are no longer used.
+- Do not leave partial rename leftovers or duplicate game entries wired in two places.
+- If unrelated local changes already exist, do not touch them unless the task requires it.
+- At handoff, only task-related files should remain changed.
+- Default finish flow:
+- 1. Complete the task.
+- 2. Ensure the remaining diff is intentional and task-related only.
+- 3. Commit or otherwise explicitly resolve the task changes.
+- 4. Only after the worktree is clean, sync/align with `main`.
+- Never run `git pull` or align to `main` on a dirty worktree unless explicitly requested.

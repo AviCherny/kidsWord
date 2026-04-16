@@ -109,8 +109,8 @@ const CATEGORIES = [
         emoji: '🐶🦺',
         nameKey: 'rescueDogName',
         descKey: 'rescueDogDesc',
-        bg: 'linear-gradient(145deg, #1565c0, #42a5f5)',
-        glow: 'rgba(21,101,192,0.4)',
+        bg: 'linear-gradient(145deg, #ff8a00, #ffd54f)',
+        glow: 'rgba(255,138,0,0.4)',
       },
       {
         id: 'spiderman',
