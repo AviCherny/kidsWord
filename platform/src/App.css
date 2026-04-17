@@ -337,10 +337,26 @@ body {
   box-shadow: 0 2px 10px var(--card-glow, rgba(0, 0, 0, 0.15));
 }
 
-.hub-card-emoji {
-  font-size: clamp(2.8rem, 9vw, 3.8rem);
+.hub-card-icon {
   line-height: 1;
   filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.2));
+}
+
+.hub-card-icon--emoji {
+  font-size: clamp(2.8rem, 9vw, 3.8rem);
+}
+
+.hub-card-icon--image {
+  width: clamp(74px, 23vw, 96px);
+  aspect-ratio: 1;
+}
+
+.hub-card-icon-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 18px;
 }
 
 .hub-card-name {
