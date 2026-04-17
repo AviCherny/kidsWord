@@ -391,7 +391,7 @@
   gap: 0;
   width: max-content;
   min-width: 100%;
-  justify-content: center;
+  justify-content: safe center;
   position: relative;
   animation: wagonsFloat 1.9s ease-in-out infinite;
 }
@@ -415,7 +415,7 @@
   box-shadow:
     0 6px 18px rgba(0,0,0,0.2),
     inset 0 1px 0 rgba(255,255,255,0.8);
-  min-width: clamp(58px, 15vw, 76px);
+  min-width: clamp(48px, 12vw, 62px);
   border: 3px solid rgba(200,200,220,0.6);
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s, border-color 0.3s, background 0.3s;

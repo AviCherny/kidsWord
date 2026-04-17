@@ -434,7 +434,7 @@ function ChallengeCard({
 }
 
 export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
-  const { lang, dir, setLang } = useLanguage();
+  const { lang, dir } = useLanguage();
   const copy = COPY[lang] || COPY.en;
   const difficulty = WORD_RACE_DIFFICULTIES[sharedDifficulty] || WORD_RACE_DIFFICULTIES[1];
   const wordPool = getWordPool(sharedDifficulty);
@@ -644,7 +644,6 @@ export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
     return (
       <div className="wr-root" dir={dir}>
         <div className="wr-bg-stars" />
-        <button className="wr-back" onClick={onExit}>{dir === 'rtl' ? '→' : '←'}</button>
         <IntroScreen copy={copy} onStart={startRace} />
       </div>
     );
@@ -658,7 +657,7 @@ export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
           <div className="wr-lane">
             <span className="wr-lane-label">{copy.you}</span>
             <div className="wr-road wr-road--paused">
-              <div className="wr-car" style={{ left: '0%' }}>🏎️</div>
+              <div className="wr-car" style={{ left: '0%', transform: 'scaleX(-1)' }}>🏎️</div>
             </div>
             <span className="wr-flag">🏁</span>
           </div>
@@ -689,7 +688,6 @@ export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
           ) : (
             <button className="wr-btn wr-btn--primary" onClick={startRace}>{copy.playAgain}</button>
           )}
-          <button className="wr-btn wr-btn--ghost" onClick={onExit}>{copy.back}</button>
         </div>
       </div>
     );
@@ -704,21 +702,11 @@ export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
       {showFlash && <div className="wr-flash" />}
 
       <div className="wr-header">
-        <button className="wr-back" onClick={onExit}>{dir === 'rtl' ? '→' : '←'}</button>
         <div className="wr-header-main">
           <div className="wr-header-title">{copy.title}</div>
           <div className="wr-header-subtitle">{copy.score}</div>
         </div>
-        <div className="wr-header-actions">
-          <button
-            className="wr-lang-btn"
-            onClick={() => setLang(lang === 'he' ? 'en' : 'he')}
-            aria-label={lang === 'he' ? 'Switch to English' : 'לעבור לעברית'}
-          >
-            {lang === 'he' ? 'EN' : 'עב'}
-          </button>
-          <div className="wr-score">{correctCount} / {difficulty.winsRequired}</div>
-        </div>
+        <div className="wr-score">{correctCount} / {difficulty.winsRequired}</div>
       </div>
 
       <div className="wr-track-wrap">
@@ -740,10 +728,10 @@ export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
           <div className={`wr-road ${roadMoving ? '' : 'wr-road--paused'}`}>
             <div
               className={`wr-car ${turboActive ? 'wr-car--turbo' : ''}`}
-              style={{ left: `calc(${playerPos}% * 0.88)` }}
+              style={{ left: `calc(${playerPos}% * 0.88)`, transform: 'scaleX(-1)' }}
             >
               🏎️
-              {subPhase === 'driving' && <span className="wr-exhaust">💨</span>}
+              {subPhase === 'driving' && <span className="wr-exhaust" style={{ transform: 'scaleX(-1)' }}>💨</span>}
               {turboActive && <span className="wr-turbo-trail">✨</span>}
             </div>
           </div>

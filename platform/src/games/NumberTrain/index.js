@@ -228,7 +228,7 @@ function Locomotive({ moving, showSteam }) {
           ))}
         </div>
       )}
-      <svg viewBox="0 0 140 90" width="116" height="75" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 140 90" width="90" height="58" xmlns="http://www.w3.org/2000/svg">
         {/* Chimney */}
         <rect x="18" y="7" width="13" height="23" rx="3" fill="#37474f"/>
         <rect x="13" y="7" width="23" height="6" rx="3" fill="#546e7a"/>
@@ -423,7 +423,6 @@ export default function NumberTrain({ onSuccess, onExit }) {
           <p>{s.doneBody}</p>
           <div className="nt-done-stars">{'⭐'.repeat(stars)}</div>
           <button className="nt-btn nt-btn--primary" onClick={onSuccess}>{s.sticker}</button>
-          <button className="nt-btn nt-btn--ghost" onClick={onExit}>{s.back}</button>
         </div>
         <div className="nt-landscape">
           <div className="nt-hills" />
@@ -449,7 +448,6 @@ export default function NumberTrain({ onSuccess, onExit }) {
 
       {/* Header */}
       <div className="nt-header">
-        <button className="nt-back" onClick={onExit}>←</button>
         <h1 className="nt-title">🚂 {lang === 'he' ? 'רכבת המספרים' : 'Number Train'}</h1>
         <div className="nt-star-count">{'⭐'.repeat(stars)}</div>
       </div>

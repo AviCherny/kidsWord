@@ -174,7 +174,6 @@ export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
         <div className="ss-model-step">{lang === 'he' ? '💡 מה אני עושה?' : '💡 What do I do?'}</div>
       </div>
       <button className="ss-start-btn" onClick={startGame}>{t(lang, 'letsStart')}</button>
-      <button className="ss-exit-link" onClick={onExit}>←</button>
     </div>
   );
 
@@ -186,7 +185,6 @@ export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
       <div className="ss-end-stars">{'⭐'.repeat(stars)}</div>
       {balloons > 0 && <div className="ss-end-balloons">{'🎈'.repeat(balloons)}</div>}
       <button className="ss-play-again" onClick={startGame}>{t(lang, 'playAgainGame')}</button>
-      <button className="ss-exit-link" onClick={onExit}>←</button>
     </div>
   );
 
@@ -213,7 +211,6 @@ export default function SocialSkills({ onSuccess, onExit, facilitatorMode }) {
             >
               {soundOn ? '🔊' : '🔇'}
             </button>
-            <button className="ss-exit-btn" onClick={exitGame}>✕</button>
           </div>
         </div>
         {facilitator && (

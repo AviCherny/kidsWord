@@ -4,6 +4,18 @@
 
 export const LEGO_LEVELS = [
   {
+    id: 0,
+    name: 'Heart ❤️',
+    cols: 3,
+    rows: 3,
+    grid: [
+      ['R',  'R',  'R' ],
+      ['R',  'R',  'R' ],
+      [null, 'R',  null],
+    ],
+    palette: ['R'],
+  },
+  {
     id: 1,
     name: 'House 🏠',
     cols: 5,

@@ -344,7 +344,17 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
   return (
     <div className="sonic-runner" dir={dir}>
       <div className="sonic-shell" ref={wrapperRef}>
-        <canvas ref={canvasRef} className="sonic-canvas" />
+        <canvas
+          ref={canvasRef}
+          className="sonic-canvas"
+          onPointerDown={(e) => {
+            // Only handle direct taps on the canvas (not from control buttons)
+            if (ui.phase === 'playing') {
+              e.preventDefault();
+              handleJump();
+            }
+          }}
+        />
 
         <div className="sonic-overlay sonic-overlay--top">
           <button className="sonic-icon-btn" onClick={onExit} type="button" aria-label={copy.exit}>
@@ -377,21 +387,14 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
               ))}
             </div>
           </div>
-          <div className="sonic-card sonic-card--meter">
-            <span>{copy.progress}</span>
-            <strong>{ui.progress}%</strong>
-            <div className="sonic-meter" aria-label={`${copy.progress}: ${ui.progress}%`}>
-              <div className="sonic-meter__fill sonic-meter__fill--progress" style={{ width: `${ui.progress}%` }} />
-            </div>
-          </div>
         </div>
 
         <div className="sonic-controls" onContextMenu={(event) => event.preventDefault()}>
           <button type="button" className="sonic-control-btn sonic-control-btn--dir" {...holdHandlers('left')}>
-            {copy.left}
+            ◄
           </button>
           <button type="button" className="sonic-control-btn sonic-control-btn--dir" {...holdHandlers('right')}>
-            {copy.right}
+            ►
           </button>
           <button type="button" className="sonic-control-btn sonic-control-btn--jump" onPointerDown={handleJump}>
             {copy.jump}

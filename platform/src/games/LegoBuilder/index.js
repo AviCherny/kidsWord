@@ -4,9 +4,9 @@ import { speak } from '../../speak';
 import './LegoBuilder.css';
 
 const DIFFICULTY_CONFIG = {
-  1: { levelCount: 2, showTargetByDefault: true },
-  2: { levelCount: 4, showTargetByDefault: true },
-  3: { levelCount: LEGO_LEVELS.length, showTargetByDefault: true },
+  1: { levelCount: 1, showTargetByDefault: true },
+  2: { levelCount: 3, showTargetByDefault: true },
+  3: { levelCount: LEGO_LEVELS.length - 1, showTargetByDefault: true },
   4: { levelCount: LEGO_LEVELS.length, showTargetByDefault: false },
 };
 

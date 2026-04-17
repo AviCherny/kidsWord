@@ -179,7 +179,7 @@ function buildStageRounds(difficulty) {
 }
 
 export default function BigVsSmall({ onSuccess, onExit }) {
-  const { lang, setLang, dir } = useLanguage();
+  const { lang, dir } = useLanguage();
   const [difficulty, setDifficulty] = useState(() => getGameDifficulty(GAME_ID, 1));
   const [stageIdx, setStageIdx] = useState(0);
   const [roundIdx, setRoundIdx] = useState(0);
@@ -338,7 +338,6 @@ export default function BigVsSmall({ onSuccess, onExit }) {
         >
           {t(lang, 'playAgain')}
         </button>
-        <button className="bvs-exit-link" onClick={onExit}>←</button>
       </div>
     );
   }
@@ -360,13 +359,6 @@ export default function BigVsSmall({ onSuccess, onExit }) {
         <div className="bvs-hud-top">
           <StarBar starsInCycle={starsInCycle} balloons={balloons} />
           <div className="bvs-hud-controls">
-            <button
-              className="bvs-lang-btn"
-              onClick={() => setLang(lang === 'he' ? 'en' : 'he')}
-              aria-label={lang === 'he' ? 'Switch to English' : 'עברית'}
-            >
-              {lang === 'he' ? 'EN' : 'עב'}
-            </button>
             <button
               className={`bvs-hint-btn${hintOn ? ' on' : ' off'}`}
               onClick={() => {
@@ -392,7 +384,6 @@ export default function BigVsSmall({ onSuccess, onExit }) {
             >
               {soundOn ? '🔊' : '🔇'}
             </button>
-            <button className="bvs-exit-btn" onClick={onExit} aria-label="Exit">✕</button>
           </div>
         </div>
       </header>

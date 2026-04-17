@@ -286,7 +286,6 @@ export default function SpiderMan({ onSuccess, onExit, sharedDifficulty = 1 }) {
         </div>
         <button className="spider-collect-btn" onClick={onSuccess}>{copy.collectSticker}</button>
         <button className="spider-play-again" onClick={() => resetSession(lang)}>{copy.playAgain}</button>
-        <button className="spider-exit-link" onClick={onExit}>←</button>
       </div>
     );
   }
@@ -307,11 +306,9 @@ export default function SpiderMan({ onSuccess, onExit, sharedDifficulty = 1 }) {
       </div>
 
       <header className="spider-hud" dir="ltr">
-        <button className="spider-exit-btn" onClick={onExit} aria-label="Exit">✕</button>
         <div className="spider-hud-stars">
           <StarBar starsInCycle={starsInCycle} balloons={balloons} />
         </div>
-        <div className="spider-hud-end" aria-hidden="true" />
       </header>
 
       <div className="spider-word-area">
@@ -330,21 +327,26 @@ export default function SpiderMan({ onSuccess, onExit, sharedDifficulty = 1 }) {
           </div>
         ) : (
           <>
-            {difficulty.allowHint && (
+            <div className="spider-word-controls">
               <button
-                className={`spider-hint-btn${showHint ? ' spider-hint-btn-on' : ''}`}
+                className="spider-speak-btn"
                 onClick={() => {
-                  const nextValue = !showHint;
-                  setShowHint(nextValue);
-                  if (nextValue) {
-                    const speakText = lang === 'he' ? currentWord.heWord : currentWord.word.toLowerCase();
-                    speak(speakText, lang);
-                  }
+                  const speakText = lang === 'he' ? currentWord.heWord : currentWord.word.toLowerCase();
+                  speak(speakText, lang);
                 }}
+                aria-label={lang === 'he' ? 'השמע מילה' : 'Hear word'}
               >
-                🔊 {copy.hint}
+                🔊
               </button>
-            )}
+              {difficulty.allowHint && (
+                <button
+                  className={`spider-hint-btn${showHint ? ' spider-hint-btn-on' : ''}`}
+                  onClick={() => setShowHint((v) => !v)}
+                >
+                  {copy.hint}
+                </button>
+              )}
+            </div>
             {showHint && (
               <div className="spider-animal-label">
                 {lang === 'he' ? `${currentWord.heWord} · ${currentWord.word}` : currentWord.word}

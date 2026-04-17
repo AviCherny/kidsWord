@@ -25,6 +25,7 @@ import Sonic from './games/Sonic';
 import { getEarnedStickers, earnSticker, migrateLegacyStickers } from './lib/storage';
 import { getNextSticker } from './data/stickers';
 import { getSettings, getGameDifficulty, saveGameDifficulty } from './lib/settings';
+import { stopSpeaking } from './speak';
 
 const GAME_COMPONENTS = {
   bigvssmall: BigVsSmall,
@@ -164,6 +165,7 @@ export default function App() {
   }, []);
 
   const handleExit = useCallback(() => {
+    stopSpeaking();
     setCurrentGame(null);
   }, []);
 

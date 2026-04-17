@@ -124,43 +124,52 @@ const CUSTOM_AUDIO = {
   cow: 'Cow.m4a',
 };
 
-const CUSTOM_AUDIO_GAIN = 2.2;
-
-let sharedAudioContext = null;
-
-function getAudioContext() {
-  if (typeof window === 'undefined') return null;
-  const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  if (!AudioCtx) return null;
-  if (!sharedAudioContext) sharedAudioContext = new AudioCtx();
-  if (sharedAudioContext.state === 'suspended') {
-    sharedAudioContext.resume().catch(() => {});
-  }
-  return sharedAudioContext;
-}
+// Track the currently playing audio element so we can stop it
+let currentAudio = null;
 
 function playCustomAudio(filename, onEnd) {
+  // Stop any currently playing audio
+  if (currentAudio) {
+    try { currentAudio.pause(); currentAudio.currentTime = 0; } catch (e) {}
+    currentAudio = null;
+  }
+
   const audio = new Audio(`/audio/${filename}`);
   audio.preload = 'auto';
   audio.volume = 1.0;
+  currentAudio = audio;
 
-  if (onEnd) audio.onended = onEnd;
-
-  const ctx = getAudioContext();
-  if (!ctx) {
-    audio.play().catch(() => { if (onEnd) onEnd(); });
-    return;
+  if (onEnd) {
+    audio.onended = () => {
+      if (currentAudio === audio) currentAudio = null;
+      onEnd();
+    };
+  } else {
+    audio.onended = () => {
+      if (currentAudio === audio) currentAudio = null;
+    };
   }
 
-  try {
-    const source = ctx.createMediaElementSource(audio);
-    const gain = ctx.createGain();
-    gain.gain.value = CUSTOM_AUDIO_GAIN;
-    source.connect(gain);
-    gain.connect(ctx.destination);
-    audio.play().catch(() => { if (onEnd) onEnd(); });
-  } catch (e) {
-    audio.play().catch(() => { if (onEnd) onEnd(); });
+  audio.onerror = () => {
+    if (currentAudio === audio) currentAudio = null;
+    if (onEnd) onEnd();
+  };
+
+  audio.play().catch(() => {
+    if (currentAudio === audio) currentAudio = null;
+    if (onEnd) onEnd();
+  });
+}
+
+export function stopSpeaking() {
+  // Stop any playing audio file
+  if (currentAudio) {
+    try { currentAudio.pause(); currentAudio.currentTime = 0; } catch (e) {}
+    currentAudio = null;
+  }
+  // Cancel any ongoing speech synthesis
+  if (typeof window !== 'undefined' && window.speechSynthesis) {
+    try { window.speechSynthesis.cancel(); } catch (e) {}
   }
 }
 
