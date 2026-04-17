@@ -171,6 +171,11 @@ export function stopSpeaking() {
   if (typeof window !== 'undefined' && window.speechSynthesis) {
     try { window.speechSynthesis.cancel(); } catch (e) {}
   }
+  // Stop Capacitor native TTS (used in APK builds)
+  try {
+    const tts = getCapacitorTTS();
+    if (tts) tts.stop().catch(() => {});
+  } catch (e) {}
 }
 
 // Detect if running inside a Capacitor native app (APK/IPA)

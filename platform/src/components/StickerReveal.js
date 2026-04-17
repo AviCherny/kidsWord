@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { TOTAL_STICKERS } from '../data/stickers';
 import { TOTAL_CANDY } from '../data/candy';
+import { speak } from '../speak';
 
 export default function StickerReveal({ sticker, earnedCount, isNew, onDone, type = 'sticker' }) {
   const { lang } = useLanguage();
@@ -10,11 +11,15 @@ export default function StickerReveal({ sticker, earnedCount, isNew, onDone, typ
   useEffect(() => {
     // Slight delay so the overlay fades in after creature exits
     const t = setTimeout(() => setVisible(true), 80);
-    // Play sticker sound when reveal appears
-    const audio = new Audio('/audio/medabeka.m4a');
-    audio.play().catch(() => {});
+    // Play reward sound: candy vs sticker
+    if (type === 'candy') {
+      speak('מגיע לך ממתק', 'he');
+    } else {
+      const audio = new Audio('/audio/medabeka.m4a');
+      audio.play().catch(() => {});
+    }
     return () => clearTimeout(t);
-  }, []);
+  }, []); // eslint-disable-line
 
   const isCandy = type === 'candy';
   const total = isCandy ? TOTAL_CANDY : TOTAL_STICKERS;

@@ -96,12 +96,6 @@ export default function WordShooter({ onSuccess, onExit }) {
   const [explosionIndex, setExplosionIndex] = useState(null);
   const [distractorShake, setDistractorShake] = useState(false);
   const [showSidekick, setShowSidekick] = useState(false);
-  const [showEnglish, setShowEnglish] = useState(false);
-
-  // Use a ref so startRound always reads current value without needing it as a dep
-  const showEnglishRef = useRef(false);
-  useEffect(() => { showEnglishRef.current = showEnglish; }, [showEnglish]);
-
   const idleTimer = useRef(null);
   const heroRef = useRef(null);
   const objectRefs = useRef([]);
@@ -125,8 +119,8 @@ export default function WordShooter({ onSuccess, onExit }) {
   }
 
   const objLabel = (obj) => {
-    if (obj.isDistractor) return showEnglish ? obj.label : (lang === 'he' ? (obj.heLabel || obj.label) : obj.label);
-    return showEnglish ? obj.label : (lang === 'he' ? obj.heLabel : obj.label);
+    if (obj.isDistractor) return lang === 'he' ? (obj.heLabel || obj.label) : obj.label;
+    return lang === 'he' ? obj.heLabel : obj.label;
   };
 
   const pickFromDeck = useCallback(() => {
@@ -167,18 +161,14 @@ export default function WordShooter({ onSuccess, onExit }) {
     setDistractorShake(false);
     setShowSidekick(false);
 
-    // If EN mode: speak English word; else speak Hebrew (with nikud hint if available)
-    const useEn = showEnglishRef.current || lang === 'en';
-    const spokenWord = useEn ? target.word : (target.heSpeech || target.heWord);
-    const speakLang  = useEn ? 'en' : lang;
+    const spokenWord = lang === 'en' ? target.word : (target.heSpeech || target.heWord);
 
     setTimeout(() => {
-      speak(spokenWord, speakLang, () => {
+      speak(spokenWord, lang, () => {
         setPhase('waiting');
         const scheduleRepeat = () => {
           idleTimer.current = setTimeout(() => {
-            const en = showEnglishRef.current || lang === 'en';
-            speak(en ? r.target.word : (r.target.heSpeech || r.target.heWord), en ? 'en' : lang, scheduleRepeat);
+            speak(lang === 'en' ? r.target.word : (r.target.heSpeech || r.target.heWord), lang, scheduleRepeat);
           }, 3000);
         };
         scheduleRepeat();
@@ -241,8 +231,7 @@ export default function WordShooter({ onSuccess, onExit }) {
       } else {
         const correctIdx = round.objects.findIndex(o => o.word === round.target.word);
         setGlowIndex(correctIdx);
-        const useEn = showEnglishRef.current || lang === 'en';
-        speak(useEn ? round.target.word : (round.target.heSpeech || round.target.heWord), useEn ? 'en' : lang);
+        speak(lang === 'en' ? round.target.word : (round.target.heSpeech || round.target.heWord), lang);
         setShowSidekick(true);
         setTimeout(() => { setExplosionIndex(null); setPhase('retry'); }, 700);
       }
@@ -300,7 +289,7 @@ export default function WordShooter({ onSuccess, onExit }) {
     </div>
   );
 
-  const targetWord = round ? (showEnglish ? round.target.word : (lang === 'he' ? round.target.heWord : round.target.word)) : '';
+  const targetWord = round ? (lang === 'he' ? round.target.heWord : round.target.word) : '';
 
   return (
     <div className="ws-screen ws-game" dir={dir}>
@@ -321,16 +310,11 @@ export default function WordShooter({ onSuccess, onExit }) {
 
       {round && (
         <button className="ws-word-prompt" onClick={() => {
-          const useEn = showEnglishRef.current || lang === 'en';
-          speak(useEn ? round.target.word : (round.target.heSpeech || round.target.heWord), useEn ? 'en' : lang);
+          speak(lang === 'en' ? round.target.word : (round.target.heSpeech || round.target.heWord), lang);
         }}>
           {targetWord} 🔊
         </button>
       )}
-
-      <button className={`ws-lang-toggle ${showEnglish ? 'active' : ''}`} onClick={() => setShowEnglish(v => !v)} aria-label="Toggle English">
-        EN
-      </button>
 
       <div className="ws-objects-area">
         {round?.objects.map((obj, i) => (
@@ -366,14 +350,14 @@ export default function WordShooter({ onSuccess, onExit }) {
       </div>
 
       {missileAnim && <Missile pos={missileAnim} />}
-      {showSidekick && round && <Sidekick word={showEnglish ? round.target.word : (lang === 'he' ? round.target.heWord : round.target.word)} lang={lang} showEnglish={showEnglish} />}
+      {showSidekick && round && <Sidekick word={lang === 'he' ? round.target.heWord : round.target.word} lang={lang} />}
     </div>
   );
 }
 
-function Sidekick({ word, lang, showEnglish }) {
-  const findIt = (showEnglish || lang === 'en') ? 'Find it!' : '!מצא את';
-  const tapIt  = (showEnglish || lang === 'en') ? '👆 Tap!'  : '!לחץ 👆';
+function Sidekick({ word, lang }) {
+  const findIt = lang === 'en' ? 'Find it!' : '!מצא את';
+  const tapIt  = lang === 'en' ? '👆 Tap!'  : '!לחץ 👆';
   return (
     <div className="ws-sidekick-wrap">
       <div className="ws-sidekick-bubble">
