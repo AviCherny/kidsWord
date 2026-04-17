@@ -295,7 +295,7 @@ export default function SpiderMan({ onSuccess, onExit }) {
 
         {flash === 'word-done' ? (
           <div className="spider-word-done">
-            <div className="spider-word-display" dir="ltr">
+            <div className="spider-word-display" dir={dir}>
               {spelledWord.split('').map((l, i) => (
                 <span key={i} className="spider-letter-slot spider-slot-filled spider-slot-done">{l}</span>
               ))}
@@ -308,7 +308,12 @@ export default function SpiderMan({ onSuccess, onExit }) {
           </div>
         ) : (
           <>
-            <div className="spider-word-display" dir="ltr">
+            <div className="spider-animal-label">
+              {lang === 'he'
+                ? `${currentWord.heWord} · ${currentWord.word}`
+                : currentWord.word}
+            </div>
+            <div className="spider-word-display" dir={dir}>
               {spelledWord.split('').map((l, i) => (
                 <span
                   key={i}
