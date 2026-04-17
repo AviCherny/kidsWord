@@ -50,9 +50,8 @@
   justify-content: center;
 }
 
-/* Right spacer = same width as the exit btn so stars stay truly centred,
-   and also keeps content away from the fixed EN/עב button in game-topbar */
-.spider-hud-end {
+/* Left spacer mirrors exit-btn width so stars stay truly centred */
+.spider-hud-start {
   width: 74px;
   flex-shrink: 0;
 }
@@ -337,6 +336,24 @@
   color: #ffe168;
   text-shadow: 0 0 18px rgba(255, 225, 104, 0.65);
   letter-spacing: 0.05em;
+}
+
+.spider-hint-btn {
+  background: rgba(255, 204, 0, 0.12);
+  border: 2px solid rgba(255, 204, 0, 0.45);
+  border-radius: 20px;
+  padding: 6px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffe168;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  margin-bottom: 4px;
+  transition: background 0.15s;
+}
+
+.spider-hint-btn:active {
+  background: rgba(255, 204, 0, 0.25);
 }
 
 /* Win screen */

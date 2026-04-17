@@ -88,6 +88,7 @@ const COPY = {
     collectSticker: 'Collect Sticker! 🌟',
     playAgain: 'Play Again',
     webCue: '🕸️ Web the right letter!',
+    hint: '💡 Hint',
   },
   he: {
     easy: 'קל',
@@ -99,6 +100,7 @@ const COPY = {
     collectSticker: 'קבל מדבקה! 🌟',
     playAgain: 'שחק שוב',
     webCue: '🕸️ ירה ברשת לאות הנכונה!',
+    hint: '💡 רמז',
   },
 };
 
@@ -131,6 +133,7 @@ export default function SpiderMan({ onSuccess, onExit }) {
   const [balloons, setBalloons] = useState(0);
   const [webShot, setWebShot] = useState(null);
   const [spiderState, setSpiderState] = useState('idle');
+  const [showHint, setShowHint] = useState(false);
 
   const spiderRef = useRef(null);
   const bubbleRefs = useRef([]);
@@ -155,6 +158,9 @@ export default function SpiderMan({ onSuccess, onExit }) {
     setSpiderState(s.spiderState);
   }, [lang]);
 
+  // Reset hint whenever we move to a new word
+  useEffect(() => { setShowHint(false); }, [wordIdx]);
+
   const startLevel = useCallback((newLevel, currentLang) => {
     const s = makeBlankState();
     setLevel(newLevel);
@@ -168,6 +174,7 @@ export default function SpiderMan({ onSuccess, onExit }) {
     setBalloons(s.balloons);
     setWebShot(s.webShot);
     setSpiderState(s.spiderState);
+    setShowHint(false);
   }, []);
 
   const { wordList, choices } = session;
@@ -198,12 +205,20 @@ export default function SpiderMan({ onSuccess, onExit }) {
 
       setFlash('good');
       setLocked(true);
-      speak(letter, lang);
       const newTyped = typed + letter;
 
+      // Clear web shot visual after 600ms (cosmetic only)
       setTimeout(() => {
         setWebShot(null);
         setSpiderState('idle');
+      }, 600);
+
+      // Proceed only after letter speech finishes; 1s fallback in case onEnd doesn't fire
+      let letterDone = false;
+      const afterLetter = () => {
+        if (letterDone) return;
+        letterDone = true;
+        clearTimeout(letterFallback); // eslint-disable-line no-use-before-define
 
         if (letterIdx + 1 >= spelledWord.length) {
           // Word complete — show celebration
@@ -227,7 +242,9 @@ export default function SpiderMan({ onSuccess, onExit }) {
           setTyped(newTyped);
           setLocked(false);
         }
-      }, 600);
+      };
+      const letterFallback = setTimeout(afterLetter, 1000);
+      speak(letter, lang, afterLetter);
 
     } else {
       // Wrong — brief lock to prevent spam, shake feedback
@@ -267,13 +284,13 @@ export default function SpiderMan({ onSuccess, onExit }) {
         ))}
       </div>
 
-      {/* HUD: exit left | stars center | spacer right (for fixed EN button) */}
-      <header className="spider-hud">
-        <button className="spider-exit-btn" onClick={onExit} aria-label="Exit">✕</button>
+      {/* HUD: spacer left | stars center | exit right — always LTR so position is consistent */}
+      <header className="spider-hud" dir="ltr">
+        <div className="spider-hud-start" aria-hidden="true" />
         <div className="spider-hud-stars">
           <StarBar starsInCycle={starsInCycle} balloons={balloons} />
         </div>
-        <div className="spider-hud-end" aria-hidden="true" />
+        <button className="spider-exit-btn" onClick={onExit} aria-label="Exit">✕</button>
       </header>
 
       {/* Difficulty pills */}
@@ -308,11 +325,17 @@ export default function SpiderMan({ onSuccess, onExit }) {
           </div>
         ) : (
           <>
-            <div className="spider-animal-label">
-              {lang === 'he'
-                ? `${currentWord.heWord} · ${currentWord.word}`
-                : currentWord.word}
-            </div>
+            {showHint ? (
+              <div className="spider-animal-label">
+                {lang === 'he'
+                  ? `${currentWord.heWord} · ${currentWord.word}`
+                  : currentWord.word}
+              </div>
+            ) : (
+              <button className="spider-hint-btn" onClick={() => setShowHint(true)}>
+                {copy.hint}
+              </button>
+            )}
             <div className="spider-word-display" dir={dir}>
               {spelledWord.split('').map((l, i) => (
                 <span
