@@ -173,7 +173,17 @@ export function stopSpeaking() {
   }
 }
 
-// Shared TTS — language-aware, web-only (no Capacitor)
+// Detect if running inside a Capacitor native app (APK/IPA)
+function getCapacitorTTS() {
+  try {
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      return window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech;
+    }
+  } catch (e) {}
+  return null;
+}
+
+// Shared TTS — language-aware, uses Capacitor native TTS in APK, Web Speech API in browser
 export function speak(text, lang, onEnd) {
   if (!text) return;
 
@@ -186,6 +196,21 @@ export function speak(text, lang, onEnd) {
     return;
   }
 
+  const ttsLang = lang === 'he' ? 'he-IL' : 'en-US';
+
+  const nativeTTS = getCapacitorTTS();
+  if (nativeTTS) {
+    // Native Android TTS via Capacitor bridge — reliable in WebView
+    (async () => {
+      try { await nativeTTS.stop(); } catch (e) {}
+      try {
+        await nativeTTS.speak({ text, lang: ttsLang, rate: 0.85, pitch: 1.0, volume: 1.0 });
+      } catch (e) {}
+      if (onEnd) onEnd();
+    })();
+    return;
+  }
+
   if (!window.speechSynthesis) {
     if (onEnd) onEnd();
     return;
@@ -194,7 +219,7 @@ export function speak(text, lang, onEnd) {
   try {
     const u = new SpeechSynthesisUtterance(text);
     u.rate = 0.85;
-    u.lang = lang === 'he' ? 'he-IL' : 'en-US';
+    u.lang = ttsLang;
     if (onEnd) u.onend = onEnd;
     window.speechSynthesis.speak(u);
   } catch (e) {
