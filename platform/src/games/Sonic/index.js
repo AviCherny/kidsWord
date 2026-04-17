@@ -12,11 +12,10 @@ const COPY = {
     title: 'Sonic Green Hill',
     hint: 'Left and Right run. Space jumps. Down rolls.',
     touchHint: 'Hold Left or Right to run. Tap Jump. Hold Roll.',
-    mission: 'Eat good food, avoid bad food, and reach the goal sign.',
+    mission: 'Eat apples and reach the goal sign.',
     springTip: 'Red springs launch Sonic high into the air.',
-    hazardTip: 'Bad food shrinks Sonic. Bad food at the smallest size costs a heart.',
-    goodFood: 'Good Food',
-    size: 'Size',
+    hazardTip: 'Spikes and falls cost a heart.',
+    goodFood: 'Apples',
     lives: 'Lives',
     level: 'Level',
     speed: 'Dash',
@@ -27,8 +26,8 @@ const COPY = {
     levelClear: 'Level clear',
     campaignClear: 'Adventure complete',
     gameOver: 'Out of hearts',
-    result: 'Good food: {goodFood}. Bad food: {badFood}.',
-    retryHint: 'Eat good food to grow and avoid junk food.',
+    result: 'Apples collected: {goodFood}.',
+    retryHint: 'Collect apples and reach the goal.',
     nextStageHint: 'Keep going. The sticker unlocks after the last level.',
     stickerReady: 'Sticker unlocked. Great run.',
     restart: 'Restart',
@@ -39,7 +38,6 @@ const COPY = {
     right: 'Right',
     jump: 'Jump',
     roll: 'Roll',
-    sizeLevels: ['Small', 'Normal', 'Big'],
   },
   he: {
     title: 'סוניק גרין היל',
@@ -71,17 +69,15 @@ const COPY = {
   },
 };
 
-COPY.he.goodFood = 'אוכל טוב';
-COPY.he.size = 'גודל';
+COPY.he.goodFood = 'תפוחים';
 COPY.he.level = 'שלב';
-COPY.he.mission = 'אכלו אוכל טוב, הימנעו מאוכל לא טוב, והגיעו לשלט הסיום.';
-COPY.he.hazardTip = 'אוכל לא טוב מקטין את סוניק. אוכל לא טוב בגודל הכי קטן מוריד לב.';
+COPY.he.mission = 'אספו תפוחים והגיעו לשלט הסיום.';
+COPY.he.hazardTip = 'קוצים ונפילות מורידים לב.';
 COPY.he.campaignClear = 'סיימתם את ההרפתקה';
-COPY.he.result = 'אוכל טוב: {goodFood}. אוכל לא טוב: {badFood}.';
+COPY.he.result = 'תפוחים שנאספו: {goodFood}.';
 COPY.he.nextStageHint = 'ממשיכים. המדבקה נפתחת אחרי השלב האחרון.';
-COPY.he.retryHint = 'אכלו אוכל טוב כדי לגדול והימנעו מג׳אנק פוד.';
+COPY.he.retryHint = 'אספו תפוחים והגיעו ליעד.';
 COPY.he.nextLevel = 'לשלב הבא';
-COPY.he.sizeLevels = ['קטן', 'רגיל', 'גדול'];
 
 function format(text, values) {
   return text.replace(/\{(\w+)\}/g, (_, key) => `${values[key] ?? ''}`);
@@ -93,8 +89,6 @@ function createInitialUi() {
     levelIndex: 1,
     totalLevels: 1,
     goodFood: 0,
-    badFood: 0,
-    sizeTier: 1,
     lives: SONIC_MAX_LIVES,
     maxLives: SONIC_MAX_LIVES,
     canAdvanceLevel: false,
@@ -114,8 +108,6 @@ function shouldPublish(prev, next) {
     prev.levelIndex !== next.levelIndex ||
     prev.totalLevels !== next.totalLevels ||
     prev.goodFood !== next.goodFood ||
-    prev.badFood !== next.badFood ||
-    prev.sizeTier !== next.sizeTier ||
     prev.lives !== next.lives ||
     prev.canAdvanceLevel !== next.canAdvanceLevel ||
     prev.canClaimSticker !== next.canClaimSticker ||
@@ -323,8 +315,7 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
   }, [clearControls, handleJump, setAction]);
 
   const hearts = Array.from({ length: ui.maxLives }, (_, index) => index < ui.lives);
-  const sizeLabel = copy.sizeLevels?.[ui.sizeTier] || COPY.en.sizeLevels[ui.sizeTier];
-  const resultText = format(copy.result, { goodFood: ui.goodFood, badFood: ui.badFood });
+  const resultText = format(copy.result, { goodFood: ui.goodFood });
   const stickerText = ui.phase === 'won'
     ? (ui.canAdvanceLevel ? copy.nextStageHint : copy.stickerReady)
     : copy.retryHint;
@@ -368,10 +359,6 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
             <strong>{ui.goodFood}</strong>
           </div>
           <div className="sonic-card sonic-card--status">
-            <span>{copy.size}</span>
-            <strong>{sizeLabel}</strong>
-          </div>
-          <div className="sonic-card sonic-card--status">
             <span>{copy.level}</span>
             <strong>
               {ui.levelIndex} / {ui.totalLevels}
@@ -398,9 +385,6 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
           </button>
           <button type="button" className="sonic-control-btn sonic-control-btn--jump" onPointerDown={handleJump}>
             {copy.jump}
-          </button>
-          <button type="button" className="sonic-control-btn sonic-control-btn--roll" {...holdHandlers('down')}>
-            {copy.roll}
           </button>
         </div>
 

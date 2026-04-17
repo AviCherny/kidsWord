@@ -20,11 +20,6 @@ const SPRING_VELOCITY = -1140;
 const CAMERA_SMOOTHING = 0.14;
 const DEFAULT_OPTIONS = { facilitatorMode: false };
 const FOOD_GOOD = 'good';
-const FOOD_BAD = 'bad';
-const PLAYER_SIZE_SMALL = 0;
-const PLAYER_SIZE_NORMAL = 1;
-const PLAYER_SIZE_BIG = 2;
-const PLAYER_SIZE_SCALES = [0.82, 1, 1.16];
 
 function makeGround() {
   return { x: 0, y: GROUND_Y, w: WORLD_WIDTH, h: WORLD_HEIGHT - GROUND_Y };
@@ -61,7 +56,7 @@ function createFood(x, y, kind, wobble) {
     x,
     y,
     kind,
-    radius: kind === FOOD_GOOD ? 16 : 15,
+    radius: 16,
     collected: false,
     wobble,
   };
@@ -91,15 +86,15 @@ function addFoodArc(target, centerX, centerY, radius, pattern, startAngle, endAn
 function buildLevelOneFoods() {
   const foods = [];
   addFoodLine(foods, 190, 394, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 34);
-  addFoodArc(foods, 650, 275, 76, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.95, Math.PI * 0.05);
+  addFoodArc(foods, 650, 275, 76, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.95, Math.PI * 0.05);
   addFoodLine(foods, 948, 322, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 28);
-  addFoodLine(foods, 1186, 220, [FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 32);
+  addFoodLine(foods, 1186, 220, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 32);
   addFoodArc(foods, 1538, 272, 84, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.08, Math.PI * 0.02);
-  addFoodLine(foods, 1768, 240, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD], 34);
+  addFoodLine(foods, 1768, 240, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 34);
   addFoodArc(foods, 2215, 220, 88, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.1, Math.PI * -0.08);
-  addFoodLine(foods, 2468, 200, [FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
+  addFoodLine(foods, 2468, 200, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
   addFoodLine(foods, 2848, 288, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 34);
-  addFoodArc(foods, 3520, 214, 90, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.08, Math.PI * -0.08);
+  addFoodArc(foods, 3520, 214, 90, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.08, Math.PI * -0.08);
   addFoodLine(foods, 3924, 324, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 32);
   return foods;
 }
@@ -107,29 +102,29 @@ function buildLevelOneFoods() {
 function buildLevelTwoFoods() {
   const foods = [];
   addFoodLine(foods, 210, 394, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 32);
-  addFoodArc(foods, 712, 262, 84, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.96, Math.PI * 0.04);
+  addFoodArc(foods, 712, 262, 84, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.96, Math.PI * 0.04);
   addFoodLine(foods, 1010, 320, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 28);
-  addFoodLine(foods, 1256, 240, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD], 30);
-  addFoodArc(foods, 1720, 238, 82, [FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.02, Math.PI * -0.02);
+  addFoodLine(foods, 1256, 240, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
+  addFoodArc(foods, 1720, 238, 82, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.02, Math.PI * -0.02);
   addFoodLine(foods, 2140, 282, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 32);
-  addFoodArc(foods, 2550, 188, 92, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.08, Math.PI * -0.08);
-  addFoodLine(foods, 3040, 316, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD], 32);
+  addFoodArc(foods, 2550, 188, 92, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.08, Math.PI * -0.08);
+  addFoodLine(foods, 3040, 316, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 32);
   addFoodLine(foods, 3520, 224, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
-  addFoodArc(foods, 3908, 282, 84, [FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.95, Math.PI * 0.05);
+  addFoodArc(foods, 3908, 282, 84, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.95, Math.PI * 0.05);
   return foods;
 }
 
 function buildLevelThreeFoods() {
   const foods = [];
   addFoodLine(foods, 220, 394, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 34);
-  addFoodArc(foods, 660, 260, 78, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.96, Math.PI * 0.04);
-  addFoodLine(foods, 1120, 178, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD], 30);
-  addFoodArc(foods, 1596, 208, 88, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.04, Math.PI * -0.04);
-  addFoodLine(foods, 2110, 236, [FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
-  addFoodArc(foods, 2520, 146, 96, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.08, Math.PI * -0.08);
-  addFoodLine(foods, 3040, 200, [FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
-  addFoodArc(foods, 3500, 220, 86, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.02, Math.PI * -0.02);
-  addFoodLine(foods, 3940, 284, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD], 30);
+  addFoodArc(foods, 660, 260, 78, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.96, Math.PI * 0.04);
+  addFoodLine(foods, 1120, 178, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
+  addFoodArc(foods, 1596, 208, 88, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.04, Math.PI * -0.04);
+  addFoodLine(foods, 2110, 236, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
+  addFoodArc(foods, 2520, 146, 96, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.08, Math.PI * -0.08);
+  addFoodLine(foods, 3040, 200, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
+  addFoodArc(foods, 3500, 220, 86, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.02, Math.PI * -0.02);
+  addFoodLine(foods, 3940, 284, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
   return foods;
 }
 
@@ -259,7 +254,6 @@ function createPlayer() {
     facing: 1,
     invulnerable: 0,
     runTime: 0,
-    sizeTier: PLAYER_SIZE_NORMAL,
     respawnX: START_X,
     respawnY: START_Y,
   };
@@ -291,7 +285,6 @@ export class SonicPlatformerEngine {
     this.flashTimer = 0;
     this.lives = this.maxLives;
     this.goodFoodEaten = 0;
-    this.badFoodEaten = 0;
     this.solids = level.solids.map((solid) => ({ ...solid }));
     this.springs = level.springs.map((spring) => ({ ...spring }));
     this.spikes = level.spikes.map((spike) => ({ ...spike }));
@@ -495,17 +488,7 @@ export class SonicPlatformerEngine {
     for (const food of this.foods) {
       if (!food.collected && circleRectOverlap({ x: food.x, y: food.y + Math.sin(food.wobble) * 3, radius: food.radius }, hurtbox)) {
         food.collected = true;
-        if (food.kind === FOOD_GOOD) {
-          this.goodFoodEaten += 1;
-          this.player.sizeTier = Math.min(PLAYER_SIZE_BIG, this.player.sizeTier + 1);
-        } else {
-          this.badFoodEaten += 1;
-          if (this.player.sizeTier > PLAYER_SIZE_SMALL) {
-            this.player.sizeTier -= 1;
-          } else {
-            this.hitPlayer(false);
-          }
-        }
+        this.goodFoodEaten += 1;
       }
     }
 
@@ -547,8 +530,6 @@ export class SonicPlatformerEngine {
       levelIndex: this.currentLevelIndex + 1,
       totalLevels: this.levels.length,
       goodFood: this.goodFoodEaten,
-      badFood: this.badFoodEaten,
-      sizeTier: this.player.sizeTier,
       lives: this.lives,
       maxLives: this.maxLives,
       canAdvanceLevel,
@@ -782,11 +763,7 @@ function drawSpikes(ctx, spike) {
 function drawFood(ctx, food) {
   ctx.save();
   ctx.translate(food.x, food.y + Math.sin(food.wobble) * 3);
-  if (food.kind === FOOD_GOOD) {
-    drawApple(ctx);
-  } else {
-    drawDonut(ctx);
-  }
+  drawApple(ctx);
   ctx.restore();
 }
 
@@ -821,40 +798,8 @@ function drawApple(ctx) {
   ctx.fill();
 }
 
-function drawDonut(ctx) {
-  const donut = ctx.createLinearGradient(-18, -18, 18, 18);
-  donut.addColorStop(0, '#f9d7a1');
-  donut.addColorStop(1, '#d08b4b');
-  ctx.fillStyle = donut;
-  ctx.beginPath();
-  ctx.arc(0, 0, 16, 0, Math.PI * 2);
-  ctx.arc(0, 0, 7, 0, Math.PI * 2, true);
-  ctx.fill('evenodd');
-
-  ctx.strokeStyle = '#ff74a8';
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.arc(0, -1, 11, Math.PI * 1.05, Math.PI * 1.95);
-  ctx.stroke();
-
-  ctx.fillStyle = '#59d9ff';
-  for (const sprinkle of [
-    [-8, -6, 0.5],
-    [-2, -9, 1.2],
-    [6, -7, -0.3],
-    [8, -1, 0.7],
-    [-5, 3, -0.6],
-  ]) {
-    ctx.save();
-    ctx.translate(sprinkle[0], sprinkle[1]);
-    ctx.rotate(sprinkle[2]);
-    ctx.fillRect(-1.5, -4, 3, 8);
-    ctx.restore();
-  }
-}
 
 function drawPlayer(ctx, player, maxSpeed) {
-  const sizeScale = PLAYER_SIZE_SCALES[player.sizeTier] || 1;
   const centerX = player.x + player.width * 0.5;
   const centerY = player.y + player.height * 0.48;
   const alpha = player.invulnerable > 0 && Math.floor(player.invulnerable * 14) % 2 === 0 ? 0.44 : 1;
@@ -863,10 +808,9 @@ function drawPlayer(ctx, player, maxSpeed) {
   ctx.globalAlpha = alpha;
   ctx.fillStyle = 'rgba(6,18,31,0.22)';
   ctx.beginPath();
-  ctx.ellipse(centerX + 8, GROUND_Y + 10, player.width * 0.42 * sizeScale, player.height * 0.14 * sizeScale, 0, 0, Math.PI * 2);
+  ctx.ellipse(centerX + 8, GROUND_Y + 10, player.width * 0.42, player.height * 0.14, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.translate(centerX, centerY - (sizeScale - 1) * 24);
-  ctx.scale(sizeScale, sizeScale);
+  ctx.translate(centerX, centerY);
   if (player.facing === -1) ctx.scale(-1, 1);
   if (player.isRolling || !player.isGrounded) {
     ctx.rotate(player.runTime * 8);
