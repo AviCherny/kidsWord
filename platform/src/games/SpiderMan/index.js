@@ -38,6 +38,15 @@ const WORDS = [
   { word: 'CROCODILE', heWord: 'תנין',     hint: '🐊', level: 'hard'   },
 ];
 
+const HE_LETTER_NAMES = {
+  'א': 'אלף', 'ב': 'בית', 'ג': 'גימל', 'ד': 'דלת',
+  'ה': 'הא',  'ו': 'וו',  'ז': 'זין',  'ח': 'חית',
+  'ט': 'טית', 'י': 'יוד', 'כ': 'כף',   'ל': 'למד',
+  'מ': 'מם',  'נ': 'נון', 'ס': 'סמך',  'ע': 'עין',
+  'פ': 'פא',  'צ': 'צדיק','ק': 'קוף',  'ר': 'ריש',
+  'ש': 'שין', 'ת': 'תו',
+};
+
 const HE_LETTERS = 'אבגדהוזחטיכלמנסעפצקרשת'.split('');
 const EN_LETTERS = 'ABCDEFGHIJKLMNOPRSTUVWXYZ'.split('');
 
@@ -244,7 +253,8 @@ export default function SpiderMan({ onSuccess, onExit }) {
         }
       };
       const letterFallback = setTimeout(afterLetter, 1000);
-      speak(letter, lang, afterLetter);
+      const letterToSpeak = lang === 'he' ? (HE_LETTER_NAMES[letter] || letter) : letter;
+      speak(letterToSpeak, lang, afterLetter);
 
     } else {
       // Wrong — brief lock to prevent spam, shake feedback
@@ -325,16 +335,18 @@ export default function SpiderMan({ onSuccess, onExit }) {
           </div>
         ) : (
           <>
-            {showHint ? (
+            <button
+              className={`spider-hint-btn${showHint ? ' spider-hint-btn-on' : ''}`}
+              onClick={() => setShowHint(h => !h)}
+            >
+              {copy.hint}
+            </button>
+            {showHint && (
               <div className="spider-animal-label">
                 {lang === 'he'
                   ? `${currentWord.heWord} · ${currentWord.word}`
                   : currentWord.word}
               </div>
-            ) : (
-              <button className="spider-hint-btn" onClick={() => setShowHint(true)}>
-                {copy.hint}
-              </button>
             )}
             <div className="spider-word-display" dir={dir}>
               {spelledWord.split('').map((l, i) => (
