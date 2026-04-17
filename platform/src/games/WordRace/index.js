@@ -463,6 +463,21 @@ export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
   const wordDeckRef = useRef([]);
 
   useEffect(() => { subPhaseRef.current = subPhase; }, [subPhase]);
+
+  // Reset to intro when language changes — avoids mixed-language mid-race state
+  const prevLangRef = useRef(lang);
+  useEffect(() => {
+    if (prevLangRef.current === lang) return;
+    prevLangRef.current = lang;
+    if (screen !== 'intro') {
+      if (recogRef.current) { try { recogRef.current.abort(); } catch (e) {} }
+      setScreen('intro');
+      doneRef.current = false;
+      setSubPhase('driving');
+      setCurrentWord(null);
+      setHeardText('');
+    }
+  }, [lang, screen]);
   useEffect(() => { playerPosRef.current = playerPos; }, [playerPos]);
   useEffect(() => { aiPosRef.current = aiPos; }, [aiPos]);
   useEffect(() => { correctCountRef.current = correctCount; }, [correctCount]);

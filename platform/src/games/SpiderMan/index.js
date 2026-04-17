@@ -35,6 +35,13 @@ const WORDS = [
   { word: 'CROCODILE', heWord: 'תנין', hint: '🐊', level: 'hard' },
 ];
 
+const EN_LETTER_NAMES = {
+  A: 'ay', B: 'bee', C: 'see', D: 'dee', E: 'ee', F: 'ef', G: 'jee',
+  H: 'aitch', I: 'eye', J: 'jay', K: 'kay', L: 'el', M: 'em', N: 'en',
+  O: 'oh', P: 'pee', Q: 'cue', R: 'ar', S: 'es', T: 'tee', U: 'you',
+  V: 'vee', W: 'double you', X: 'ex', Y: 'why', Z: 'zee',
+};
+
 const HE_LETTER_NAMES = {
   א: 'אלף',
   ב: 'בית',
@@ -252,7 +259,7 @@ export default function SpiderMan({ onSuccess, onExit, sharedDifficulty = 1 }) {
       };
 
       const fallbackTimer = setTimeout(afterLetter, 1000);
-      const spokenLetter = lang === 'he' ? (HE_LETTER_NAMES[letter] || letter) : letter;
+      const spokenLetter = lang === 'he' ? (HE_LETTER_NAMES[letter] || letter) : (EN_LETTER_NAMES[letter] || letter);
       speak(spokenLetter, lang, () => {
         clearTimeout(fallbackTimer);
         afterLetter();

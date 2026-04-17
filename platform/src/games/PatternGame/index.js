@@ -1,6 +1,34 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { speak } from '../../speak';
+import { useLanguage } from '../../context/LanguageContext';
 import './PatternGame.css';
+
+const COPY = {
+  en: {
+    title: 'Pattern Finder',
+    prompt: 'What comes next?',
+    great: 'Great job!',
+    tryAgain: 'Try again!',
+    correct: '✅ Great job!',
+    wrong: 'Try again! 💪',
+    amazing: 'Amazing! 🎉',
+    finished: 'You finished all patterns!',
+    collect: 'Collect Sticker 🌟',
+    back: 'Back',
+  },
+  he: {
+    title: 'מציאת דפוסים',
+    prompt: 'מה בא הבא?',
+    great: 'כל הכבוד!',
+    tryAgain: 'נסה שוב!',
+    correct: '✅ כל הכבוד!',
+    wrong: 'נסה שוב! 💪',
+    amazing: 'מדהים! 🎉',
+    finished: 'סיימת את כל הדפוסים!',
+    collect: 'קבל מדבקה 🌟',
+    back: 'חזור',
+  },
+};
 
 const SHAPES = ['⭐', '🔴', '🔵', '🟡', '🟢', '🟠', '💜', '🔶', '🔷', '🌸'];
 const ANIMALS = ['🐶', '🐱', '🐸', '🐻', '🦊', '🐨', '🐯', '🐰', '🐼', '🦁'];
@@ -47,6 +75,8 @@ function buildRound(levelCfg) {
 }
 
 export default function PatternGame({ onSuccess, onExit, sharedDifficulty = 1 }) {
+  const { lang, dir } = useLanguage();
+  const copy = COPY[lang] || COPY.en;
   const activeLevels = DIFFICULTY_LEVELS[sharedDifficulty] || DIFFICULTY_LEVELS[1];
   const [levelIdx, setLevelIdx]   = useState(0);
   const [round, setRound]         = useState(null);
@@ -58,8 +88,8 @@ export default function PatternGame({ onSuccess, onExit, sharedDifficulty = 1 })
   const startRound = useCallback((idx) => {
     setRound(buildRound(activeLevels[idx]));
     setFeedback(null);
-    speak('What comes next?', 'en');
-  }, [activeLevels]);
+    speak(copy.prompt, lang);
+  }, [activeLevels, copy.prompt, lang]);
 
   useEffect(() => { startRound(0); }, [startRound]);
 
@@ -68,7 +98,7 @@ export default function PatternGame({ onSuccess, onExit, sharedDifficulty = 1 })
     if (choice === round.answer) {
       setFeedback('correct');
       setStars(s => s + 1);
-      speak('Great job!', 'en', () => {
+      speak(copy.great, lang, () => {
         setTimeout(() => {
           const next = levelIdx + 1;
           if (next >= activeLevels.length) {
@@ -82,7 +112,7 @@ export default function PatternGame({ onSuccess, onExit, sharedDifficulty = 1 })
     } else {
       setFeedback('wrong');
       setShake(true);
-      speak('Try again!', 'en', () => {
+      speak(copy.tryAgain, lang, () => {
         setTimeout(() => { setShake(false); setFeedback(null); }, 300);
       });
     }
@@ -92,13 +122,13 @@ export default function PatternGame({ onSuccess, onExit, sharedDifficulty = 1 })
 
   if (done) {
     return (
-      <div className="pg-root">
+      <div className="pg-root" dir={dir}>
         <div className="pg-done">
           <div className="pg-done-stars">{'⭐'.repeat(stars)}</div>
-          <h2>Amazing! 🎉</h2>
-          <p>You finished all patterns!</p>
-          <button className="pg-btn pg-btn--primary" onClick={onSuccess}>Collect Sticker 🌟</button>
-          <button className="pg-btn pg-btn--ghost" onClick={onExit}>Back</button>
+          <h2>{copy.amazing}</h2>
+          <p>{copy.finished}</p>
+          <button className="pg-btn pg-btn--primary" onClick={onSuccess}>{copy.collect}</button>
+          <button className="pg-btn pg-btn--ghost" onClick={onExit}>{copy.back}</button>
         </div>
       </div>
     );
@@ -108,12 +138,12 @@ export default function PatternGame({ onSuccess, onExit, sharedDifficulty = 1 })
   const progress = (levelIdx / activeLevels.length) * 100;
 
   return (
-    <div className="pg-root">
+    <div className="pg-root" dir={dir}>
       {/* Header */}
       <div className="pg-header">
         <button className="pg-back" onClick={onExit}>←</button>
         <div className="pg-title-wrap">
-          <span className="pg-title">Pattern Finder</span>
+          <span className="pg-title">{copy.title}</span>
           <span className="pg-badge">{level.label}</span>
         </div>
         <div className="pg-stars-count">{'⭐'.repeat(stars)}</div>
@@ -125,7 +155,7 @@ export default function PatternGame({ onSuccess, onExit, sharedDifficulty = 1 })
       </div>
 
       {/* Prompt */}
-      <div className="pg-prompt">What comes next?</div>
+      <div className="pg-prompt">{copy.prompt}</div>
 
       {/* Sequence */}
       <div className={`pg-sequence ${shake ? 'pg-shake' : ''}`}>
@@ -159,10 +189,10 @@ export default function PatternGame({ onSuccess, onExit, sharedDifficulty = 1 })
       </div>
 
       {feedback === 'correct' && (
-        <div className="pg-feedback pg-feedback--correct">✅ Great job!</div>
+        <div className="pg-feedback pg-feedback--correct">{copy.correct}</div>
       )}
       {feedback === 'wrong' && (
-        <div className="pg-feedback pg-feedback--wrong">Try again! 💪</div>
+        <div className="pg-feedback pg-feedback--wrong">{copy.wrong}</div>
       )}
     </div>
   );

@@ -7,6 +7,48 @@ const FIXED_STEP = 1 / 60;
 const HEART_LIVE = '\u2665';
 const HEART_EMPTY = '\u2661';
 
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {}
+  }
+  return audioCtx;
+}
+
+function playTone(frequency, duration, type = 'sine', volume = 0.3, delay = 0) {
+  const ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type;
+    osc.frequency.setValueAtTime(frequency, ctx.currentTime + delay);
+    gain.gain.setValueAtTime(volume, ctx.currentTime + delay);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+    osc.start(ctx.currentTime + delay);
+    osc.stop(ctx.currentTime + delay + duration + 0.01);
+  } catch (e) {}
+}
+
+function playSoundJump() {
+  playTone(440, 0.08, 'square', 0.2);
+  playTone(660, 0.1, 'square', 0.15, 0.06);
+}
+
+function playSoundEat() {
+  playTone(880, 0.06, 'sine', 0.25);
+  playTone(1100, 0.08, 'sine', 0.2, 0.05);
+}
+
+function playSoundWin() {
+  // Short ascending jingle
+  [523, 659, 784, 1047].forEach((freq, i) => {
+    playTone(freq, 0.18, 'sine', 0.25, i * 0.12);
+  });
+}
+
 const COPY = {
   en: {
     title: 'Sonic Green Hill',
@@ -133,6 +175,7 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
   const sizeRef = useRef({ width: 0, height: 0, dpr: 1 });
 
   const [ui, setUi] = useState(createInitialUi);
+  const prevUiRef = useRef(null);
 
   const publishSnapshot = useCallback((force = false) => {
     const engine = engineRef.current;
@@ -152,6 +195,9 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
   const handleJump = useCallback(() => {
     const engine = engineRef.current;
     if (!engine) return;
+    // Resume AudioContext on first user gesture (browser autoplay policy)
+    const ctx = getAudioCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume().catch(() => {});
     engine.jump();
     publishSnapshot();
   }, [publishSnapshot]);
@@ -313,6 +359,16 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
       document.removeEventListener('visibilitychange', onVisibilityChange);
     };
   }, [clearControls, handleJump, setAction]);
+
+  // Sound effects triggered by state changes
+  useEffect(() => {
+    const prev = prevUiRef.current;
+    prevUiRef.current = ui;
+    if (!prev) return;
+    if (!prev.playerAirborne && ui.playerAirborne) playSoundJump();
+    if (ui.goodFood > prev.goodFood) playSoundEat();
+    if (prev.phase === 'playing' && ui.phase === 'won') playSoundWin();
+  }, [ui]);
 
   const hearts = Array.from({ length: ui.maxLives }, (_, index) => index < ui.lives);
   const resultText = format(copy.result, { goodFood: ui.goodFood });

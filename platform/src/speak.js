@@ -192,20 +192,11 @@ function getCapacitorTTS() {
 export function speak(text, lang, onEnd) {
   if (!text) return;
 
-  if (CUSTOM_AUDIO[text]) {
-    try {
-      playCustomAudio(CUSTOM_AUDIO[text], onEnd);
-    } catch (e) {
-      if (onEnd) onEnd();
-    }
-    return;
-  }
-
   const ttsLang = lang === 'he' ? 'he-IL' : 'en-US';
 
+  // On Capacitor (APK/IPA), always use native TTS — more reliable than new Audio() in WebView
   const nativeTTS = getCapacitorTTS();
   if (nativeTTS) {
-    // Native Android TTS via Capacitor bridge — reliable in WebView
     (async () => {
       try { await nativeTTS.stop(); } catch (e) {}
       try {
@@ -213,6 +204,16 @@ export function speak(text, lang, onEnd) {
       } catch (e) {}
       if (onEnd) onEnd();
     })();
+    return;
+  }
+
+  // On web: prefer pre-recorded audio for better pronunciation
+  if (CUSTOM_AUDIO[text]) {
+    try {
+      playCustomAudio(CUSTOM_AUDIO[text], onEnd);
+    } catch (e) {
+      if (onEnd) onEnd();
+    }
     return;
   }
 

@@ -75,11 +75,20 @@ export default function LetterMatch({ onSuccess, onExit }) {
   const lang = showHebrew ? 'he' : 'en';
   const preset = DIFFICULTY_PRESETS[difficulty - 1] || DIFFICULTY_PRESETS[0];
   const activeItems = useMemo(
-    () => ITEMS.slice(0, preset.itemCount).map((entry) => ({
-      ...entry,
-      en: { ...entry.en, choices: entry.en.choices.slice(0, preset.choiceCount) },
-      he: { ...entry.he, choices: entry.he.choices.slice(0, preset.choiceCount) },
-    })),
+    () => ITEMS.slice(0, preset.itemCount).map((entry) => {
+      const sliceChoices = (choices, answer) => {
+        const sliced = choices.slice(0, preset.choiceCount);
+        if (!sliced.includes(answer)) {
+          sliced[sliced.length - 1] = answer;
+        }
+        return sliced;
+      };
+      return {
+        ...entry,
+        en: { ...entry.en, choices: sliceChoices(entry.en.choices, entry.en.answer) },
+        he: { ...entry.he, choices: sliceChoices(entry.he.choices, entry.he.answer) },
+      };
+    }),
     [preset]
   );
   const item = activeItems[roundIdx];
