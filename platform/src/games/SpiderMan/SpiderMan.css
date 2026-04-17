@@ -50,9 +50,9 @@
   justify-content: center;
 }
 
-/* Left spacer mirrors exit-btn width so stars stay truly centred */
-.spider-hud-start {
-  width: 74px;
+/* Right spacer mirrors exit-btn width so stars stay truly centred */
+.spider-hud-end {
+  width: 38px;
   flex-shrink: 0;
 }
 
@@ -401,4 +401,24 @@
   font-size: 26px;
   cursor: pointer;
   color: rgba(255,255,255,0.35);
+}
+
+/* Decorative corner spider webs */
+.spider-web-corner {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.spider-web-corner-tl {
+  top: 0;
+  left: 0;
+}
+
+.spider-web-corner-tr {
+  top: 0;
+  right: 0;
+  transform: scaleX(-1);
 }

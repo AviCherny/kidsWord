@@ -288,19 +288,27 @@ export default function SpiderMan({ onSuccess, onExit }) {
 
   return (
     <div className="spider-game" dir={dir}>
+      {/* Decorative corner webs */}
+      <svg className="spider-web-corner spider-web-corner-tl" aria-hidden="true" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <WebCornerPaths />
+      </svg>
+      <svg className="spider-web-corner spider-web-corner-tr" aria-hidden="true" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <WebCornerPaths />
+      </svg>
+
       <div className="spider-city" aria-hidden="true">
         {[65,110,80,130,70,95,85,115,75].map((h, i) => (
           <div key={i} className="spider-building" style={{ height: h }} />
         ))}
       </div>
 
-      {/* HUD: spacer left | stars center | exit right — always LTR so position is consistent */}
+      {/* HUD: exit left | stars center | spacer right — language btn is fixed to the right, so exit goes left */}
       <header className="spider-hud" dir="ltr">
-        <div className="spider-hud-start" aria-hidden="true" />
+        <button className="spider-exit-btn" onClick={onExit} aria-label="Exit">✕</button>
         <div className="spider-hud-stars">
           <StarBar starsInCycle={starsInCycle} balloons={balloons} />
         </div>
-        <button className="spider-exit-btn" onClick={onExit} aria-label="Exit">✕</button>
+        <div className="spider-hud-end" aria-hidden="true" />
       </header>
 
       {/* Difficulty pills */}
@@ -337,9 +345,16 @@ export default function SpiderMan({ onSuccess, onExit }) {
           <>
             <button
               className={`spider-hint-btn${showHint ? ' spider-hint-btn-on' : ''}`}
-              onClick={() => setShowHint(h => !h)}
+              onClick={() => {
+                const next = !showHint;
+                setShowHint(next);
+                if (next) {
+                  const speakText = lang === 'he' ? currentWord.heWord : currentWord.word.toLowerCase();
+                  speak(speakText, lang);
+                }
+              }}
             >
-              {copy.hint}
+              🔊 {copy.hint}
             </button>
             {showHint && (
               <div className="spider-animal-label">
@@ -397,6 +412,28 @@ export default function SpiderMan({ onSuccess, onExit }) {
 
       {webShot && <WebLine pos={webShot} />}
     </div>
+  );
+}
+
+function WebCornerPaths() {
+  // Radial lines from corner (0,0)
+  const angles = [0, 15, 30, 45, 60, 75, 90];
+  const radii = [35, 60, 85, 110];
+  return (
+    <>
+      {angles.map((deg, i) => {
+        const rad = (deg * Math.PI) / 180;
+        return <line key={i} x1="0" y1="0" x2={Math.cos(rad) * 115} y2={Math.sin(rad) * 115} stroke="rgba(255,255,255,0.13)" strokeWidth="0.8" />;
+      })}
+      {radii.map((r, i) => {
+        // Arc segment from angle 0 to 90
+        const startX = r;
+        const startY = 0;
+        const endX = 0;
+        const endY = r;
+        return <path key={i} d={`M${startX},${startY} A${r},${r} 0 0,1 ${endX},${endY}`} stroke="rgba(255,255,255,0.11)" strokeWidth="0.8" fill="none" />;
+      })}
+    </>
   );
 }
 
