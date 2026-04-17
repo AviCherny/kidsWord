@@ -5,6 +5,8 @@ import { TOTAL_STICKERS } from '../data/stickers';
 import ParentSettings from './ParentSettings';
 import { getSettings } from '../lib/settings';
 import LanguageSwitchButton from './LanguageSwitchButton';
+import numberTrainHubIcon from '../assets/number-train-hub-icon.svg';
+import sonicHubIcon from '../assets/sonic-hub-icon.svg';
 
 const CATEGORIES = [
   {
@@ -81,7 +83,8 @@ const CATEGORIES = [
       },
       {
         id: 'numbertrain',
-        emoji: '🚂💨',
+        iconSrc: numberTrainHubIcon,
+        emoji: '🚂',
         nameKey: 'numberTrainName',
         descKey: 'numberTrainDesc',
         bg: 'linear-gradient(145deg, #e65100, #ff8f00)',
@@ -130,7 +133,8 @@ const CATEGORIES = [
       },
       {
         id: 'sonic',
-        emoji: '💨💍',
+        iconSrc: sonicHubIcon,
+        emoji: '🦔💨',
         nameKey: 'sonicName',
         descKey: 'sonicDesc',
         bg: 'linear-gradient(145deg, #006abc, #42b3f5)',
@@ -305,7 +309,13 @@ export default function Hub({ onLaunch, earnedCount, onOpenCollection, onSetting
                   aria-label={t(lang, game.nameKey)}
                 >
                   <div className="hub-card-shine" />
-                  <div className="hub-card-emoji">{game.emoji}</div>
+                  {game.iconSrc ? (
+                    <div className="hub-card-icon hub-card-icon--image" aria-hidden="true">
+                      <img className="hub-card-icon-image" src={game.iconSrc} alt="" />
+                    </div>
+                  ) : (
+                    <div className="hub-card-icon hub-card-icon--emoji">{game.emoji}</div>
+                  )}
                   <div className="hub-card-name">{t(lang, game.nameKey)}</div>
                   <div className="hub-card-desc">{t(lang, game.descKey)}</div>
                 </button>

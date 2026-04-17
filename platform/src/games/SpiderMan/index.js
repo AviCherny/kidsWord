@@ -110,7 +110,6 @@ const COPY = {
     playAgain: 'שחק שוב',
     webCue: '🕸️ ירה ברשת לאות הנכונה!',
     hint: '💡 רמז',
-
   },
 };
 
@@ -289,18 +288,12 @@ export default function SpiderMan({ onSuccess, onExit }) {
 
   return (
     <div className="spider-game" dir={dir}>
-      {/* Decorative spider webs — four corners */}
-      <svg className="spider-web-deco spider-web-deco-tl" aria-hidden="true" viewBox="0 0 480 480" fill="none">
-        <WebCornerPaths size={480} />
+      {/* Decorative corner webs */}
+      <svg className="spider-web-corner spider-web-corner-tl" aria-hidden="true" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <WebCornerPaths />
       </svg>
-      <svg className="spider-web-deco spider-web-deco-tr" aria-hidden="true" viewBox="0 0 480 480" fill="none">
-        <WebCornerPaths size={480} />
-      </svg>
-      <svg className="spider-web-deco spider-web-deco-bl" aria-hidden="true" viewBox="0 0 360 360" fill="none">
-        <WebCornerPaths size={360} />
-      </svg>
-      <svg className="spider-web-deco spider-web-deco-br" aria-hidden="true" viewBox="0 0 360 360" fill="none">
-        <WebCornerPaths size={360} />
+      <svg className="spider-web-corner spider-web-corner-tr" aria-hidden="true" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <WebCornerPaths />
       </svg>
 
       <div className="spider-city" aria-hidden="true">
@@ -350,24 +343,19 @@ export default function SpiderMan({ onSuccess, onExit }) {
           </div>
         ) : (
           <>
-            <div className="spider-word-actions">
-              <button
-                className="spider-sound-btn"
-                aria-label="Say word"
-                onClick={() => {
+            <button
+              className={`spider-hint-btn${showHint ? ' spider-hint-btn-on' : ''}`}
+              onClick={() => {
+                const next = !showHint;
+                setShowHint(next);
+                if (next) {
                   const speakText = lang === 'he' ? currentWord.heWord : currentWord.word.toLowerCase();
                   speak(speakText, lang);
-                }}
-              >
-                🔊
-              </button>
-              <button
-                className={`spider-hint-btn${showHint ? ' spider-hint-btn-on' : ''}`}
-                onClick={() => setShowHint(h => !h)}
-              >
-                {copy.hint}
-              </button>
-            </div>
+                }
+              }}
+            >
+              🔊 {copy.hint}
+            </button>
             {showHint && (
               <div className="spider-animal-label">
                 {lang === 'he'
@@ -427,56 +415,24 @@ export default function SpiderMan({ onSuccess, onExit }) {
   );
 }
 
-function WebCornerPaths({ size = 160 }) {
-  // Spider web radiating from corner (0,0)
-  // 7 spoke angles covering the quadrant
-  const angles = [0, 13, 26, 40, 54, 67, 80, 90];
-  // Concentric arc radii
-  const arcRadii = [
-    size * 0.22,
-    size * 0.38,
-    size * 0.54,
-    size * 0.70,
-    size * 0.87,
-  ];
-  const spokeLen = size * 1.05;
-
-  // Pre-compute spoke endpoints
-  const spokes = angles.map(deg => {
-    const rad = (deg * Math.PI) / 180;
-    return { x: Math.cos(rad) * spokeLen, y: Math.sin(rad) * spokeLen };
-  });
-
+function WebCornerPaths() {
+  // Radial lines from corner (0,0)
+  const angles = [0, 15, 30, 45, 60, 75, 90];
+  const radii = [35, 60, 85, 110];
   return (
     <>
-      {/* Radial spokes */}
-      {spokes.map((pt, i) => (
-        <line key={`s${i}`} x1="0" y1="0" x2={pt.x} y2={pt.y}
-          stroke="rgba(255,255,255,0.18)" strokeWidth="0.9" />
-      ))}
-      {/* Concentric arcs */}
-      {arcRadii.map((r, ri) => (
-        <path key={`a${ri}`}
-          d={`M${r},0 A${r},${r} 0 0,1 0,${r}`}
-          stroke="rgba(255,255,255,0.14)" strokeWidth="0.9" fill="none" />
-      ))}
-      {/* Cross-threads between adjacent spokes at each arc radius */}
-      {arcRadii.map((r, ri) =>
-        spokes.slice(0, -1).map((sp, si) => {
-          // Point on spoke si at radius r
-          const t1 = r / spokeLen;
-          const t2 = r / spokeLen;
-          const x1 = sp.x * t1;
-          const y1 = sp.y * t1;
-          const x2 = spokes[si + 1].x * t2;
-          const y2 = spokes[si + 1].y * t2;
-          return (
-            <line key={`c${ri}-${si}`}
-              x1={x1} y1={y1} x2={x2} y2={y2}
-              stroke="rgba(255,255,255,0.10)" strokeWidth="0.7" />
-          );
-        })
-      )}
+      {angles.map((deg, i) => {
+        const rad = (deg * Math.PI) / 180;
+        return <line key={i} x1="0" y1="0" x2={Math.cos(rad) * 115} y2={Math.sin(rad) * 115} stroke="rgba(255,255,255,0.13)" strokeWidth="0.8" />;
+      })}
+      {radii.map((r, i) => {
+        // Arc segment from angle 0 to 90
+        const startX = r;
+        const startY = 0;
+        const endX = 0;
+        const endY = r;
+        return <path key={i} d={`M${startX},${startY} A${r},${r} 0 0,1 ${endX},${endY}`} stroke="rgba(255,255,255,0.11)" strokeWidth="0.8" fill="none" />;
+      })}
     </>
   );
 }

@@ -1,0 +1,2156 @@
+.rescuedog-root {
+  min-height: calc(100dvh - env(safe-area-inset-top, 0px));
+  margin-top: calc(-1 * (env(safe-area-inset-top, 0px) + 64px));
+  position: relative;
+  --rescuedog-accent: #2458a5;
+  --rescuedog-accent-soft: #3f78c6;
+  --rescuedog-highlight: #f4ca51;
+  --rescuedog-deep: #1d427d;
+  --rescuedog-fur: #b47d4f;
+  --rescuedog-ink: #173226;
+  --rescuedog-muted: rgba(23, 50, 38, 0.72);
+  --rescuedog-shell: rgba(255, 252, 245, 0.76);
+  --rescuedog-border: rgba(255, 255, 255, 0.56);
+  --rescuedog-shadow: 0 22px 48px rgba(15, 36, 24, 0.18);
+  --rescuedog-display: 'Avenir Next Condensed', 'Arial Narrow', 'Franklin Gothic Demi Cond', sans-serif;
+  --rescuedog-body: 'Avenir Next', 'Segoe UI', sans-serif;
+}
+
+.rescuedog-scene {
+  min-height: 100dvh;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: calc(env(safe-area-inset-top, 0px) + 76px) 18px 32px;
+  background:
+    radial-gradient(circle at 14% 15%, rgba(255, 255, 255, 0.65) 0, rgba(255, 255, 255, 0) 20%),
+    radial-gradient(circle at 86% 10%, color-mix(in srgb, var(--rescuedog-highlight) 52%, white) 0, rgba(255, 230, 160, 0) 21%),
+    radial-gradient(circle at 50% 100%, rgba(213, 255, 177, 0.42) 0, rgba(213, 255, 177, 0) 32%),
+    linear-gradient(180deg, #b9ecff 0%, #e7f7ff 24%, #f9f7de 58%, #d9efc5 100%);
+  color: var(--rescuedog-ink);
+  font-family: var(--rescuedog-body);
+}
+
+.rescuedog-scene::before,
+.rescuedog-scene::after {
+  content: '';
+  position: absolute;
+  inset: auto;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(40px);
+  opacity: 0.55;
+}
+
+.rescuedog-scene::before {
+  top: 16%;
+  left: -5%;
+  width: 220px;
+  height: 220px;
+  background: color-mix(in srgb, var(--rescuedog-accent-soft) 44%, white);
+}
+
+.rescuedog-scene::after {
+  right: -7%;
+  bottom: 12%;
+  width: 280px;
+  height: 280px;
+  background: color-mix(in srgb, var(--rescuedog-highlight) 44%, white);
+}
+
+.rescuedog-exit {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  left: 16px;
+  z-index: 50;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 18px;
+  font: 900 0.94rem/1 var(--rescuedog-body);
+  color: #fff;
+  background: linear-gradient(135deg, var(--rescuedog-deep), color-mix(in srgb, var(--rescuedog-accent) 82%, black));
+  box-shadow: 0 14px 28px rgba(18, 42, 30, 0.22);
+}
+
+.rescuedog-setup,
+.rescuedog-play {
+  position: relative;
+  z-index: 2;
+  width: min(1240px, 100%);
+  margin: 0 auto;
+}
+
+.rescuedog-setup-copy,
+.rescuedog-panel,
+.rescuedog-goalbar,
+.rescuedog-title-wrap,
+.rescuedog-toast,
+.rescuedog-status-grid,
+.rescuedog-partner-card,
+.rescuedog-route-tracker {
+  border-radius: 28px;
+  border: 1px solid var(--rescuedog-border);
+  background: var(--rescuedog-shell);
+  box-shadow: var(--rescuedog-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.rescuedog-setup-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  gap: 22px;
+  align-items: stretch;
+  margin-bottom: 22px;
+}
+
+.rescuedog-setup-copy {
+  padding: 30px;
+}
+
+.rescuedog-eyebrow,
+.rescuedog-console-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: rgba(23, 77, 43, 0.08);
+  color: color-mix(in srgb, var(--rescuedog-deep) 84%, black);
+  font: 900 0.78rem/1 var(--rescuedog-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rescuedog-setup-copy h1,
+.rescuedog-title-wrap h1,
+.rescuedog-overlay-card h2 {
+  margin: 16px 0 0;
+  font-family: var(--rescuedog-display);
+  font-size: clamp(2.2rem, 5vw, 4rem);
+  line-height: 0.94;
+  letter-spacing: -0.04em;
+  color: color-mix(in srgb, var(--rescuedog-deep) 74%, #0f271a);
+}
+
+.rescuedog-setup-copy p,
+.rescuedog-title-wrap p,
+.rescuedog-overlay-card p {
+  margin: 12px 0 0;
+  font-size: clamp(1rem, 1.8vw, 1.14rem);
+  line-height: 1.5;
+  color: var(--rescuedog-muted);
+  font-weight: 700;
+}
+
+.rescuedog-setup-stats,
+.rescuedog-console-stats {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 22px;
+}
+
+.rescuedog-setup-stat,
+.rescuedog-console-stat {
+  padding: 14px 14px 12px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+}
+
+.rescuedog-setup-stat label,
+.rescuedog-console-stat label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(23, 50, 38, 0.56);
+}
+
+.rescuedog-setup-stat strong,
+.rescuedog-console-stat strong {
+  display: block;
+  font-size: 1.1rem;
+  color: var(--rescuedog-ink);
+}
+
+.rescuedog-setup-note {
+  margin-top: 20px;
+  padding: 18px 20px;
+  border-radius: 22px;
+  display: grid;
+  gap: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(244, 251, 227, 0.88)),
+    linear-gradient(135deg, color-mix(in srgb, var(--rescuedog-highlight) 22%, white), rgba(255, 255, 255, 0));
+}
+
+.rescuedog-setup-note strong,
+.rescuedog-panel-header h2,
+.rescuedog-goalbar strong,
+.rescuedog-score-pill strong,
+.rescuedog-control-pill strong {
+  color: var(--rescuedog-ink);
+}
+
+.rescuedog-setup-stage-preview {
+  position: relative;
+  overflow: hidden;
+  min-height: 500px;
+  padding: 26px;
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 20% 12%, rgba(255, 255, 255, 0.22) 0, rgba(255, 255, 255, 0) 24%),
+    linear-gradient(160deg, color-mix(in srgb, var(--rescuedog-deep) 74%, #0c2418), color-mix(in srgb, var(--rescuedog-accent-soft) 65%, #5fd484));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24), 0 26px 50px rgba(12, 34, 22, 0.22);
+}
+
+.rescuedog-setup-stage-preview::before {
+  content: '';
+  position: absolute;
+  inset: 20px;
+  border-radius: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  pointer-events: none;
+}
+
+.rescuedog-console-head {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 6px;
+  color: #fff;
+}
+
+.rescuedog-console-head strong {
+  font-family: var(--rescuedog-display);
+  font-size: clamp(1.8rem, 2.6vw, 2.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.rescuedog-console-head span:last-child {
+  font-size: 1rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.rescuedog-console-pup {
+  position: relative;
+  z-index: 2;
+  width: min(82%, 320px);
+  margin: 10px auto 0;
+}
+
+.rescuedog-console-stats {
+  position: relative;
+  z-index: 2;
+}
+
+.rescuedog-console-stat {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.rescuedog-console-stat label {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.rescuedog-console-stat strong {
+  color: #fff;
+}
+
+.rescuedog-preview-stack {
+  position: relative;
+  height: 170px;
+  margin-top: 26px;
+}
+
+.rescuedog-preview-card {
+  position: absolute;
+  width: min(67%, 250px);
+  aspect-ratio: 1 / 1;
+  border-radius: 28px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 20px 42px rgba(9, 22, 16, 0.3);
+  overflow: hidden;
+}
+
+.rescuedog-preview-card span {
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 2;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.8);
+  font-weight: 900;
+  color: var(--rescuedog-ink);
+  text-align: center;
+}
+
+.rescuedog-preview-card--harbor {
+  right: 1%;
+  top: 4%;
+  background: linear-gradient(180deg, #9ae8ff 0%, #c7fbff 34%, #5ab9d8 35%, #3a96bb 58%, #f4da97 59%, #eec06d 100%);
+  transform: rotate(-8deg);
+  animation: rescuedogFloatCardOne 4.6s ease-in-out infinite;
+}
+
+.rescuedog-preview-card--jungle {
+  left: 2%;
+  top: 28%;
+  background: linear-gradient(180deg, #9bf0ba 0%, #70cb73 30%, #3c8c45 60%, #235f31 100%);
+  transform: rotate(5deg);
+  animation: rescuedogFloatCardTwo 4.1s ease-in-out infinite;
+}
+
+.rescuedog-preview-card--snow {
+  right: 18%;
+  bottom: 0;
+  background: linear-gradient(180deg, #c8efff 0%, #f2fbff 34%, #dcecff 35%, #b8d0ea 72%, #ffffff 100%);
+  transform: rotate(8deg);
+  animation: rescuedogFloatCardThree 5s ease-in-out infinite;
+}
+
+.rescuedog-panel {
+  padding: 22px;
+  margin-top: 18px;
+}
+
+.rescuedog-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.rescuedog-panel-header h2 {
+  margin: 0;
+  font-family: var(--rescuedog-display);
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.rescuedog-choice-grid,
+.rescuedog-difficulty-grid,
+.rescuedog-location-strip {
+  display: grid;
+  gap: 14px;
+}
+
+.rescuedog-choice-grid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.rescuedog-difficulty-grid {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.rescuedog-location-strip {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.rescuedog-choice-card,
+.rescuedog-difficulty-card,
+.rescuedog-location-chip,
+.rescuedog-goal-chip,
+.rescuedog-control-pill,
+.rescuedog-score-pill,
+.rescuedog-primary-btn,
+.rescuedog-secondary-btn {
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease;
+}
+
+.rescuedog-choice-card,
+.rescuedog-difficulty-card {
+  position: relative;
+  border: 0;
+  border-radius: 26px;
+  padding: 20px 16px 18px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 249, 241, 0.88));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  color: var(--rescuedog-ink);
+  text-align: start;
+}
+
+.rescuedog-choice-card:hover,
+.rescuedog-difficulty-card:hover,
+.rescuedog-location-chip:hover,
+.rescuedog-hidden-item:hover,
+.rescuedog-control-pill:hover,
+.rescuedog-primary-btn:hover,
+.rescuedog-secondary-btn:hover {
+  transform: translateY(-3px);
+}
+
+.rescuedog-choice-card.is-active,
+.rescuedog-difficulty-card.is-active {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 249, 235, 0.95)),
+    linear-gradient(135deg, color-mix(in srgb, var(--rescuedog-highlight) 18%, white), rgba(255, 255, 255, 0));
+  box-shadow: 0 18px 36px rgba(20, 49, 32, 0.14), inset 0 0 0 3px color-mix(in srgb, var(--rescuedog-highlight) 52%, white);
+}
+
+.rescuedog-choice-badge,
+.rescuedog-partner-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--rescuedog-highlight) 84%, white), color-mix(in srgb, var(--rescuedog-accent-soft) 18%, white));
+  color: color-mix(in srgb, var(--rescuedog-deep) 88%, black);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.rescuedog-choice-pup {
+  width: 134px;
+  margin: 8px auto 10px;
+}
+
+.rescuedog-choice-card strong,
+.rescuedog-difficulty-card strong,
+.rescuedog-location-chip strong,
+.rescuedog-route-name {
+  display: block;
+  font-size: 1.08rem;
+  font-weight: 900;
+}
+
+.rescuedog-choice-card span,
+.rescuedog-difficulty-card span,
+.rescuedog-location-chip span,
+.rescuedog-goal-chip span {
+  display: block;
+  margin-top: 7px;
+  color: var(--rescuedog-muted);
+  font-weight: 700;
+  line-height: 1.38;
+}
+
+.rescuedog-difficulty-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.rescuedog-difficulty-metrics span {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(20, 77, 43, 0.08);
+  font-size: 0.78rem;
+  font-weight: 900;
+  color: rgba(23, 50, 38, 0.7);
+}
+
+.rescuedog-location-chip {
+  padding: 18px;
+  border-radius: 26px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.rescuedog-location-step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.78);
+  font: 900 0.82rem/1 var(--rescuedog-body);
+  color: var(--rescuedog-ink);
+}
+
+.rescuedog-location-chip--harbor {
+  background: linear-gradient(135deg, rgba(187, 245, 255, 0.96), rgba(255, 238, 185, 0.88));
+}
+
+.rescuedog-location-chip--jungle {
+  background: linear-gradient(135deg, rgba(202, 255, 194, 0.94), rgba(232, 246, 166, 0.88));
+}
+
+.rescuedog-location-chip--snow {
+  background: linear-gradient(135deg, rgba(236, 247, 255, 0.98), rgba(248, 252, 255, 0.88));
+}
+
+.rescuedog-setup-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.rescuedog-start-note {
+  color: rgba(23, 50, 38, 0.68);
+  font-weight: 800;
+}
+
+.rescuedog-primary-btn,
+.rescuedog-secondary-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 15px 26px;
+  font: 900 1rem/1 var(--rescuedog-body);
+}
+
+.rescuedog-primary-btn {
+  background: linear-gradient(135deg, var(--rescuedog-accent-soft), var(--rescuedog-accent));
+  color: #fff;
+  box-shadow: 0 18px 30px color-mix(in srgb, var(--rescuedog-accent) 22%, transparent);
+}
+
+.rescuedog-secondary-btn {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--rescuedog-ink);
+}
+
+.rescuedog-hud {
+  display: grid;
+  gap: 14px;
+}
+
+.rescuedog-title-wrap {
+  padding: 20px 22px;
+}
+
+.rescuedog-title-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.rescuedog-stage-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(20, 77, 43, 0.08);
+  color: color-mix(in srgb, var(--rescuedog-deep) 82%, black);
+  font-weight: 900;
+}
+
+.rescuedog-stage-pill--accent {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--rescuedog-highlight) 65%, white), color-mix(in srgb, var(--rescuedog-accent-soft) 18%, white));
+}
+
+.rescuedog-route-tracker {
+  padding: 16px;
+}
+
+.rescuedog-route-tracker > strong {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.rescuedog-route-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rescuedog-route-step {
+  position: relative;
+  padding: 14px 14px 14px 50px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(255, 255, 255, 0.56);
+}
+
+.rescuedog-route-step.is-current {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), color-mix(in srgb, var(--rescuedog-highlight) 18%, white));
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--rescuedog-highlight) 44%, white);
+}
+
+.rescuedog-route-step.is-complete {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--rescuedog-accent-soft) 18%, white), rgba(255, 255, 255, 0.88));
+}
+
+.rescuedog-route-index {
+  position: absolute;
+  inset-inline-start: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--rescuedog-accent);
+  color: #fff;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.rescuedog-status-grid {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rescuedog-score-pill,
+.rescuedog-control-pill {
+  min-height: 84px;
+  border: 0;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 6px;
+  color: var(--rescuedog-ink);
+}
+
+.rescuedog-score-pill span,
+.rescuedog-control-pill span {
+  font-weight: 900;
+}
+
+.rescuedog-control-pill--hint {
+  background: linear-gradient(135deg, rgba(255, 244, 187, 0.96), rgba(255, 230, 151, 0.94));
+}
+
+.rescuedog-goalbar {
+  position: relative;
+  z-index: 6;
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.rescuedog-goalbar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rescuedog-goalbar-head span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 78px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(20, 77, 43, 0.08);
+  font-weight: 900;
+  color: var(--rescuedog-ink);
+}
+
+.rescuedog-goal-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.rescuedog-goal-chip {
+  padding: 12px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.84);
+  display: grid;
+  justify-items: center;
+  text-align: center;
+}
+
+.rescuedog-goal-chip.is-found {
+  opacity: 0.48;
+  filter: grayscale(0.18);
+}
+
+.rescuedog-goal-icon {
+  width: 48px;
+  height: 48px;
+}
+
+.rescuedog-goal-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.rescuedog-toast {
+  position: relative;
+  z-index: 6;
+  width: min(520px, calc(100% - 24px));
+  margin: 14px auto 0;
+  padding: 14px 18px;
+  text-align: center;
+  font-weight: 900;
+  color: color-mix(in srgb, var(--rescuedog-deep) 84%, black);
+}
+
+.rescuedog-playfield {
+  position: relative;
+  min-height: 56dvh;
+  margin-top: 18px;
+  border-radius: 40px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42), 0 30px 56px rgba(20, 63, 38, 0.18);
+}
+
+.rescuedog-playfield--harbor {
+  background: linear-gradient(180deg, #94e6ff 0%, #d5f9ff 30%, #5dbcdb 31%, #3c98be 56%, #f0d78f 57%, #eabb67 72%, #88c16f 100%);
+}
+
+.rescuedog-playfield--jungle {
+  background: linear-gradient(180deg, #98ecba 0%, #7cca7d 28%, #4a9552 48%, #2f663f 72%, #7e5b34 100%);
+}
+
+.rescuedog-playfield--snow {
+  background: linear-gradient(180deg, #9dd8ff 0%, #dbf4ff 29%, #f5fbff 46%, #cadcf0 68%, #ffffff 100%);
+}
+
+.rescuedog-playfield-scan,
+.rescuedog-playfield-vignette,
+.rescuedog-playfield-label {
+  position: absolute;
+  pointer-events: none;
+}
+
+.rescuedog-playfield-scan {
+  inset: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08)) 0 0 / 100% 1px no-repeat,
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.06) 0 1px, transparent 1px 84px),
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 68px);
+  mix-blend-mode: soft-light;
+}
+
+.rescuedog-playfield-vignette {
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0) 46%, rgba(7, 16, 10, 0.22) 100%);
+}
+
+.rescuedog-playfield-label {
+  inset-inline-start: 18px;
+  bottom: 18px;
+  font-family: var(--rescuedog-display);
+  font-size: clamp(2rem, 6vw, 4.4rem);
+  line-height: 0.9;
+  letter-spacing: -0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.16);
+}
+
+.rescuedog-hidden-item {
+  position: absolute;
+  width: 62px;
+  height: 62px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  transform: translate(-50%, -50%) scale(var(--item-scale)) rotate(var(--item-rotate));
+  cursor: pointer;
+  z-index: 12;
+  filter: drop-shadow(0 12px 14px rgba(17, 32, 23, 0.18));
+}
+
+.rescuedog-hidden-item svg {
+  width: 100%;
+  height: 100%;
+}
+
+.rescuedog-hidden-item.is-found {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.rescuedog-hidden-item.is-highlighted {
+  animation: rescuedogPulseItem 0.6s ease-in-out 3;
+}
+
+.rescuedog-partner-card {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 18;
+  width: min(286px, calc(100% - 36px));
+  padding: 16px;
+}
+
+.rescuedog-partner-pup {
+  width: 136px;
+  margin: 0 auto 8px;
+}
+
+.rescuedog-partner-card strong,
+.rescuedog-partner-card span {
+  display: block;
+  text-align: center;
+}
+
+.rescuedog-partner-card strong {
+  font-size: 1.12rem;
+}
+
+.rescuedog-partner-badge {
+  margin: 8px auto 0;
+  width: fit-content;
+}
+
+.rescuedog-partner-card span:last-child {
+  margin-top: 8px;
+  color: var(--rescuedog-muted);
+  font-weight: 700;
+}
+
+.rescuedog-pup-svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 16px 20px rgba(70, 48, 25, 0.2));
+  animation: rescuedogPupBob 2.8s ease-in-out infinite;
+}
+
+.rescuedog-pup-svg--happy {
+  animation: rescuedogHappyBounce 0.85s ease-in-out infinite;
+}
+
+.rescuedog-sun,
+.rescuedog-cloud,
+.rescuedog-water,
+.rescuedog-dock,
+.rescuedog-lighthouse,
+.rescuedog-boat,
+.rescuedog-canopy,
+.rescuedog-vines,
+.rescuedog-waterfall,
+.rescuedog-jungle-rock,
+.rescuedog-aurora,
+.rescuedog-mountains,
+.rescuedog-cabin,
+.rescuedog-ice-lake,
+.rescuedog-snowdrift {
+  position: absolute;
+  pointer-events: none;
+}
+
+.rescuedog-sun {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+}
+
+.rescuedog-sun--harbor {
+  top: 24px;
+  right: 8%;
+  background: radial-gradient(circle, rgba(255, 248, 170, 1) 0%, rgba(255, 221, 110, 0.94) 42%, rgba(255, 221, 110, 0) 72%);
+}
+
+.rescuedog-sun--jungle {
+  top: 26px;
+  right: 13%;
+  background: radial-gradient(circle, rgba(255, 243, 171, 0.84) 0%, rgba(255, 213, 96, 0.5) 44%, rgba(255, 213, 96, 0) 72%);
+}
+
+.rescuedog-sun--snow {
+  top: 16px;
+  right: 12%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.94) 0%, rgba(232, 249, 255, 0.76) 42%, rgba(232, 249, 255, 0) 72%);
+}
+
+.rescuedog-cloud {
+  width: 128px;
+  height: 40px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.rescuedog-cloud::before,
+.rescuedog-cloud::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.rescuedog-cloud::before {
+  width: 56px;
+  height: 56px;
+  left: 16px;
+  top: -22px;
+}
+
+.rescuedog-cloud::after {
+  width: 64px;
+  height: 64px;
+  right: 12px;
+  top: -28px;
+}
+
+.rescuedog-cloud--one {
+  top: 12%;
+  left: 8%;
+}
+
+.rescuedog-cloud--two {
+  top: 18%;
+  left: 30%;
+  transform: scale(0.86);
+}
+
+.rescuedog-water {
+  left: 0;
+  right: 0;
+  bottom: 22%;
+  height: 29%;
+  background: linear-gradient(180deg, rgba(120, 223, 246, 0.14), rgba(49, 132, 165, 0.94));
+}
+
+.rescuedog-dock {
+  left: 10%;
+  bottom: 21%;
+  width: 36%;
+  height: 14%;
+  border-radius: 24px 24px 8px 8px;
+  background: linear-gradient(180deg, #c98f56, #8d5930);
+}
+
+.rescuedog-dock::after {
+  content: '';
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 18%;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.rescuedog-lighthouse {
+  right: 15%;
+  bottom: 29%;
+  width: 72px;
+  height: 186px;
+  border-radius: 22px 22px 10px 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 52%, #ff765b 53%, #ff765b 66%, #ffffff 67%, #ffffff 100%);
+}
+
+.rescuedog-lighthouse::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: -18px;
+  height: 26px;
+  border-radius: 12px 12px 4px 4px;
+  background: #33485d;
+}
+
+.rescuedog-boat {
+  bottom: 30%;
+  width: 112px;
+  height: 54px;
+  border-radius: 0 0 50px 50px;
+  background: linear-gradient(180deg, #fff4e4, #d2744d);
+}
+
+.rescuedog-boat::before {
+  content: '';
+  position: absolute;
+  bottom: 34px;
+  left: 44px;
+  width: 6px;
+  height: 54px;
+  background: #735033;
+}
+
+.rescuedog-boat::after {
+  content: '';
+  position: absolute;
+  bottom: 58px;
+  left: 50px;
+  border-style: solid;
+  border-width: 0 0 34px 28px;
+  border-color: transparent transparent #fff9f1 transparent;
+}
+
+.rescuedog-boat--one {
+  left: 48%;
+}
+
+.rescuedog-boat--two {
+  left: 70%;
+  transform: scale(0.78);
+}
+
+.rescuedog-canopy {
+  top: -3%;
+  width: 38%;
+  height: 31%;
+  background: radial-gradient(circle at 50% 34%, rgba(164, 245, 133, 0.88) 0%, rgba(77, 164, 82, 0.98) 62%, rgba(42, 103, 50, 1) 100%);
+  border-radius: 0 0 46% 46%;
+}
+
+.rescuedog-canopy--left {
+  left: -4%;
+}
+
+.rescuedog-canopy--right {
+  right: -4%;
+}
+
+.rescuedog-vines {
+  top: 0;
+  width: 110px;
+  height: 44%;
+}
+
+.rescuedog-vines::before,
+.rescuedog-vines::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(180deg, #6cbb59, #2f7a3d);
+}
+
+.rescuedog-vines::before {
+  left: 30%;
+}
+
+.rescuedog-vines::after {
+  left: 60%;
+}
+
+.rescuedog-vines--left {
+  left: 6%;
+}
+
+.rescuedog-vines--right {
+  right: 6%;
+}
+
+.rescuedog-waterfall {
+  left: 43%;
+  top: 16%;
+  width: 18%;
+  height: 52%;
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(212, 247, 255, 0.92), rgba(91, 195, 222, 0.92));
+  opacity: 0.76;
+}
+
+.rescuedog-jungle-rock {
+  bottom: 18%;
+  width: 184px;
+  height: 94px;
+  border-radius: 54px;
+  background: linear-gradient(180deg, #aeb7a5, #737d70);
+}
+
+.rescuedog-jungle-rock--one {
+  left: 14%;
+}
+
+.rescuedog-jungle-rock--two {
+  right: 14%;
+}
+
+.rescuedog-aurora {
+  left: 12%;
+  right: 12%;
+  top: 6%;
+  height: 24%;
+  border-radius: 50%;
+  background: linear-gradient(90deg, rgba(152, 255, 212, 0), rgba(152, 255, 212, 0.56), rgba(200, 220, 255, 0.62), rgba(152, 255, 212, 0));
+  filter: blur(18px);
+}
+
+.rescuedog-mountains {
+  left: -6%;
+  right: -6%;
+  bottom: 28%;
+  height: 40%;
+  background:
+    linear-gradient(135deg, transparent 44%, #bfd2ea 44%, #bfd2ea 60%, transparent 60%) 0 100% / 33% 100% no-repeat,
+    linear-gradient(135deg, transparent 42%, #a6bdd7 42%, #a6bdd7 60%, transparent 60%) 34% 100% / 34% 100% no-repeat,
+    linear-gradient(135deg, transparent 46%, #d4e4f2 46%, #d4e4f2 60%, transparent 60%) 68% 100% / 34% 100% no-repeat;
+}
+
+.rescuedog-cabin {
+  bottom: 24%;
+  width: 108px;
+  height: 82px;
+  border-radius: 16px 16px 8px 8px;
+  background: linear-gradient(180deg, #e2a46c, #8c5733);
+}
+
+.rescuedog-cabin::before {
+  content: '';
+  position: absolute;
+  left: -8px;
+  right: -8px;
+  top: -24px;
+  border-style: solid;
+  border-width: 0 62px 24px;
+  border-color: transparent transparent #74452a;
+}
+
+.rescuedog-cabin--left {
+  left: 16%;
+}
+
+.rescuedog-cabin--right {
+  right: 16%;
+}
+
+.rescuedog-ice-lake {
+  left: 36%;
+  bottom: 21%;
+  width: 28%;
+  height: 18%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.88), rgba(162, 221, 255, 0.94) 50%, rgba(126, 176, 220, 0.92) 100%);
+}
+
+.rescuedog-snowdrift {
+  bottom: -3%;
+  width: 42%;
+  height: 30%;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(245, 251, 255, 0.96), rgba(224, 240, 252, 0.98));
+}
+
+.rescuedog-snowdrift--one {
+  left: -6%;
+}
+
+.rescuedog-snowdrift--two {
+  right: -8%;
+}
+
+.rescuedog-burst {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  transform: translate(-50%, -50%);
+  z-index: 25;
+  pointer-events: none;
+}
+
+.rescuedog-burst span,
+.rescuedog-burst-core {
+  position: absolute;
+  inset: 0;
+}
+
+.rescuedog-burst span::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffef8a, #ffae42);
+  transform: rotate(var(--angle)) translateX(var(--distance)) scale(0.7);
+  animation: rescuedogSpark 0.65s ease-out forwards;
+}
+
+.rescuedog-burst-core {
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 250, 188, 0.96) 0%, rgba(255, 190, 70, 0.88) 45%, rgba(255, 190, 70, 0) 70%);
+  animation: rescuedogCore 0.65s ease-out forwards;
+}
+
+.rescuedog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background: rgba(10, 32, 18, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.rescuedog-overlay-card {
+  width: min(560px, 100%);
+  padding: 28px;
+  border-radius: 36px;
+  text-align: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 250, 237, 0.92));
+  box-shadow: 0 24px 44px rgba(10, 33, 20, 0.22);
+}
+
+.rescuedog-overlay-pup {
+  width: 176px;
+  margin: 0 auto 12px;
+}
+
+.rescuedog-overlay-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+@keyframes rescuedogPupBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes rescuedogHappyBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-8px) scale(1.03); }
+}
+
+@keyframes rescuedogSpark {
+  0% { opacity: 1; transform: rotate(var(--angle)) translateX(0) scale(0.2); }
+  100% { opacity: 0; transform: rotate(var(--angle)) translateX(var(--distance)) scale(0.95); }
+}
+
+@keyframes rescuedogCore {
+  0% { opacity: 0.9; transform: scale(0.3); }
+  100% { opacity: 0; transform: scale(2); }
+}
+
+@keyframes rescuedogPulseItem {
+  0%, 100% { transform: translate(-50%, -50%) scale(var(--item-scale)) rotate(var(--item-rotate)); }
+  50% { transform: translate(-50%, -50%) scale(calc(var(--item-scale) * 1.2)) rotate(var(--item-rotate)); }
+}
+
+@keyframes rescuedogFloatCardOne {
+  0%, 100% { transform: rotate(-8deg) translateY(0); }
+  50% { transform: rotate(-6deg) translateY(-8px); }
+}
+
+@keyframes rescuedogFloatCardTwo {
+  0%, 100% { transform: rotate(5deg) translateY(0); }
+  50% { transform: rotate(7deg) translateY(-10px); }
+}
+
+@keyframes rescuedogFloatCardThree {
+  0%, 100% { transform: rotate(8deg) translateY(0); }
+  50% { transform: rotate(6deg) translateY(-7px); }
+}
+
+@media (max-width: 1024px) {
+  .rescuedog-setup-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .rescuedog-setup-stage-preview {
+    min-height: 440px;
+  }
+
+  .rescuedog-route-steps {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .rescuedog-scene {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .rescuedog-setup-stats,
+  .rescuedog-console-stats,
+  .rescuedog-status-grid,
+  .rescuedog-choice-grid,
+  .rescuedog-difficulty-grid,
+  .rescuedog-location-strip,
+  .rescuedog-goal-list {
+    grid-template-columns: 1fr;
+  }
+
+  .rescuedog-setup-stage-preview {
+    min-height: 520px;
+  }
+
+  .rescuedog-console-pup {
+    width: min(80%, 280px);
+  }
+
+  .rescuedog-preview-stack {
+    height: 220px;
+  }
+
+  .rescuedog-preview-card {
+    width: 62%;
+  }
+
+  .rescuedog-partner-card {
+    left: 14px;
+    right: 14px;
+    width: auto;
+  }
+
+  .rescuedog-hidden-item {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (max-width: 560px) {
+  .rescuedog-title-meta,
+  .rescuedog-goalbar-head,
+  .rescuedog-overlay-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rescuedog-playfield {
+    min-height: 60dvh;
+  }
+
+  .rescuedog-setup-copy,
+  .rescuedog-panel,
+  .rescuedog-goalbar,
+  .rescuedog-title-wrap,
+  .rescuedog-route-tracker,
+  .rescuedog-overlay-card {
+    border-radius: 24px;
+  }
+}
+
+/* Finder layout refresh */
+.rescuedog-root {
+  --rescuedog-ink: #1d3245;
+  --rescuedog-muted: rgba(29, 50, 69, 0.72);
+  --rescuedog-shell: rgba(255, 252, 244, 0.92);
+  --rescuedog-shell-strong: rgba(255, 255, 255, 0.96);
+  --rescuedog-border: rgba(255, 255, 255, 0.72);
+  --rescuedog-shadow: 0 24px 52px rgba(40, 67, 51, 0.14);
+  --rescuedog-display: 'Trebuchet MS', 'Avenir Next Condensed', 'Arial Narrow', sans-serif;
+  --rescuedog-body: 'Avenir Next', 'Trebuchet MS', 'Segoe UI', sans-serif;
+}
+
+.rescuedog-scene {
+  padding: calc(env(safe-area-inset-top, 0px) + 78px) 22px 34px;
+  background:
+    radial-gradient(circle at 14% 10%, rgba(255, 255, 255, 0.85) 0, rgba(255, 255, 255, 0) 16%),
+    radial-gradient(circle at 82% 12%, rgba(255, 236, 170, 0.58) 0, rgba(255, 236, 170, 0) 18%),
+    linear-gradient(180deg, #b7ebff 0%, #ddf6ff 25%, #fff6db 60%, #dff0cb 100%);
+  color: var(--rescuedog-ink);
+}
+
+.rescuedog-scene::before {
+  top: 12%;
+  left: -3%;
+  width: 260px;
+  height: 260px;
+  background: color-mix(in srgb, var(--rescuedog-accent-soft) 22%, white);
+}
+
+.rescuedog-scene::after {
+  right: -4%;
+  bottom: 8%;
+  width: 320px;
+  height: 320px;
+  background: color-mix(in srgb, var(--rescuedog-highlight) 28%, white);
+}
+
+.rescuedog-setup,
+.rescuedog-play {
+  width: min(1280px, 100%);
+}
+
+.rescuedog-exit {
+  top: calc(env(safe-area-inset-top, 0px) + 18px);
+  left: 18px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--rescuedog-deep) 88%, #112633), var(--rescuedog-accent));
+  box-shadow: 0 16px 28px rgba(18, 42, 30, 0.18);
+}
+
+.rescuedog-briefing-shell,
+.rescuedog-panel,
+.rescuedog-board-shell,
+.rescuedog-title-wrap,
+.rescuedog-goalbar,
+.rescuedog-toast,
+.rescuedog-status-grid,
+.rescuedog-partner-card,
+.rescuedog-route-tracker,
+.rescuedog-find-panel {
+  border-radius: 30px;
+  border: 1px solid var(--rescuedog-border);
+  background: var(--rescuedog-shell);
+  box-shadow: var(--rescuedog-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.rescuedog-briefing-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.04fr) minmax(360px, 0.96fr);
+  gap: 22px;
+  padding: 24px;
+}
+
+.rescuedog-briefing-copy {
+  padding: 12px 8px 12px 6px;
+}
+
+.rescuedog-briefing-copy h1,
+.rescuedog-title-wrap h1,
+.rescuedog-overlay-card h2 {
+  margin: 16px 0 0;
+  font-family: var(--rescuedog-display);
+  font-size: clamp(2.4rem, 5vw, 4.3rem);
+  line-height: 0.92;
+  letter-spacing: -0.05em;
+  color: color-mix(in srgb, var(--rescuedog-deep) 72%, #163044);
+}
+
+.rescuedog-briefing-copy p,
+.rescuedog-title-wrap p,
+.rescuedog-overlay-card p {
+  margin: 12px 0 0;
+  font-size: clamp(1rem, 1.8vw, 1.12rem);
+  line-height: 1.55;
+  color: var(--rescuedog-muted);
+  font-weight: 700;
+}
+
+.rescuedog-eyebrow,
+.rescuedog-console-kicker,
+.rescuedog-find-kicker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: color-mix(in srgb, var(--rescuedog-deep) 86%, #112633);
+  font: 900 0.78rem/1 var(--rescuedog-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rescuedog-briefing-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.rescuedog-briefing-stat {
+  padding: 14px 14px 12px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  text-align: center;
+}
+
+.rescuedog-briefing-stat label,
+.rescuedog-panel-header h2,
+.rescuedog-goalbar strong,
+.rescuedog-score-pill strong,
+.rescuedog-control-pill strong,
+.rescuedog-goalbar-head span {
+  color: var(--rescuedog-ink);
+}
+
+.rescuedog-briefing-stat label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(29, 50, 69, 0.55);
+}
+
+.rescuedog-briefing-stat strong {
+  display: block;
+  font-size: 1.1rem;
+}
+
+.rescuedog-briefing-note {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 18px 20px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(250, 247, 224, 0.94));
+}
+
+.rescuedog-setup-actions {
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.rescuedog-start-note {
+  max-width: 34rem;
+}
+
+.rescuedog-briefing-preview {
+  position: relative;
+  overflow: hidden;
+  padding: 26px;
+  border-radius: 28px;
+  min-height: 560px;
+  background:
+    radial-gradient(circle at 20% 16%, rgba(255, 255, 255, 0.24) 0, rgba(255, 255, 255, 0) 20%),
+    linear-gradient(165deg, color-mix(in srgb, var(--rescuedog-deep) 82%, #102833), color-mix(in srgb, var(--rescuedog-accent-soft) 72%, #8edda6));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+
+.rescuedog-briefing-preview::before {
+  content: '';
+  position: absolute;
+  inset: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  pointer-events: none;
+}
+
+.rescuedog-briefing-head {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 6px;
+  color: #fff;
+}
+
+.rescuedog-briefing-head strong {
+  font-family: var(--rescuedog-display);
+  font-size: clamp(1.9rem, 2.7vw, 2.7rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.rescuedog-briefing-head span:last-child {
+  color: rgba(255, 255, 255, 0.82);
+  font-weight: 800;
+}
+
+.rescuedog-briefing-pup {
+  position: relative;
+  z-index: 2;
+  width: min(80%, 300px);
+  margin: 8px auto 0;
+}
+
+.rescuedog-briefing-route {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.rescuedog-route-preview {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 12px 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.rescuedog-route-preview strong,
+.rescuedog-route-preview span {
+  display: block;
+  margin: 0;
+  color: inherit;
+}
+
+.rescuedog-route-preview span:last-child {
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+}
+
+.rescuedog-route-preview-index {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--rescuedog-deep);
+  font: 900 0.82rem/1 var(--rescuedog-body);
+}
+
+.rescuedog-briefing-stats--preview {
+  position: relative;
+  z-index: 2;
+  margin-top: 18px;
+}
+
+.rescuedog-briefing-stat--preview {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.rescuedog-briefing-stat--preview label {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.rescuedog-briefing-stat--preview strong {
+  color: #fff;
+}
+
+.rescuedog-preview-stack {
+  position: relative;
+  z-index: 2;
+  height: 168px;
+  margin-top: 22px;
+}
+
+.rescuedog-setup-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.75fr);
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.rescuedog-panel {
+  padding: 22px;
+}
+
+.rescuedog-panel--wide {
+  min-width: 0;
+}
+
+.rescuedog-panel-header {
+  margin-bottom: 16px;
+}
+
+.rescuedog-panel-header h2 {
+  margin: 0;
+  font-family: var(--rescuedog-display);
+  font-size: clamp(1.45rem, 2.1vw, 2rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.rescuedog-choice-grid,
+.rescuedog-difficulty-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.rescuedog-choice-grid {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.rescuedog-difficulty-grid {
+  grid-template-columns: 1fr;
+}
+
+.rescuedog-choice-card,
+.rescuedog-difficulty-card,
+.rescuedog-goal-chip,
+.rescuedog-control-pill,
+.rescuedog-score-pill,
+.rescuedog-primary-btn,
+.rescuedog-secondary-btn {
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, border-color 180ms ease, opacity 180ms ease;
+}
+
+.rescuedog-choice-card,
+.rescuedog-difficulty-card {
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  border-radius: 26px;
+  padding: 18px 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 245, 233, 0.9));
+  text-align: start;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+.rescuedog-choice-card:hover,
+.rescuedog-difficulty-card:hover,
+.rescuedog-goal-chip:hover,
+.rescuedog-control-pill:hover,
+.rescuedog-primary-btn:hover,
+.rescuedog-secondary-btn:hover {
+  transform: translateY(-3px);
+}
+
+.rescuedog-choice-card.is-active,
+.rescuedog-difficulty-card.is-active {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 250, 235, 0.96));
+  box-shadow: 0 18px 36px rgba(20, 49, 32, 0.12), inset 0 0 0 3px color-mix(in srgb, var(--rescuedog-highlight) 48%, white);
+}
+
+.rescuedog-choice-badge,
+.rescuedog-partner-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 30px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--rescuedog-highlight) 80%, white), rgba(255, 255, 255, 0.95));
+  color: color-mix(in srgb, var(--rescuedog-deep) 88%, black);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.rescuedog-choice-pup {
+  width: 128px;
+  margin: 8px auto 12px;
+}
+
+.rescuedog-choice-card strong,
+.rescuedog-difficulty-card strong,
+.rescuedog-route-name {
+  display: block;
+  font-size: 1.06rem;
+  font-weight: 900;
+}
+
+.rescuedog-choice-card span,
+.rescuedog-difficulty-card span {
+  display: block;
+  margin-top: 7px;
+  color: var(--rescuedog-muted);
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.rescuedog-difficulty-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.rescuedog-difficulty-metrics span {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(20, 77, 43, 0.08);
+  color: rgba(29, 50, 69, 0.68);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.rescuedog-primary-btn,
+.rescuedog-secondary-btn {
+  border: 0;
+  border-radius: 999px;
+  padding: 15px 26px;
+  font: 900 1rem/1 var(--rescuedog-body);
+}
+
+.rescuedog-primary-btn {
+  background: linear-gradient(135deg, var(--rescuedog-accent-soft), var(--rescuedog-accent));
+  color: #fff;
+  box-shadow: 0 18px 30px color-mix(in srgb, var(--rescuedog-accent) 20%, transparent);
+}
+
+.rescuedog-secondary-btn {
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--rescuedog-ink);
+}
+
+.rescuedog-play-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  align-items: start;
+}
+
+.rescuedog-board-shell {
+  padding: 18px;
+}
+
+.rescuedog-board-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.rescuedog-title-wrap {
+  padding: 22px 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 250, 239, 0.92));
+}
+
+.rescuedog-title-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.rescuedog-stage-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: rgba(19, 76, 104, 0.08);
+  color: color-mix(in srgb, var(--rescuedog-deep) 82%, black);
+  font-weight: 900;
+}
+
+.rescuedog-stage-pill--accent {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--rescuedog-highlight) 64%, white), rgba(255, 255, 255, 0.95));
+}
+
+.rescuedog-find-panel {
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 232, 0.94));
+}
+
+.rescuedog-find-target {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 16px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(251, 244, 203, 0.94));
+}
+
+.rescuedog-find-icon {
+  display: grid;
+  place-items: center;
+  width: 82px;
+  height: 82px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(19, 76, 104, 0.08);
+}
+
+.rescuedog-find-icon svg {
+  width: 58px;
+  height: 58px;
+}
+
+.rescuedog-find-copy strong {
+  display: block;
+  font-size: 1.24rem;
+  color: var(--rescuedog-ink);
+}
+
+.rescuedog-find-copy span {
+  display: block;
+  margin-top: 6px;
+  color: var(--rescuedog-muted);
+  font-weight: 800;
+}
+
+.rescuedog-goalbar {
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.rescuedog-goalbar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rescuedog-goalbar-head span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 84px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(19, 76, 104, 0.08);
+  font-weight: 900;
+}
+
+.rescuedog-goal-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(114px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.rescuedog-goal-chip {
+  padding: 12px 10px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.86);
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.88);
+}
+
+.rescuedog-goal-chip.is-current {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 244, 198, 0.96));
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--rescuedog-highlight) 58%, white);
+}
+
+.rescuedog-goal-chip.is-found {
+  opacity: 0.46;
+  filter: grayscale(0.16);
+}
+
+.rescuedog-goal-chip > span:last-child {
+  margin: 0;
+  color: var(--rescuedog-ink);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.rescuedog-goal-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0;
+  border-radius: 18px;
+  background: rgba(240, 247, 252, 0.95);
+}
+
+.rescuedog-toast {
+  width: 100%;
+  margin: 14px 0 0;
+  padding: 14px 18px;
+  text-align: center;
+  font-weight: 900;
+  color: color-mix(in srgb, var(--rescuedog-deep) 84%, black);
+}
+
+.rescuedog-playfield {
+  min-height: 62dvh;
+  margin-top: 14px;
+  border-radius: 34px;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42), 0 30px 56px rgba(20, 63, 38, 0.16);
+}
+
+.rescuedog-hidden-item {
+  width: 60px;
+  height: 60px;
+}
+
+.rescuedog-sidepanel {
+  display: grid;
+  gap: 16px;
+}
+
+.rescuedog-route-tracker {
+  padding: 18px;
+}
+
+.rescuedog-route-tracker > strong {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.rescuedog-route-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.rescuedog-route-step {
+  position: relative;
+  padding: 14px 14px 14px 50px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.68);
+}
+
+.rescuedog-route-step.is-current {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 244, 198, 0.9));
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--rescuedog-highlight) 45%, white);
+}
+
+.rescuedog-route-step.is-complete {
+  background: linear-gradient(135deg, rgba(232, 247, 255, 0.92), rgba(255, 255, 255, 0.92));
+}
+
+.rescuedog-route-index {
+  background: var(--rescuedog-accent);
+}
+
+.rescuedog-status-grid {
+  padding: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rescuedog-score-pill,
+.rescuedog-control-pill {
+  min-height: 88px;
+  border: 0;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 6px;
+  color: var(--rescuedog-ink);
+}
+
+.rescuedog-score-pill span,
+.rescuedog-control-pill span {
+  font-weight: 900;
+}
+
+.rescuedog-control-pill--hint {
+  background: linear-gradient(135deg, rgba(255, 244, 187, 0.98), rgba(255, 230, 151, 0.96));
+}
+
+.rescuedog-partner-card {
+  position: relative;
+  inset: auto;
+  width: auto;
+  padding: 18px;
+}
+
+.rescuedog-partner-pup {
+  width: 150px;
+  margin: 0 auto 10px;
+}
+
+.rescuedog-partner-card strong,
+.rescuedog-partner-card span {
+  display: block;
+  text-align: center;
+}
+
+.rescuedog-partner-card strong {
+  font-size: 1.12rem;
+}
+
+.rescuedog-partner-badge {
+  margin: 8px auto 0;
+}
+
+.rescuedog-partner-card span:last-child {
+  margin-top: 8px;
+  color: var(--rescuedog-muted);
+  font-weight: 700;
+}
+
+@media (max-width: 1120px) {
+  .rescuedog-briefing-shell,
+  .rescuedog-play-layout,
+  .rescuedog-board-top,
+  .rescuedog-setup-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rescuedog-briefing-preview {
+    min-height: 520px;
+  }
+
+  .rescuedog-sidepanel {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+  }
+}
+
+@media (max-width: 820px) {
+  .rescuedog-scene {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .rescuedog-briefing-shell,
+  .rescuedog-board-shell,
+  .rescuedog-title-wrap,
+  .rescuedog-goalbar,
+  .rescuedog-toast,
+  .rescuedog-status-grid,
+  .rescuedog-partner-card,
+  .rescuedog-route-tracker,
+  .rescuedog-find-panel,
+  .rescuedog-panel,
+  .rescuedog-overlay-card {
+    border-radius: 24px;
+  }
+
+  .rescuedog-briefing-stats,
+  .rescuedog-status-grid,
+  .rescuedog-goal-list {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .rescuedog-sidepanel {
+    grid-template-columns: 1fr;
+  }
+
+  .rescuedog-hidden-item {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+@media (max-width: 560px) {
+  .rescuedog-briefing-shell,
+  .rescuedog-board-shell,
+  .rescuedog-panel,
+  .rescuedog-overlay-card {
+    padding: 16px;
+  }
+
+  .rescuedog-briefing-copy h1,
+  .rescuedog-title-wrap h1,
+  .rescuedog-overlay-card h2 {
+    font-size: clamp(2rem, 9vw, 3rem);
+  }
+
+  .rescuedog-briefing-stats,
+  .rescuedog-goal-list,
+  .rescuedog-status-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .rescuedog-title-meta,
+  .rescuedog-goalbar-head,
+  .rescuedog-overlay-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .rescuedog-find-target {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .rescuedog-briefing-preview {
+    min-height: 580px;
+    padding: 20px;
+  }
+
+  .rescuedog-preview-stack {
+    height: 210px;
+  }
+
+  .rescuedog-preview-card {
+    width: 62%;
+  }
+
+  .rescuedog-playfield {
+    min-height: 58dvh;
+  }
+}

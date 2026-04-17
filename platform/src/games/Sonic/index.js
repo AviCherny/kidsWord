@@ -1,189 +1,381 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './Sonic.css';
 import { useLanguage } from '../../context/LanguageContext';
-import { speak } from '../../speak';
-import StarBar from '../../components/StarBar';
+import { SonicPlatformerEngine, STICKER_RING_GOAL } from './engine';
 
-// Help Sonic collect the RIGHT ring!
-const ROUNDS = [
-  { prompt: { en: 'Which is a color?',       he: 'מה זה צבע?' },       correct: 'RED',     options: ['RED',   'CAT',   'RUN',   'JUMP'] },
-  { prompt: { en: 'Which is an animal?',     he: 'מה זה חיה?' },       correct: 'DOG',     options: ['DOG',   'BIG',   'FAST',  'RING'] },
-  { prompt: { en: 'Which is a number?',      he: 'מה זה מספר?' },      correct: 'THREE',   options: ['THREE', 'BLUE',  'SPIN',  'SHOE'] },
-  { prompt: { en: 'Which is a fruit?',       he: 'מה זה פרי?' },       correct: 'APPLE',   options: ['APPLE', 'CHAIR', 'SPEED', 'GOLD'] },
-  { prompt: { en: 'Which is a vehicle?',     he: 'מה זה רכב?' },       correct: 'CAR',     options: ['CAR',   'HAPPY', 'RING',  'COLD'] },
-  { prompt: { en: 'Which animal can fly?',   he: 'איזה חיה עפה?' },    correct: 'BIRD',    options: ['BIRD',  'FISH',  'CAT',   'DOG'] },
-  { prompt: { en: 'Which is a shape?',       he: 'מה זה צורה?' },      correct: 'CIRCLE',  options: ['CIRCLE','FAST',  'ZOOM',  'STAR'] },
-  { prompt: { en: 'Which is a body part?',   he: 'מה זה חלק בגוף?' },  correct: 'HAND',    options: ['HAND',  'TREE',  'RINGS', 'DASH'] },
-  { prompt: { en: "Sonic's favorite thing?", he: 'מה סוניק אוהב?' },   correct: 'RINGS',   options: ['RINGS', 'SLOW',  'WALK',  'NAPS'] },
-  { prompt: { en: 'Which is fast?',          he: 'מה מהיר?' },         correct: 'CHEETAH', options: ['CHEETAH','TABLE','CHAIR','CLOUD'] },
-];
+const FIXED_STEP = 1 / 60;
+const HEART_LIVE = '\u2665';
+const HEART_EMPTY = '\u2661';
 
-const RING_TIME = 4500;
+const COPY = {
+  en: {
+    title: 'Sonic Green Hill',
+    hint: 'Left and Right run. Space jumps. Down rolls.',
+    touchHint: 'Hold Left or Right to run. Tap Jump. Hold Roll.',
+    mission: 'Collect at least {ringGoal} rings and reach the goal sign.',
+    springTip: 'Red springs launch Sonic high into the air.',
+    hazardTip: 'Silver spikes cost a heart. Star posts save your spot.',
+    rings: 'Rings',
+    lives: 'Lives',
+    speed: 'Dash',
+    progress: 'Progress',
+    target: 'Target',
+    ground: 'Running',
+    rolling: 'Rolling',
+    airborne: 'Air time',
+    levelClear: 'Level clear',
+    gameOver: 'Out of hearts',
+    result: 'You collected {rings} of {totalRings} rings.',
+    stickerReady: 'Sticker unlocked. Great run.',
+    stickerMissed: 'Reach {ringGoal} rings to unlock the sticker.',
+    restart: 'Restart',
+    exit: 'Back',
+    collect: 'Collect Sticker',
+    left: 'Left',
+    right: 'Right',
+    jump: 'Jump',
+    roll: 'Roll',
+  },
+  he: {
+    title: 'סוניק גרין היל',
+    hint: 'ימינה ושמאלה לרוץ. רווח לקפוץ. למטה לגלגול.',
+    touchHint: 'החזיקו ימין או שמאל כדי לרוץ. לחצו קפיצה. החזיקו גלגול.',
+    mission: 'אספו לפחות {ringGoal} טבעות והגיעו לשלט הסיום.',
+    springTip: 'הקפיצים האדומים מעיפים את סוניק גבוה.',
+    hazardTip: 'הקוצים הכסופים מורידים לב. עמודי הכוכב שומרים מקום.',
+    rings: 'טבעות',
+    lives: 'חיים',
+    speed: 'מהירות',
+    progress: 'התקדמות',
+    target: 'מטרה',
+    ground: 'רץ',
+    rolling: 'מתגלגל',
+    airborne: 'באוויר',
+    levelClear: 'סיימתם את המסלול',
+    gameOver: 'נגמרו הלבבות',
+    result: 'אספתם {rings} מתוך {totalRings} טבעות.',
+    stickerReady: 'המדבקה נפתחה. ריצה מעולה.',
+    stickerMissed: 'צריך להגיע ל-{ringGoal} טבעות כדי לפתוח מדבקה.',
+    restart: 'נסו שוב',
+    exit: 'חזרה',
+    collect: 'קבלו מדבקה',
+    left: 'שמאל',
+    right: 'ימין',
+    jump: 'קפיצה',
+    roll: 'גלגול',
+  },
+};
 
-function shuffleOptions(options) {
-  const arr = [...options];
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
+function format(text, values) {
+  return text.replace(/\{(\w+)\}/g, (_, key) => `${values[key] ?? ''}`);
 }
 
-export default function Sonic({ onSuccess, onExit }) {
-  const { lang, dir } = useLanguage();
-  const [roundIdx, setRoundIdx] = useState(0);
-  const [options] = useState(() => ROUNDS.map(r => shuffleOptions(r.options)));
-  const [selected, setSelected] = useState(null);
-  const [locked, setLocked] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(RING_TIME);
-  const [stars, setStars] = useState(0);
-  const [balloons, setBalloons] = useState(0);
-  const [missed, setMissed] = useState(false);
-  const [sonicState, setSonicState] = useState('run'); // 'run' | 'jump' | 'hit'
-  const timerRef = useRef(null);
-  const startRef = useRef(Date.now());
-  const soundOnRef = useRef(true);
+function createInitialUi() {
+  return {
+    phase: 'playing',
+    rings: 0,
+    totalRings: 0,
+    ringGoal: STICKER_RING_GOAL,
+    lives: 3,
+    maxLives: 3,
+    canClaimSticker: false,
+    progress: 0,
+    speed: 0,
+    playerRolling: false,
+    playerAirborne: false,
+  };
+}
 
-  const done = roundIdx >= ROUNDS.length;
-  const round = ROUNDS[Math.min(roundIdx, ROUNDS.length - 1)];
-  const starsInCycle = stars % 5 === 0 && stars > 0 ? 5 : stars % 5;
-
-  const advance = useCallback((gotIt) => {
-    clearInterval(timerRef.current);
-    if (gotIt) {
-      setSonicState('jump');
-      const newStars = stars + 1;
-      setStars(newStars);
-      if (newStars % 5 === 0) setBalloons(b => b + 1);
-      if (soundOnRef.current) speak(lang === 'he' ? 'יופי!' : 'Got it!', lang);
-    } else {
-      setSonicState('hit');
-      if (soundOnRef.current) speak(lang === 'he' ? 'נסה שוב!' : 'Try again!', lang);
-    }
-    setTimeout(() => {
-      setSonicState('run');
-      setRoundIdx(i => i + 1);
-      setSelected(null);
-      setLocked(false);
-      setMissed(false);
-      setTimeLeft(RING_TIME);
-      startRef.current = Date.now();
-    }, 950);
-  }, [stars, lang]);
-
-  useEffect(() => {
-    if (done || locked) return;
-    startRef.current = Date.now();
-    setTimeLeft(RING_TIME);
-    timerRef.current = setInterval(() => {
-      const elapsed = Date.now() - startRef.current;
-      const remaining = Math.max(0, RING_TIME - elapsed);
-      setTimeLeft(remaining);
-      if (remaining === 0) {
-        clearInterval(timerRef.current);
-        setMissed(true);
-        setLocked(true);
-        advance(false);
-      }
-    }, 50);
-    return () => clearInterval(timerRef.current);
-    // eslint-disable-next-line
-  }, [roundIdx, done]);
-
-  const handlePick = useCallback((opt) => {
-    if (locked) return;
-    setLocked(true);
-    setSelected(opt);
-    advance(opt === round.correct);
-  }, [locked, round, advance]);
-
-  if (done) {
-    return (
-      <div className="sonic-game sonic-win" dir={dir}>
-        <div className="sonic-win-rings">💍💍💍</div>
-        <h1 className="sonic-win-title">{lang === 'he' ? 'מהיר כסוניק! 🦔' : 'Fast as Sonic! 🦔'}</h1>
-        <p className="sonic-win-sub">{lang === 'he' ? 'איספת את כל הטבעות!' : 'You collected all the rings!'}</p>
-        <div className="sonic-win-stars">
-          {Array.from({ length: ROUNDS.length }).map((_, i) => (
-            <span key={i}>{i < stars ? '⭐' : '☆'}</span>
-          ))}
-        </div>
-        <button className="sonic-collect-btn" onClick={onSuccess}>
-          {lang === 'he' ? 'קבל מדבקה! 🌟' : 'Collect Sticker! 🌟'}
-        </button>
-        <button className="sonic-play-again" onClick={() => {
-          setRoundIdx(0); setStars(0); setBalloons(0);
-          setSelected(null); setLocked(false); setMissed(false);
-          setTimeLeft(RING_TIME); startRef.current = Date.now();
-          setSonicState('run');
-        }}>
-          {lang === 'he' ? 'שחק שוב' : 'Play Again'}
-        </button>
-        <button className="sonic-exit-link" onClick={onExit}>←</button>
-      </div>
-    );
-  }
-
-  const boostPct = (timeLeft / RING_TIME) * 100;
+function shouldPublish(prev, next) {
+  if (!prev) return true;
 
   return (
-    <div className="sonic-game" dir={dir}>
-      {/* Sky speed lines */}
-      <div className="sonic-speed-lines" aria-hidden="true">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="sonic-speed-line" style={{ top: `${10 + i * 14}%`, animationDelay: `${i * 0.18}s` }} />
-        ))}
-      </div>
+    prev.phase !== next.phase ||
+    prev.rings !== next.rings ||
+    prev.lives !== next.lives ||
+    prev.canClaimSticker !== next.canClaimSticker ||
+    prev.progress !== next.progress ||
+    prev.speed !== next.speed ||
+    prev.playerRolling !== next.playerRolling ||
+    prev.playerAirborne !== next.playerAirborne
+  );
+}
 
-      {/* HUD */}
-      <header className="sonic-hud">
-        <StarBar starsInCycle={starsInCycle} balloons={balloons} />
-        <div className="sonic-boost-wrap" title="Boost!">
-          <div
-            className="sonic-boost-fill"
-            style={{ width: `${boostPct}%`, background: boostPct > 40 ? 'linear-gradient(90deg,#FFD700,#FFA500)' : boostPct > 20 ? 'linear-gradient(90deg,#FFA500,#ff6600)' : 'linear-gradient(90deg,#ff4444,#cc0000)' }}
-          />
+export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
+  const { lang, dir } = useLanguage();
+  const copy = COPY[lang] || COPY.en;
+
+  const wrapperRef = useRef(null);
+  const canvasRef = useRef(null);
+  const engineRef = useRef(null);
+  const rafRef = useRef(0);
+  const accumulatorRef = useRef(0);
+  const lastFrameRef = useRef(0);
+  const lastUiSyncRef = useRef(0);
+  const lastSnapshotRef = useRef(null);
+  const sizeRef = useRef({ width: 0, height: 0, dpr: 1 });
+
+  const [ui, setUi] = useState(createInitialUi);
+
+  const publishSnapshot = useCallback((force = false) => {
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    const next = engine.getSnapshot();
+    if (!force && !shouldPublish(lastSnapshotRef.current, next)) return;
+
+    lastSnapshotRef.current = next;
+    setUi(next);
+  }, []);
+
+  const clearControls = useCallback(() => {
+    engineRef.current?.clearControls();
+  }, []);
+
+  const handleJump = useCallback(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    engine.jump();
+    publishSnapshot();
+  }, [publishSnapshot]);
+
+  const handleRestart = useCallback(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    engine.reset();
+    accumulatorRef.current = 0;
+    lastFrameRef.current = 0;
+    lastUiSyncRef.current = 0;
+    publishSnapshot(true);
+  }, [publishSnapshot]);
+
+  const setAction = useCallback((action, active) => {
+    engineRef.current?.setControl(action, active);
+  }, []);
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    const canvas = canvasRef.current;
+    if (!wrapper || !canvas) return undefined;
+
+    const engine = new SonicPlatformerEngine({ facilitatorMode });
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return undefined;
+
+    engineRef.current = engine;
+    let resizeFrame = 0;
+
+    const renderFrame = () => {
+      const { width, height, dpr } = sizeRef.current;
+      if (!width || !height) return;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      engine.render(ctx);
+    };
+
+    const resizeCanvas = () => {
+      const rect = wrapper.getBoundingClientRect();
+      const width = Math.max(320, Math.round(rect.width));
+      const height = Math.max(360, Math.round(rect.height));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      if (sizeRef.current.width === width && sizeRef.current.height === height && sizeRef.current.dpr === dpr) {
+        return;
+      }
+
+      sizeRef.current = { width, height, dpr };
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      engine.resize(width, height);
+      renderFrame();
+      publishSnapshot(true);
+    };
+
+    const queueResize = () => {
+      if (resizeFrame) return;
+      resizeFrame = window.requestAnimationFrame(() => {
+        resizeFrame = 0;
+        resizeCanvas();
+      });
+    };
+
+    const step = (timestamp) => {
+      if (!lastFrameRef.current) lastFrameRef.current = timestamp;
+      const frameDelta = Math.min(0.05, (timestamp - lastFrameRef.current) / 1000);
+      lastFrameRef.current = timestamp;
+
+      if (!document.hidden) {
+        accumulatorRef.current += frameDelta;
+        while (accumulatorRef.current >= FIXED_STEP) {
+          engine.update(FIXED_STEP);
+          accumulatorRef.current -= FIXED_STEP;
+        }
+        renderFrame();
+        if (timestamp - lastUiSyncRef.current >= 80) {
+          lastUiSyncRef.current = timestamp;
+          publishSnapshot();
+        }
+      }
+
+      rafRef.current = window.requestAnimationFrame(step);
+    };
+
+    resizeCanvas();
+    publishSnapshot(true);
+    renderFrame();
+    rafRef.current = window.requestAnimationFrame(step);
+
+    let resizeObserver;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(queueResize);
+      resizeObserver.observe(wrapper);
+    } else {
+      window.addEventListener('resize', queueResize);
+    }
+
+    return () => {
+      window.cancelAnimationFrame(rafRef.current);
+      if (resizeFrame) window.cancelAnimationFrame(resizeFrame);
+      if (resizeObserver) resizeObserver.disconnect();
+      else window.removeEventListener('resize', queueResize);
+      engineRef.current = null;
+    };
+  }, [facilitatorMode, publishSnapshot]);
+
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.code === 'ArrowLeft' || event.code === 'KeyA') {
+        event.preventDefault();
+        setAction('left', true);
+      }
+      if (event.code === 'ArrowRight' || event.code === 'KeyD') {
+        event.preventDefault();
+        setAction('right', true);
+      }
+      if (event.code === 'ArrowDown' || event.code === 'KeyS') {
+        event.preventDefault();
+        setAction('down', true);
+      }
+      if (event.code === 'Space' || event.code === 'ArrowUp' || event.code === 'KeyW') {
+        event.preventDefault();
+        if (!event.repeat) handleJump();
+      }
+    };
+
+    const onKeyUp = (event) => {
+      if (event.code === 'ArrowLeft' || event.code === 'KeyA') setAction('left', false);
+      if (event.code === 'ArrowRight' || event.code === 'KeyD') setAction('right', false);
+      if (event.code === 'ArrowDown' || event.code === 'KeyS') setAction('down', false);
+    };
+
+    const onVisibilityChange = () => {
+      accumulatorRef.current = 0;
+      lastFrameRef.current = 0;
+      clearControls();
+    };
+
+    window.addEventListener('keydown', onKeyDown, { passive: false });
+    window.addEventListener('keyup', onKeyUp);
+    window.addEventListener('blur', clearControls);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('keyup', onKeyUp);
+      window.removeEventListener('blur', clearControls);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [clearControls, handleJump, setAction]);
+
+  const hearts = Array.from({ length: ui.maxLives }, (_, index) => index < ui.lives);
+  const resultText = format(copy.result, { rings: ui.rings, totalRings: ui.totalRings });
+  const stickerText = ui.canClaimSticker
+    ? copy.stickerReady
+    : format(copy.stickerMissed, { ringGoal: ui.ringGoal });
+
+  const holdHandlers = (action) => ({
+    onPointerDown: (event) => {
+      event.preventDefault();
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+      setAction(action, true);
+    },
+    onPointerUp: () => setAction(action, false),
+    onPointerLeave: () => setAction(action, false),
+    onPointerCancel: () => setAction(action, false),
+    onLostPointerCapture: () => setAction(action, false),
+  });
+
+  return (
+    <div className="sonic-runner" dir={dir}>
+      <div className="sonic-shell" ref={wrapperRef}>
+        <canvas ref={canvasRef} className="sonic-canvas" />
+
+        <div className="sonic-overlay sonic-overlay--top">
+          <button className="sonic-icon-btn" onClick={onExit} type="button" aria-label={copy.exit}>
+            X
+          </button>
         </div>
-        <button className="sonic-exit-btn" onClick={onExit} aria-label="Exit">✕</button>
-      </header>
 
-      {/* Question */}
-      <div className="sonic-question-area">
-        <p className="sonic-collect-cue">
-          {lang === 'he' ? '🔔 איסוף הטבעת הנכונה!' : '🔔 Collect the right ring!'}
-        </p>
-        <h2 className="sonic-prompt">{lang === 'he' ? round.prompt.he : round.prompt.en}</h2>
-      </div>
+        <div className="sonic-overlay sonic-overlay--stats">
+          <div className="sonic-card">
+            <span>{copy.rings}</span>
+            <strong>{ui.rings}</strong>
+          </div>
+          <div className="sonic-card sonic-card--status">
+            <span>{copy.lives}</span>
+            <div className="sonic-hearts" aria-label={`${copy.lives}: ${ui.lives}`}>
+              {hearts.map((filled, index) => (
+                <span key={index} className={filled ? 'is-live' : 'is-empty'}>
+                  {filled ? HEART_LIVE : HEART_EMPTY}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
 
-      {/* Ring options */}
-      <div className="sonic-rings-grid">
-        {options[roundIdx].map((opt, i) => {
-          const isCorrect = selected === opt && opt === round.correct;
-          const isWrong   = selected === opt && opt !== round.correct;
-          return (
-            <button
-              key={opt}
-              className={[
-                'sonic-ring-btn',
-                isCorrect ? 'sonic-ring-correct' : '',
-                isWrong   ? 'sonic-ring-wrong'   : '',
-                missed && !selected ? 'sonic-ring-missed' : '',
-              ].join(' ')}
-              style={{ animationDelay: `${i * 0.2}s` }}
-              onClick={() => handlePick(opt)}
-              aria-label={opt}
-            >
-              <span className="sonic-ring-shine" aria-hidden="true" />
-              <span className="sonic-ring-text">{opt}</span>
-            </button>
-          );
-        })}
-      </div>
+        <div className="sonic-controls" onContextMenu={(event) => event.preventDefault()}>
+          <button type="button" className="sonic-control-btn sonic-control-btn--dir" {...holdHandlers('left')}>
+            {copy.left}
+          </button>
+          <button type="button" className="sonic-control-btn sonic-control-btn--dir" {...holdHandlers('right')}>
+            {copy.right}
+          </button>
+          <button type="button" className="sonic-control-btn sonic-control-btn--jump" onPointerDown={handleJump}>
+            {copy.jump}
+          </button>
+          <button type="button" className="sonic-control-btn sonic-control-btn--roll" {...holdHandlers('down')}>
+            {copy.roll}
+          </button>
+        </div>
 
-      {/* Sonic character */}
-      <div className="sonic-ground-zone" aria-hidden="true">
-        <div className="sonic-hills" />
-        <div className={`sonic-char sonic-char-${sonicState}`}>🦔</div>
+        {ui.phase !== 'playing' && (
+          <div className="sonic-gameover">
+            <div className="sonic-gameover-card">
+              <p className="sonic-gameover-kicker">
+                {ui.phase === 'won' ? copy.levelClear : copy.gameOver}
+              </p>
+              <h2>{ui.rings}</h2>
+              <p>{resultText}</p>
+              <p className={`sonic-sticker-note ${ui.canClaimSticker ? 'is-ready' : ''}`}>
+                {stickerText}
+              </p>
+              <div className="sonic-gameover-actions">
+                <button type="button" className="sonic-action-btn sonic-action-btn--primary" onClick={handleRestart}>
+                  {copy.restart}
+                </button>
+                {ui.canClaimSticker && (
+                  <button type="button" className="sonic-action-btn sonic-action-btn--accent" onClick={onSuccess}>
+                    {copy.collect}
+                  </button>
+                )}
+                <button type="button" className="sonic-action-btn sonic-action-btn--ghost" onClick={onExit}>
+                  {copy.exit}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

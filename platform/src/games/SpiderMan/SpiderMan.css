@@ -404,6 +404,25 @@
 }
 
 /* Decorative corner spider webs */
+.spider-web-corner {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  width: 120px;
+  height: 120px;
+}
+
+.spider-web-corner-tl {
+  top: 0;
+  left: 0;
+}
+
+.spider-web-corner-tr {
+  top: 0;
+  right: 0;
+  transform: scaleX(-1);
+}
+
 .spider-web-deco {
   position: absolute;
   pointer-events: none;

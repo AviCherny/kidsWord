@@ -35,13 +35,13 @@ export const T = {
     bubblePopDesc: 'פוצץ את הבועות הנכונות!',
     // Character games
     rescueDogName: 'כלב חילוץ',
-    rescueDogDesc: 'מצאו את האדם שמתחבא ועזרו לו!',
-    spiderManName: 'ספיידרמן',
+    rescueDogDesc: 'בוחרים כלב חילוץ, דרגת קושי ומוצאים חפצים נסתרים בנמל, בג׳ונגל ובשלג!',
+    spiderManName: 'עכביש אותיות',
     spiderManDesc: 'ארוג מילים עם קורי עכביש!',
     pjMasksName: 'מסכות הפיג\'מה',
     pjMasksDesc: 'מיין לפי צבעי הגיבורים!',
     sonicName: 'סוניק',
-    sonicDesc: 'ענה מהר לפני שהטבעת נעלמת!',
+    sonicDesc: 'רוץ בגרין היל, אסוף טבעות והגע לשלט הסיום.',
     // Category labels
     catLanguage: 'שפה ומילים',
     catLogic: 'חשיבה והיגיון',
@@ -137,13 +137,13 @@ export const T = {
     bubblePopDesc: 'Pop the right bubbles!',
     // Character games
     rescueDogName: 'Rescue Dog',
-    rescueDogDesc: 'Tap the right hiding spot to find the survivor!',
-    spiderManName: 'Spider-Man',
+    rescueDogDesc: 'Pick a rescue pup, choose a difficulty, and find hidden items in the harbor, jungle, and snow!',
+    spiderManName: 'Spider Letters',
     spiderManDesc: 'Spell words with web power!',
     pjMasksName: 'PJ Masks',
     pjMasksDesc: 'Sort by hero colors!',
     sonicName: 'Sonic',
-    sonicDesc: 'Answer fast before the ring vanishes!',
+    sonicDesc: 'Race through Green Hill, collect rings, and reach the goal sign.',
     // Category labels
     catLanguage: 'Language & Words',
     catLogic: 'Logic & Thinking',
