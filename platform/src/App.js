@@ -22,6 +22,7 @@ import RescueDog from './games/RescueDog';
 import SpiderMan from './games/SpiderMan';
 import PJMasks from './games/PJMasks';
 import Sonic from './games/Sonic';
+import PizzaParty from './games/PizzaParty';
 import { getEarnedStickers, earnSticker, migrateLegacyStickers, getEarnedCandy, earnCandy } from './lib/storage';
 import { getNextSticker } from './data/stickers';
 import { getNextCandy } from './data/candy';
@@ -45,6 +46,7 @@ const GAME_COMPONENTS = {
   spiderman: SpiderMan,
   pjmasks: PJMasks,
   sonic: Sonic,
+  pizzaparty: PizzaParty,
 };
 
 function createDifficultyConfig(title = 'Difficulty') {

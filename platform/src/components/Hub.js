@@ -150,6 +150,14 @@ const CATEGORIES = [
     accent: '#e65100',
     games: [
       {
+        id: 'pizzaparty',
+        emoji: '🍕',
+        nameKey: 'pizzaPartyName',
+        descKey: 'pizzaPartyDesc',
+        bg: 'linear-gradient(145deg, #ff8b4d, #ffd166)',
+        glow: 'rgba(255,139,77,0.42)',
+      },
+      {
         id: 'lego',
         emoji: '🧱',
         nameKey: 'legoBuilderName',

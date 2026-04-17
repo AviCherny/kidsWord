@@ -120,4 +120,9 @@ idle → speaking → waiting → shooting → feedback
 - 2. Ensure the remaining diff is intentional and task-related only.
 - 3. Commit or otherwise explicitly resolve the task changes.
 - 4. Only after the worktree is clean, sync/align with `main`.
+- 5. Delete the old branch locally and remotely:
+  ```
+  git branch -d <branch-name>
+  git push origin --delete <branch-name>
+  ```
 - Never run `git pull` or align to `main` on a dirty worktree unless explicitly requested.
