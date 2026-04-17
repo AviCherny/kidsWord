@@ -113,12 +113,49 @@
   gap: 6px;
 }
 
+.lb-panel-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .lb-panel-label {
   font-size: clamp(0.75rem, 2.5vw, 0.9rem);
   font-weight: 800;
   color: #4a1942;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+.lb-target-toggle {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.75);
+  color: #4a1942;
+  font-size: 0.8rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.lb-target-hidden {
+  width: 100%;
+  min-height: 160px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.45);
+  color: rgba(74,25,66,0.8);
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 }
 
 /* Grid */

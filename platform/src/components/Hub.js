@@ -179,6 +179,8 @@ const CATEGORIES = [
 
 const MASCOTS = ['🌟', '🦊', '🐸', '🦄', '🐻', '🌈', '🎯'];
 
+const TEMP_HIDDEN_GAME_IDS = new Set(['shapesorter', 'rescuedog', 'pjmasks']);
+
 export default function Hub({ onLaunch, earnedCount, onOpenCollection, onSettingsChange }) {
   const { lang, dir } = useLanguage();
   const [showSettings, setShowSettings] = useState(false);
@@ -215,7 +217,9 @@ export default function Hub({ onLaunch, earnedCount, onOpenCollection, onSetting
 
   const visibleCategories = CATEGORIES.map(cat => ({
     ...cat,
-    games: cat.games.filter(g => !settings.hiddenGames.includes(g.id)),
+    games: cat.games.filter(
+      (g) => !settings.hiddenGames.includes(g.id) && !TEMP_HIDDEN_GAME_IDS.has(g.id),
+    ),
   })).filter(cat => cat.games.length > 0);
 
   const displayedCategories = activeCategory === null

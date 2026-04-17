@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import './Sonic.css';
 import { useLanguage } from '../../context/LanguageContext';
-import { SonicPlatformerEngine, STICKER_RING_GOAL } from './engine';
+import { SonicPlatformerEngine, SONIC_MAX_LIVES } from './engine';
 
 const FIXED_STEP = 1 / 60;
 const HEART_LIVE = '\u2665';
@@ -12,29 +12,34 @@ const COPY = {
     title: 'Sonic Green Hill',
     hint: 'Left and Right run. Space jumps. Down rolls.',
     touchHint: 'Hold Left or Right to run. Tap Jump. Hold Roll.',
-    mission: 'Collect at least {ringGoal} rings and reach the goal sign.',
+    mission: 'Eat good food, avoid bad food, and reach the goal sign.',
     springTip: 'Red springs launch Sonic high into the air.',
-    hazardTip: 'Silver spikes cost a heart. Star posts save your spot.',
-    rings: 'Rings',
+    hazardTip: 'Bad food shrinks Sonic. Bad food at the smallest size costs a heart.',
+    goodFood: 'Good Food',
+    size: 'Size',
     lives: 'Lives',
+    level: 'Level',
     speed: 'Dash',
     progress: 'Progress',
-    target: 'Target',
     ground: 'Running',
     rolling: 'Rolling',
     airborne: 'Air time',
     levelClear: 'Level clear',
+    campaignClear: 'Adventure complete',
     gameOver: 'Out of hearts',
-    result: 'You collected {rings} of {totalRings} rings.',
+    result: 'Good food: {goodFood}. Bad food: {badFood}.',
+    retryHint: 'Eat good food to grow and avoid junk food.',
+    nextStageHint: 'Keep going. The sticker unlocks after the last level.',
     stickerReady: 'Sticker unlocked. Great run.',
-    stickerMissed: 'Reach {ringGoal} rings to unlock the sticker.',
     restart: 'Restart',
+    nextLevel: 'Next Level',
     exit: 'Back',
     collect: 'Collect Sticker',
     left: 'Left',
     right: 'Right',
     jump: 'Jump',
     roll: 'Roll',
+    sizeLevels: ['Small', 'Normal', 'Big'],
   },
   he: {
     title: 'סוניק גרין היל',
@@ -66,6 +71,18 @@ const COPY = {
   },
 };
 
+COPY.he.goodFood = 'אוכל טוב';
+COPY.he.size = 'גודל';
+COPY.he.level = 'שלב';
+COPY.he.mission = 'אכלו אוכל טוב, הימנעו מאוכל לא טוב, והגיעו לשלט הסיום.';
+COPY.he.hazardTip = 'אוכל לא טוב מקטין את סוניק. אוכל לא טוב בגודל הכי קטן מוריד לב.';
+COPY.he.campaignClear = 'סיימתם את ההרפתקה';
+COPY.he.result = 'אוכל טוב: {goodFood}. אוכל לא טוב: {badFood}.';
+COPY.he.nextStageHint = 'ממשיכים. המדבקה נפתחת אחרי השלב האחרון.';
+COPY.he.retryHint = 'אכלו אוכל טוב כדי לגדול והימנעו מג׳אנק פוד.';
+COPY.he.nextLevel = 'לשלב הבא';
+COPY.he.sizeLevels = ['קטן', 'רגיל', 'גדול'];
+
 function format(text, values) {
   return text.replace(/\{(\w+)\}/g, (_, key) => `${values[key] ?? ''}`);
 }
@@ -73,11 +90,14 @@ function format(text, values) {
 function createInitialUi() {
   return {
     phase: 'playing',
-    rings: 0,
-    totalRings: 0,
-    ringGoal: STICKER_RING_GOAL,
-    lives: 3,
-    maxLives: 3,
+    levelIndex: 1,
+    totalLevels: 1,
+    goodFood: 0,
+    badFood: 0,
+    sizeTier: 1,
+    lives: SONIC_MAX_LIVES,
+    maxLives: SONIC_MAX_LIVES,
+    canAdvanceLevel: false,
     canClaimSticker: false,
     progress: 0,
     speed: 0,
@@ -91,8 +111,13 @@ function shouldPublish(prev, next) {
 
   return (
     prev.phase !== next.phase ||
-    prev.rings !== next.rings ||
+    prev.levelIndex !== next.levelIndex ||
+    prev.totalLevels !== next.totalLevels ||
+    prev.goodFood !== next.goodFood ||
+    prev.badFood !== next.badFood ||
+    prev.sizeTier !== next.sizeTier ||
     prev.lives !== next.lives ||
+    prev.canAdvanceLevel !== next.canAdvanceLevel ||
     prev.canClaimSticker !== next.canClaimSticker ||
     prev.progress !== next.progress ||
     prev.speed !== next.speed ||
@@ -103,7 +128,7 @@ function shouldPublish(prev, next) {
 
 export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
   const { lang, dir } = useLanguage();
-  const copy = COPY[lang] || COPY.en;
+  const copy = { ...COPY.en, ...(COPY[lang] || {}) };
 
   const wrapperRef = useRef(null);
   const canvasRef = useRef(null);
@@ -143,6 +168,15 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
     const engine = engineRef.current;
     if (!engine) return;
     engine.reset();
+    accumulatorRef.current = 0;
+    lastFrameRef.current = 0;
+    lastUiSyncRef.current = 0;
+    publishSnapshot(true);
+  }, [publishSnapshot]);
+
+  const handleNextLevel = useCallback(() => {
+    const engine = engineRef.current;
+    if (!engine?.nextLevel()) return;
     accumulatorRef.current = 0;
     lastFrameRef.current = 0;
     lastUiSyncRef.current = 0;
@@ -289,10 +323,11 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
   }, [clearControls, handleJump, setAction]);
 
   const hearts = Array.from({ length: ui.maxLives }, (_, index) => index < ui.lives);
-  const resultText = format(copy.result, { rings: ui.rings, totalRings: ui.totalRings });
-  const stickerText = ui.canClaimSticker
-    ? copy.stickerReady
-    : format(copy.stickerMissed, { ringGoal: ui.ringGoal });
+  const sizeLabel = copy.sizeLevels?.[ui.sizeTier] || COPY.en.sizeLevels[ui.sizeTier];
+  const resultText = format(copy.result, { goodFood: ui.goodFood, badFood: ui.badFood });
+  const stickerText = ui.phase === 'won'
+    ? (ui.canAdvanceLevel ? copy.nextStageHint : copy.stickerReady)
+    : copy.retryHint;
 
   const holdHandlers = (action) => ({
     onPointerDown: (event) => {
@@ -319,8 +354,18 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
 
         <div className="sonic-overlay sonic-overlay--stats">
           <div className="sonic-card">
-            <span>{copy.rings}</span>
-            <strong>{ui.rings}</strong>
+            <span>{copy.goodFood}</span>
+            <strong>{ui.goodFood}</strong>
+          </div>
+          <div className="sonic-card sonic-card--status">
+            <span>{copy.size}</span>
+            <strong>{sizeLabel}</strong>
+          </div>
+          <div className="sonic-card sonic-card--status">
+            <span>{copy.level}</span>
+            <strong>
+              {ui.levelIndex} / {ui.totalLevels}
+            </strong>
           </div>
           <div className="sonic-card sonic-card--status">
             <span>{copy.lives}</span>
@@ -330,6 +375,13 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
                   {filled ? HEART_LIVE : HEART_EMPTY}
                 </span>
               ))}
+            </div>
+          </div>
+          <div className="sonic-card sonic-card--meter">
+            <span>{copy.progress}</span>
+            <strong>{ui.progress}%</strong>
+            <div className="sonic-meter" aria-label={`${copy.progress}: ${ui.progress}%`}>
+              <div className="sonic-meter__fill sonic-meter__fill--progress" style={{ width: `${ui.progress}%` }} />
             </div>
           </div>
         </div>
@@ -353,17 +405,30 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
           <div className="sonic-gameover">
             <div className="sonic-gameover-card">
               <p className="sonic-gameover-kicker">
-                {ui.phase === 'won' ? copy.levelClear : copy.gameOver}
+                {ui.phase === 'won' ? (ui.canAdvanceLevel ? copy.levelClear : copy.campaignClear) : copy.gameOver}
               </p>
-              <h2>{ui.rings}</h2>
+              <h2>
+                {ui.levelIndex} / {ui.totalLevels}
+              </h2>
               <p>{resultText}</p>
               <p className={`sonic-sticker-note ${ui.canClaimSticker ? 'is-ready' : ''}`}>
                 {stickerText}
               </p>
               <div className="sonic-gameover-actions">
-                <button type="button" className="sonic-action-btn sonic-action-btn--primary" onClick={handleRestart}>
-                  {copy.restart}
-                </button>
+                {ui.canAdvanceLevel ? (
+                  <button type="button" className="sonic-action-btn sonic-action-btn--primary" onClick={handleNextLevel}>
+                    {copy.nextLevel}
+                  </button>
+                ) : (
+                  <button type="button" className="sonic-action-btn sonic-action-btn--primary" onClick={handleRestart}>
+                    {copy.restart}
+                  </button>
+                )}
+                {ui.canAdvanceLevel && (
+                  <button type="button" className="sonic-action-btn sonic-action-btn--ghost" onClick={handleRestart}>
+                    {copy.restart}
+                  </button>
+                )}
                 {ui.canClaimSticker && (
                   <button type="button" className="sonic-action-btn sonic-action-btn--accent" onClick={onSuccess}>
                     {copy.collect}

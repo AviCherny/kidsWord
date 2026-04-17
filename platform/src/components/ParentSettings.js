@@ -13,6 +13,8 @@ const GAME_LABELS = {
   lego:        { emoji: '🧱',     he: 'בונה לגו',             en: 'Lego Builder'    },
 };
 
+const TEMP_HIDDEN_GAME_IDS = new Set(['shapesorter', 'rescuedog', 'pjmasks']);
+
 function PinPad({ title, hint, onDigit, onBack, pinLength, hasError, onCancel }) {
   return (
     <div className={`ps-pin-modal ${hasError ? 'ps-pin-shake' : ''}`}>
@@ -261,7 +263,7 @@ export default function ParentSettings({ onClose, onSettingsChange }) {
             {isRTL ? 'משחקים מוצגים' : 'Visible Games'}
           </div>
           <div className="ps-games-grid">
-            {Object.entries(GAME_LABELS).map(([id, info]) => {
+            {Object.entries(GAME_LABELS).filter(([id]) => !TEMP_HIDDEN_GAME_IDS.has(id)).map(([id, info]) => {
               const active = !settings.hiddenGames.includes(id);
               return (
                 <button

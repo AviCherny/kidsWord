@@ -262,8 +262,15 @@
   flex-shrink: 0;
   display: flex;
   align-items: flex-end;
-  margin-bottom: 4px;
+  margin-bottom: 18px;
   filter: drop-shadow(0 6px 14px rgba(0,0,0,0.35));
+  animation: locoIdle 1.7s ease-in-out infinite;
+  transform-origin: 35% 85%;
+}
+
+@keyframes locoIdle {
+  0%,100% { transform: translateY(0) rotate(-0.8deg); }
+  50% { transform: translateY(-4px) rotate(0.8deg); }
 }
 
 /* Spin wheels (and very subtle bounce) when train moves */
@@ -311,7 +318,7 @@
 ────────────────────────────────────────── */
 .nt-train-scene {
   position: absolute;
-  bottom: 68px;
+  bottom: 108px;
   left: 0; right: 0;
   margin: 0 auto;
   z-index: 2;
@@ -319,9 +326,45 @@
   max-width: 620px;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 6px 8px 0;
+  padding: 14px 8px 0;
 }
 .nt-train-scene::-webkit-scrollbar { display: none; }
+
+.nt-inline-rail {
+  position: absolute;
+  left: 60px;
+  right: 16px;
+  bottom: 18px;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #7b4d1e, #4f3111);
+  box-shadow:
+    0 2px 0 rgba(255,255,255,0.18) inset,
+    0 5px 12px rgba(0,0,0,0.22);
+  overflow: hidden;
+}
+
+.nt-inline-rail::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: -8px;
+  height: 24px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(61, 39, 16, 0.92) 0 16px,
+      rgba(61, 39, 16, 0.18) 16px 36px
+    );
+  opacity: 0.48;
+  animation: railDrift 1.4s linear infinite;
+}
+
+@keyframes railDrift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-52px); }
+}
 
 /* Shaking scene on wrong */
 @keyframes nt-shake {
@@ -349,6 +392,14 @@
   width: max-content;
   min-width: 100%;
   justify-content: center;
+  position: relative;
+  animation: wagonsFloat 1.9s ease-in-out infinite;
+}
+
+@keyframes wagonsFloat {
+  0%,100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(3px) translateY(-2px); }
+  60% { transform: translateX(-2px) translateY(1px); }
 }
 
 /* ──────────────────────────────────────────
@@ -466,6 +517,7 @@
   border: 2px solid #263238;
   box-shadow: 0 2px 4px rgba(0,0,0,0.35);
   position: relative;
+  animation: wheelSpin 2.4s linear infinite;
 }
 .nt-wheel::after {
   content: '';
@@ -651,6 +703,20 @@
     padding-bottom: 210px;
   }
 
+  .nt-train-scene {
+    bottom: 92px;
+    padding-top: 10px;
+  }
+
+  .nt-locomotive {
+    margin-bottom: 14px;
+  }
+
+  .nt-inline-rail {
+    left: 44px;
+    right: 10px;
+  }
+
   .nt-difficulty-pills {
     gap: 8px;
   }
@@ -658,5 +724,17 @@
   .nt-difficulty-pill {
     min-width: 68px;
     padding: 7px 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nt-locomotive,
+  .nt-wagons-row,
+  .nt-wheel,
+  .nt-inline-rail::before,
+  .nt-locomotive--moving svg,
+  .nt-train--moving {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

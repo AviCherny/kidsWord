@@ -17,6 +17,13 @@ const LEVELS = [
   { length: 8, patternLen: 3, pool: SHAPES,  missingIdx: 5, label: 'Expert' },
 ];
 
+const DIFFICULTY_LEVELS = {
+  1: LEVELS.slice(0, 2),
+  2: LEVELS.slice(0, 4),
+  3: LEVELS.slice(0, 6),
+  4: LEVELS,
+};
+
 function buildRound(levelCfg) {
   const { length, patternLen, pool, missingIdx } = levelCfg;
 
@@ -39,7 +46,8 @@ function buildRound(levelCfg) {
   return { sequence, missingIdx, answer, choices };
 }
 
-export default function PatternGame({ onSuccess, onExit }) {
+export default function PatternGame({ onSuccess, onExit, sharedDifficulty = 1 }) {
+  const activeLevels = DIFFICULTY_LEVELS[sharedDifficulty] || DIFFICULTY_LEVELS[1];
   const [levelIdx, setLevelIdx]   = useState(0);
   const [round, setRound]         = useState(null);
   const [feedback, setFeedback]   = useState(null); // 'correct' | 'wrong'
@@ -48,10 +56,10 @@ export default function PatternGame({ onSuccess, onExit }) {
   const [shake, setShake]         = useState(false);
 
   const startRound = useCallback((idx) => {
-    setRound(buildRound(LEVELS[idx]));
+    setRound(buildRound(activeLevels[idx]));
     setFeedback(null);
     speak('What comes next?', 'en');
-  }, []);
+  }, [activeLevels]);
 
   useEffect(() => { startRound(0); }, [startRound]);
 
@@ -63,7 +71,7 @@ export default function PatternGame({ onSuccess, onExit }) {
       speak('Great job!', 'en', () => {
         setTimeout(() => {
           const next = levelIdx + 1;
-          if (next >= LEVELS.length) {
+          if (next >= activeLevels.length) {
             setDone(true);
           } else {
             setLevelIdx(next);
@@ -96,8 +104,8 @@ export default function PatternGame({ onSuccess, onExit }) {
     );
   }
 
-  const level = LEVELS[levelIdx];
-  const progress = ((levelIdx) / LEVELS.length) * 100;
+  const level = activeLevels[levelIdx];
+  const progress = (levelIdx / activeLevels.length) * 100;
 
   return (
     <div className="pg-root">

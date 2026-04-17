@@ -1,4 +1,4 @@
-export const STICKER_RING_GOAL = 16;
+export const SONIC_MAX_LIVES = 5;
 
 const WORLD_HEIGHT = 576;
 const WORLD_WIDTH = 4300;
@@ -19,45 +19,16 @@ const JUMP_VELOCITY = -810;
 const SPRING_VELOCITY = -1140;
 const CAMERA_SMOOTHING = 0.14;
 const DEFAULT_OPTIONS = { facilitatorMode: false };
+const FOOD_GOOD = 'good';
+const FOOD_BAD = 'bad';
+const PLAYER_SIZE_SMALL = 0;
+const PLAYER_SIZE_NORMAL = 1;
+const PLAYER_SIZE_BIG = 2;
+const PLAYER_SIZE_SCALES = [0.82, 1, 1.16];
 
-const SOLIDS = [
-  { x: 0, y: GROUND_Y, w: WORLD_WIDTH, h: WORLD_HEIGHT - GROUND_Y },
-  { x: 360, y: 388, w: 120, h: 60 },
-  { x: 580, y: 320, w: 180, h: 22 },
-  { x: 930, y: 360, w: 120, h: 88 },
-  { x: 1160, y: 270, w: 170, h: 22 },
-  { x: 1480, y: 340, w: 130, h: 108 },
-  { x: 1740, y: 290, w: 190, h: 22 },
-  { x: 2140, y: 320, w: 120, h: 128 },
-  { x: 2440, y: 250, w: 190, h: 22 },
-  { x: 2820, y: 340, w: 220, h: 22 },
-  { x: 3140, y: 370, w: 130, h: 78 },
-  { x: 3460, y: 280, w: 170, h: 22 },
-  { x: 3900, y: 380, w: 160, h: 68 },
-];
-
-const SPRINGS = [
-  { x: 952, y: 332, w: 76, h: 28 },
-  { x: 2162, y: 292, w: 76, h: 28 },
-  { x: 3170, y: 342, w: 76, h: 28 },
-];
-
-const SPIKES = [
-  { x: 720, y: 414, w: 86, h: 34 },
-  { x: 1348, y: 414, w: 84, h: 34 },
-  { x: 1978, y: 414, w: 86, h: 34 },
-  { x: 2750, y: 414, w: 108, h: 34 },
-  { x: 3322, y: 414, w: 84, h: 34 },
-  { x: 1544, y: 306, w: 58, h: 34 },
-];
-
-const CHECKPOINTS = [
-  { x: 1270, y: 296 },
-  { x: 2940, y: 296 },
-];
-
-const GOAL = { x: 4040, y: 272, w: 30, h: 176 };
-const PALM_TREES = [260, 640, 1260, 2020, 2580, 3360, 3880];
+function makeGround() {
+  return { x: 0, y: GROUND_Y, w: WORLD_WIDTH, h: WORLD_HEIGHT - GROUND_Y };
+}
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -85,41 +56,191 @@ function circleRectOverlap(circle, rect) {
   return dx * dx + dy * dy < circle.radius * circle.radius;
 }
 
-function addRingLine(target, startX, y, count, spacing) {
-  for (let index = 0; index < count; index += 1) {
-    target.push({ x: startX + index * spacing, y, radius: 14, collected: false, wobble: index * 0.4 });
+function createFood(x, y, kind, wobble) {
+  return {
+    x,
+    y,
+    kind,
+    radius: kind === FOOD_GOOD ? 16 : 15,
+    collected: false,
+    wobble,
+  };
+}
+
+function addFoodLine(target, startX, y, pattern, spacing) {
+  for (let index = 0; index < pattern.length; index += 1) {
+    target.push(createFood(startX + index * spacing, y, pattern[index], index * 0.4));
   }
 }
 
-function addRingArc(target, centerX, centerY, radius, count, startAngle, endAngle) {
-  const step = count === 1 ? 0 : (endAngle - startAngle) / (count - 1);
-  for (let index = 0; index < count; index += 1) {
+function addFoodArc(target, centerX, centerY, radius, pattern, startAngle, endAngle) {
+  const step = pattern.length === 1 ? 0 : (endAngle - startAngle) / (pattern.length - 1);
+  for (let index = 0; index < pattern.length; index += 1) {
     const angle = startAngle + step * index;
-    target.push({
-      x: centerX + Math.cos(angle) * radius,
-      y: centerY + Math.sin(angle) * radius,
-      radius: 14,
-      collected: false,
-      wobble: index * 0.45,
-    });
+    target.push(
+      createFood(
+        centerX + Math.cos(angle) * radius,
+        centerY + Math.sin(angle) * radius,
+        pattern[index],
+        index * 0.45,
+      ),
+    );
   }
 }
 
-function buildRings() {
-  const rings = [];
-  addRingLine(rings, 190, 394, 5, 34);
-  addRingArc(rings, 650, 275, 76, 5, Math.PI * 0.95, Math.PI * 0.05);
-  addRingLine(rings, 948, 322, 4, 28);
-  addRingLine(rings, 1186, 220, 4, 32);
-  addRingArc(rings, 1538, 272, 84, 5, Math.PI * 1.08, Math.PI * 0.02);
-  addRingLine(rings, 1768, 240, 5, 34);
-  addRingArc(rings, 2215, 220, 88, 5, Math.PI * 1.1, Math.PI * -0.08);
-  addRingLine(rings, 2468, 200, 4, 30);
-  addRingLine(rings, 2848, 288, 5, 34);
-  addRingArc(rings, 3520, 214, 90, 6, Math.PI * 1.08, Math.PI * -0.08);
-  addRingLine(rings, 3924, 324, 4, 32);
-  return rings;
+function buildLevelOneFoods() {
+  const foods = [];
+  addFoodLine(foods, 190, 394, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 34);
+  addFoodArc(foods, 650, 275, 76, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.95, Math.PI * 0.05);
+  addFoodLine(foods, 948, 322, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 28);
+  addFoodLine(foods, 1186, 220, [FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 32);
+  addFoodArc(foods, 1538, 272, 84, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.08, Math.PI * 0.02);
+  addFoodLine(foods, 1768, 240, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD], 34);
+  addFoodArc(foods, 2215, 220, 88, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.1, Math.PI * -0.08);
+  addFoodLine(foods, 2468, 200, [FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
+  addFoodLine(foods, 2848, 288, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 34);
+  addFoodArc(foods, 3520, 214, 90, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.08, Math.PI * -0.08);
+  addFoodLine(foods, 3924, 324, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 32);
+  return foods;
 }
+
+function buildLevelTwoFoods() {
+  const foods = [];
+  addFoodLine(foods, 210, 394, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 32);
+  addFoodArc(foods, 712, 262, 84, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.96, Math.PI * 0.04);
+  addFoodLine(foods, 1010, 320, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 28);
+  addFoodLine(foods, 1256, 240, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD], 30);
+  addFoodArc(foods, 1720, 238, 82, [FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.02, Math.PI * -0.02);
+  addFoodLine(foods, 2140, 282, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 32);
+  addFoodArc(foods, 2550, 188, 92, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.08, Math.PI * -0.08);
+  addFoodLine(foods, 3040, 316, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD], 32);
+  addFoodLine(foods, 3520, 224, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
+  addFoodArc(foods, 3908, 282, 84, [FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.95, Math.PI * 0.05);
+  return foods;
+}
+
+function buildLevelThreeFoods() {
+  const foods = [];
+  addFoodLine(foods, 220, 394, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 34);
+  addFoodArc(foods, 660, 260, 78, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 0.96, Math.PI * 0.04);
+  addFoodLine(foods, 1120, 178, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD], 30);
+  addFoodArc(foods, 1596, 208, 88, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.04, Math.PI * -0.04);
+  addFoodLine(foods, 2110, 236, [FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
+  addFoodArc(foods, 2520, 146, 96, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.08, Math.PI * -0.08);
+  addFoodLine(foods, 3040, 200, [FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], 30);
+  addFoodArc(foods, 3500, 220, 86, [FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD, FOOD_GOOD, FOOD_GOOD], Math.PI * 1.02, Math.PI * -0.02);
+  addFoodLine(foods, 3940, 284, [FOOD_GOOD, FOOD_GOOD, FOOD_GOOD, FOOD_BAD, FOOD_GOOD], 30);
+  return foods;
+}
+
+const LEVELS = [
+  {
+    solids: [
+      makeGround(),
+      { x: 360, y: 388, w: 120, h: 60 },
+      { x: 580, y: 320, w: 180, h: 22 },
+      { x: 930, y: 360, w: 120, h: 88 },
+      { x: 1160, y: 270, w: 170, h: 22 },
+      { x: 1480, y: 340, w: 130, h: 108 },
+      { x: 1740, y: 290, w: 190, h: 22 },
+      { x: 2140, y: 320, w: 120, h: 128 },
+      { x: 2440, y: 250, w: 190, h: 22 },
+      { x: 2820, y: 340, w: 220, h: 22 },
+      { x: 3140, y: 370, w: 130, h: 78 },
+      { x: 3460, y: 280, w: 170, h: 22 },
+      { x: 3900, y: 380, w: 160, h: 68 },
+    ],
+    springs: [
+      { x: 952, y: 332, w: 76, h: 28 },
+      { x: 2162, y: 292, w: 76, h: 28 },
+      { x: 3170, y: 342, w: 76, h: 28 },
+    ],
+    spikes: [
+      { x: 720, y: 414, w: 86, h: 34 },
+      { x: 1348, y: 414, w: 84, h: 34 },
+      { x: 1978, y: 414, w: 86, h: 34 },
+      { x: 2750, y: 414, w: 108, h: 34 },
+      { x: 3322, y: 414, w: 84, h: 34 },
+      { x: 1544, y: 306, w: 58, h: 34 },
+    ],
+    checkpoints: [
+      { x: 1270, y: 296 },
+      { x: 2940, y: 296 },
+    ],
+    goal: { x: 4040, y: 272, w: 30, h: 176 },
+    palmTrees: [260, 640, 1260, 2020, 2580, 3360, 3880],
+    buildFoods: buildLevelOneFoods,
+  },
+  {
+    solids: [
+      makeGround(),
+      { x: 300, y: 388, w: 140, h: 60 },
+      { x: 560, y: 332, w: 190, h: 22 },
+      { x: 960, y: 360, w: 150, h: 88 },
+      { x: 1220, y: 284, w: 200, h: 22 },
+      { x: 1600, y: 320, w: 160, h: 128 },
+      { x: 1960, y: 336, w: 180, h: 22 },
+      { x: 2360, y: 250, w: 190, h: 22 },
+      { x: 2880, y: 360, w: 160, h: 88 },
+      { x: 3280, y: 270, w: 190, h: 22 },
+      { x: 3720, y: 320, w: 190, h: 128 },
+    ],
+    springs: [
+      { x: 980, y: 332, w: 76, h: 28 },
+      { x: 2390, y: 222, w: 76, h: 28 },
+      { x: 3748, y: 292, w: 76, h: 28 },
+    ],
+    spikes: [
+      { x: 820, y: 414, w: 84, h: 34 },
+      { x: 1480, y: 414, w: 88, h: 34 },
+      { x: 2200, y: 414, w: 96, h: 34 },
+      { x: 3090, y: 414, w: 96, h: 34 },
+      { x: 3478, y: 236, w: 60, h: 34 },
+    ],
+    checkpoints: [
+      { x: 1440, y: 296 },
+      { x: 3200, y: 296 },
+    ],
+    goal: { x: 4010, y: 272, w: 30, h: 176 },
+    palmTrees: [220, 860, 1520, 2440, 3180, 3920],
+    buildFoods: buildLevelTwoFoods,
+  },
+  {
+    solids: [
+      makeGround(),
+      { x: 340, y: 388, w: 140, h: 60 },
+      { x: 560, y: 316, w: 180, h: 22 },
+      { x: 900, y: 250, w: 160, h: 22 },
+      { x: 1120, y: 206, w: 180, h: 22 },
+      { x: 1500, y: 290, w: 180, h: 22 },
+      { x: 1920, y: 344, w: 180, h: 104 },
+      { x: 2280, y: 236, w: 180, h: 22 },
+      { x: 2700, y: 188, w: 180, h: 22 },
+      { x: 3120, y: 292, w: 190, h: 156 },
+      { x: 3460, y: 224, w: 190, h: 22 },
+      { x: 3840, y: 340, w: 170, h: 108 },
+    ],
+    springs: [
+      { x: 582, y: 288, w: 76, h: 28 },
+      { x: 2308, y: 208, w: 76, h: 28 },
+      { x: 3490, y: 196, w: 76, h: 28 },
+    ],
+    spikes: [
+      { x: 760, y: 414, w: 88, h: 34 },
+      { x: 1760, y: 414, w: 96, h: 34 },
+      { x: 2108, y: 310, w: 58, h: 34 },
+      { x: 2980, y: 414, w: 94, h: 34 },
+      { x: 3664, y: 190, w: 58, h: 34 },
+    ],
+    checkpoints: [
+      { x: 1380, y: 296 },
+      { x: 3200, y: 296 },
+    ],
+    goal: { x: 4040, y: 272, w: 30, h: 176 },
+    palmTrees: [260, 1180, 2060, 2860, 3600, 4100],
+    buildFoods: buildLevelThreeFoods,
+  },
+];
 
 function solidRect(solid) {
   return { x: solid.x, y: solid.y, width: solid.w, height: solid.h };
@@ -138,6 +259,7 @@ function createPlayer() {
     facing: 1,
     invulnerable: 0,
     runTime: 0,
+    sizeTier: PLAYER_SIZE_NORMAL,
     respawnX: START_X,
     respawnY: START_Y,
   };
@@ -149,23 +271,42 @@ export class SonicPlatformerEngine {
     this.viewportWidth = 1024;
     this.viewportHeight = WORLD_HEIGHT;
     this.controls = { left: false, right: false, down: false };
+    this.levels = LEVELS;
     this.reset();
   }
 
   reset() {
+    this.maxLives = SONIC_MAX_LIVES;
+    this.loadLevel(0);
+    this.clearControls();
+  }
+
+  loadLevel(levelIndex) {
+    const level = this.levels[levelIndex];
+    this.currentLevelIndex = levelIndex;
     this.player = createPlayer();
     this.elapsed = 0;
     this.phase = 'playing';
     this.cameraX = 0;
     this.flashTimer = 0;
-    this.ringsCollected = 0;
-    this.ringGoal = this.options.facilitatorMode ? 12 : STICKER_RING_GOAL;
-    this.maxLives = this.options.facilitatorMode ? 5 : 3;
     this.lives = this.maxLives;
-    this.goal = { ...GOAL, activated: false };
-    this.checkpoints = CHECKPOINTS.map((checkpoint) => ({ ...checkpoint, activated: false }));
-    this.rings = buildRings();
-    this.totalRings = this.rings.length;
+    this.goodFoodEaten = 0;
+    this.badFoodEaten = 0;
+    this.solids = level.solids.map((solid) => ({ ...solid }));
+    this.springs = level.springs.map((spring) => ({ ...spring }));
+    this.spikes = level.spikes.map((spike) => ({ ...spike }));
+    this.goal = { ...level.goal, activated: false };
+    this.checkpoints = level.checkpoints.map((checkpoint) => ({ ...checkpoint, activated: false }));
+    this.palmTrees = [...level.palmTrees];
+    this.foods = level.buildFoods();
+    this.updateCamera(true);
+  }
+
+  nextLevel() {
+    if (this.currentLevelIndex >= this.levels.length - 1) return false;
+    this.loadLevel(this.currentLevelIndex + 1);
+    this.clearControls();
+    return true;
   }
 
   resize(width, height) {
@@ -217,7 +358,7 @@ export class SonicPlatformerEngine {
   }
 
   canOccupy(rect) {
-    return !SOLIDS.some((solid) => rectsOverlap(rect, solidRect(solid)));
+    return !this.solids.some((solid) => rectsOverlap(rect, solidRect(solid)));
   }
 
   enterRoll() {
@@ -249,7 +390,7 @@ export class SonicPlatformerEngine {
     this.cameraX = force ? target : lerp(this.cameraX, target, CAMERA_SMOOTHING);
   }
 
-  hitPlayer() {
+  hitPlayer(respawn = true) {
     if (this.phase !== 'playing' || this.player.invulnerable > 0) return;
     this.lives -= 1;
     this.flashTimer = 0.26;
@@ -258,6 +399,10 @@ export class SonicPlatformerEngine {
       this.player.vx = 0;
       this.player.vy = 0;
       this.clearControls();
+      return;
+    }
+    if (!respawn) {
+      this.player.invulnerable = 1.1;
       return;
     }
     this.exitRoll(true);
@@ -273,8 +418,8 @@ export class SonicPlatformerEngine {
 
   update(dt) {
     this.flashTimer = Math.max(0, this.flashTimer - dt);
-    this.rings.forEach((ring) => {
-      ring.wobble += dt * 5.4;
+    this.foods.forEach((food) => {
+      food.wobble += dt * 5.4;
     });
     if (this.phase !== 'playing') {
       this.updateCamera();
@@ -304,7 +449,7 @@ export class SonicPlatformerEngine {
     const previousBottom = this.player.y + this.player.height;
     this.player.x += this.player.vx * dt;
     let playerRect = this.getPlayerRect();
-    for (const solid of SOLIDS) {
+    for (const solid of this.solids) {
       if (!rectsOverlap(playerRect, solidRect(solid))) continue;
       this.player.x = this.player.vx > 0 ? solid.x - this.player.width : solid.x + solid.w;
       this.player.vx = 0;
@@ -317,7 +462,7 @@ export class SonicPlatformerEngine {
     playerRect = this.getPlayerRect();
 
     let bounced = false;
-    for (const spring of SPRINGS) {
+    for (const spring of this.springs) {
       const springRect = { x: spring.x, y: spring.y, width: spring.w, height: spring.h };
       if (rectsOverlap(playerRect, springRect) && previousBottom <= spring.y + spring.h * 0.5 && this.player.vy >= 0) {
         this.player.y = spring.y - this.player.height + 4;
@@ -330,7 +475,7 @@ export class SonicPlatformerEngine {
     }
 
     if (!bounced) {
-      for (const solid of SOLIDS) {
+      for (const solid of this.solids) {
         if (!rectsOverlap(playerRect, solidRect(solid))) continue;
         if (this.player.vy > 0) {
           this.player.y = solid.y - this.player.height;
@@ -347,10 +492,20 @@ export class SonicPlatformerEngine {
     if (this.player.isGrounded && !this.controls.down && this.player.isRolling && Math.abs(this.player.vx) < 170) this.exitRoll();
 
     const hurtbox = this.getPlayerHurtbox();
-    for (const ring of this.rings) {
-      if (!ring.collected && circleRectOverlap({ x: ring.x, y: ring.y + Math.sin(ring.wobble) * 3, radius: ring.radius }, hurtbox)) {
-        ring.collected = true;
-        this.ringsCollected += 1;
+    for (const food of this.foods) {
+      if (!food.collected && circleRectOverlap({ x: food.x, y: food.y + Math.sin(food.wobble) * 3, radius: food.radius }, hurtbox)) {
+        food.collected = true;
+        if (food.kind === FOOD_GOOD) {
+          this.goodFoodEaten += 1;
+          this.player.sizeTier = Math.min(PLAYER_SIZE_BIG, this.player.sizeTier + 1);
+        } else {
+          this.badFoodEaten += 1;
+          if (this.player.sizeTier > PLAYER_SIZE_SMALL) {
+            this.player.sizeTier -= 1;
+          } else {
+            this.hitPlayer(false);
+          }
+        }
       }
     }
 
@@ -363,7 +518,7 @@ export class SonicPlatformerEngine {
     }
 
     if (this.player.invulnerable <= 0) {
-      for (const spike of SPIKES) {
+      for (const spike of this.spikes) {
         if (rectsOverlap(hurtbox, { x: spike.x + 6, y: spike.y + 4, width: spike.w - 12, height: spike.h - 4 })) {
           this.hitPlayer();
           break;
@@ -372,7 +527,7 @@ export class SonicPlatformerEngine {
     }
 
     if (this.phase === 'playing' && this.player.y > WORLD_HEIGHT + 180) this.hitPlayer();
-    if (this.phase === 'playing' && this.player.x + this.player.width * 0.55 >= this.goal.x && this.player.y + this.player.height > this.goal.y) {
+    if (this.phase === 'playing' && rectsOverlap(hurtbox, { x: this.goal.x, y: this.goal.y, width: this.goal.w, height: this.goal.h })) {
       this.phase = 'won';
       this.goal.activated = true;
       this.player.vx = 0;
@@ -385,14 +540,19 @@ export class SonicPlatformerEngine {
   }
 
   getSnapshot() {
+    const canAdvanceLevel = this.phase === 'won' && this.currentLevelIndex < this.levels.length - 1;
+
     return {
       phase: this.phase,
-      rings: this.ringsCollected,
-      totalRings: this.totalRings,
-      ringGoal: this.ringGoal,
+      levelIndex: this.currentLevelIndex + 1,
+      totalLevels: this.levels.length,
+      goodFood: this.goodFoodEaten,
+      badFood: this.badFoodEaten,
+      sizeTier: this.player.sizeTier,
       lives: this.lives,
       maxLives: this.maxLives,
-      canClaimSticker: this.phase === 'won' && this.ringsCollected >= this.ringGoal,
+      canAdvanceLevel,
+      canClaimSticker: this.phase === 'won' && !canAdvanceLevel,
       progress: clamp(Math.round(((this.player.x - START_X) / (this.goal.x - START_X)) * 100), 0, 100),
       speed: Math.round(Math.abs(this.player.vx) / 6),
       playerRolling: this.player.isRolling,
@@ -416,13 +576,13 @@ export class SonicPlatformerEngine {
     ctx.save();
     ctx.scale(scale, scale);
     ctx.translate(-this.cameraX, 0);
-    for (const solid of SOLIDS) drawSolid(ctx, solid);
-    for (const treeX of PALM_TREES) drawPalmTree(ctx, treeX);
+    for (const solid of this.solids) drawSolid(ctx, solid);
+    for (const treeX of this.palmTrees) drawPalmTree(ctx, treeX);
     for (const checkpoint of this.checkpoints) drawCheckpoint(ctx, checkpoint);
     drawGoal(ctx, this.goal);
-    for (const spring of SPRINGS) drawSpring(ctx, spring);
-    for (const spike of SPIKES) drawSpikes(ctx, spike);
-    for (const ring of this.rings) if (!ring.collected) drawRing(ctx, ring);
+    for (const spring of this.springs) drawSpring(ctx, spring);
+    for (const spike of this.spikes) drawSpikes(ctx, spike);
+    for (const food of this.foods) if (!food.collected) drawFood(ctx, food);
     drawPlayer(ctx, this.player, this.getMaxRunSpeed());
     ctx.restore();
 
@@ -619,25 +779,82 @@ function drawSpikes(ctx, spike) {
   ctx.restore();
 }
 
-function drawRing(ctx, ring) {
-  const scaleX = 0.55 + Math.abs(Math.sin(ring.wobble)) * 0.45;
+function drawFood(ctx, food) {
   ctx.save();
-  ctx.translate(ring.x, ring.y + Math.sin(ring.wobble) * 3);
-  ctx.scale(scaleX, 1);
-  ctx.strokeStyle = '#ffd84e';
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.arc(0, 0, ring.radius, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(255,255,255,0.56)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(-2, -2, ring.radius - 4, -0.5, 1.5);
-  ctx.stroke();
+  ctx.translate(food.x, food.y + Math.sin(food.wobble) * 3);
+  if (food.kind === FOOD_GOOD) {
+    drawApple(ctx);
+  } else {
+    drawDonut(ctx);
+  }
   ctx.restore();
 }
 
+function drawApple(ctx) {
+  ctx.fillStyle = '#2f8f41';
+  ctx.beginPath();
+  ctx.ellipse(4, -16, 6, 12, -0.45, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#6f3f1d';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, -9);
+  ctx.lineTo(2, -17);
+  ctx.stroke();
+
+  const appleBody = ctx.createRadialGradient(-3, -5, 4, 0, 0, 18);
+  appleBody.addColorStop(0, '#ff9d8d');
+  appleBody.addColorStop(0.6, '#ff5b44');
+  appleBody.addColorStop(1, '#cf2415');
+  ctx.fillStyle = appleBody;
+  ctx.beginPath();
+  ctx.moveTo(0, -13);
+  ctx.bezierCurveTo(-14, -18, -20, -4, -16, 10);
+  ctx.bezierCurveTo(-12, 20, -3, 23, 0, 19);
+  ctx.bezierCurveTo(3, 23, 12, 20, 16, 10);
+  ctx.bezierCurveTo(20, -4, 14, -18, 0, -13);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255,255,255,0.34)';
+  ctx.beginPath();
+  ctx.ellipse(-6, -3, 5, 8, -0.2, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawDonut(ctx) {
+  const donut = ctx.createLinearGradient(-18, -18, 18, 18);
+  donut.addColorStop(0, '#f9d7a1');
+  donut.addColorStop(1, '#d08b4b');
+  ctx.fillStyle = donut;
+  ctx.beginPath();
+  ctx.arc(0, 0, 16, 0, Math.PI * 2);
+  ctx.arc(0, 0, 7, 0, Math.PI * 2, true);
+  ctx.fill('evenodd');
+
+  ctx.strokeStyle = '#ff74a8';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(0, -1, 11, Math.PI * 1.05, Math.PI * 1.95);
+  ctx.stroke();
+
+  ctx.fillStyle = '#59d9ff';
+  for (const sprinkle of [
+    [-8, -6, 0.5],
+    [-2, -9, 1.2],
+    [6, -7, -0.3],
+    [8, -1, 0.7],
+    [-5, 3, -0.6],
+  ]) {
+    ctx.save();
+    ctx.translate(sprinkle[0], sprinkle[1]);
+    ctx.rotate(sprinkle[2]);
+    ctx.fillRect(-1.5, -4, 3, 8);
+    ctx.restore();
+  }
+}
+
 function drawPlayer(ctx, player, maxSpeed) {
+  const sizeScale = PLAYER_SIZE_SCALES[player.sizeTier] || 1;
   const centerX = player.x + player.width * 0.5;
   const centerY = player.y + player.height * 0.48;
   const alpha = player.invulnerable > 0 && Math.floor(player.invulnerable * 14) % 2 === 0 ? 0.44 : 1;
@@ -646,9 +863,10 @@ function drawPlayer(ctx, player, maxSpeed) {
   ctx.globalAlpha = alpha;
   ctx.fillStyle = 'rgba(6,18,31,0.22)';
   ctx.beginPath();
-  ctx.ellipse(centerX + 8, GROUND_Y + 10, player.width * 0.42, player.height * 0.14, 0, 0, Math.PI * 2);
+  ctx.ellipse(centerX + 8, GROUND_Y + 10, player.width * 0.42 * sizeScale, player.height * 0.14 * sizeScale, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.translate(centerX, centerY);
+  ctx.translate(centerX, centerY - (sizeScale - 1) * 24);
+  ctx.scale(sizeScale, sizeScale);
   if (player.facing === -1) ctx.scale(-1, 1);
   if (player.isRolling || !player.isGrounded) {
     ctx.rotate(player.runTime * 8);

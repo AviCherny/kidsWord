@@ -1,106 +1,136 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { speak } from '../../speak';
 import './PicturePuzzle.css';
 
-// Each puzzle: 9 UNIQUE emoji pieces that form a scene
 const PUZZLES = [
   {
-    name: 'Garden',   emoji: '🌻',
-    pieces: ['🌸','☀️','🌺','🦋','🌻','🌿','🐝','🌱','🌼'],
+    name: 'Garden',
+    emoji: '🌻',
+    pieces: ['🌸', '☀️', '🌷', '🦋', '🌻', '🌿', '🐝', '🌱', '🌼', '🍄', '🪻', '🌹', '🐞', '🌳', '🐛', '🍀'],
   },
   {
-    name: 'Space',    emoji: '🚀',
-    pieces: ['⭐','🌙','✨','🪐','🚀','☄️','🌟','💫','🌌'],
+    name: 'Space',
+    emoji: '🚀',
+    pieces: ['⭐', '🌙', '✨', '🪐', '🚀', '☄️', '🌟', '💫', '🌌', '🛰️', '👩‍🚀', '🌍', '🔭', '👽', '☀️', '🛸'],
   },
   {
-    name: 'Ocean',    emoji: '🐠',
-    pieces: ['🌊','🐬','🦭','🐠','🐙','🦀','🐡','🦑','🐳'],
+    name: 'Ocean',
+    emoji: '🐠',
+    pieces: ['🌊', '🐬', '🦭', '🐠', '🐙', '🦀', '🐡', '🦑', '🐳', '🐚', '🪸', '🦞', '🐟', '🐋', '🪼', '🦈'],
   },
   {
-    name: 'Cars',     emoji: '🏎️',
-    pieces: ['🏁','🏎️','🚧','🚗','🚦','🏍️','🚕','⛽','🔧'],
+    name: 'Cars',
+    emoji: '🏎️',
+    pieces: ['🏁', '🏎️', '🚧', '🚗', '🚦', '🏍️', '🚕', '🛞', '🔧', '🚓', '🚑', '⛽', '🚘', '🛻', '🚌', '🛵'],
   },
   {
-    name: 'Forest',   emoji: '🦊',
-    pieces: ['🌲','🐦','🐿️','🦊','🍄','🌿','🦔','🍂','🌳'],
+    name: 'Forest',
+    emoji: '🦊',
+    pieces: ['🌲', '🐦', '🍄', '🦊', '🌿', '🦔', '🍂', '🌳', '🐿️', '🦉', '🪵', '🐞', '🍁', '🐻', '🐇', '🌾'],
   },
 ];
 
+const DIFFICULTY_CONFIG = {
+  1: { cols: 2, pieceCount: 4, puzzleCount: 3 },
+  2: { cols: 3, pieceCount: 9, puzzleCount: 3 },
+  3: { cols: 3, pieceCount: 9, puzzleCount: 5 },
+  4: { cols: 4, pieceCount: 16, puzzleCount: 3 },
+};
+
 function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
+  const next = [...arr];
+  for (let i = next.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [next[i], next[j]] = [next[j], next[i]];
   }
-  return a;
+  return next;
 }
 
-function initPool(puzzleIdx) {
-  return shuffle(PUZZLES[puzzleIdx].pieces.map((emoji, idx) => ({ emoji, idx })));
+function getPuzzlePack(sharedDifficulty) {
+  const difficulty = DIFFICULTY_CONFIG[sharedDifficulty] || DIFFICULTY_CONFIG[1];
+  return PUZZLES.slice(0, difficulty.puzzleCount).map((entry) => ({
+    ...entry,
+    cols: difficulty.cols,
+    pieces: entry.pieces.slice(0, difficulty.pieceCount),
+  }));
 }
 
-export default function PicturePuzzle({ onSuccess, onExit }) {
+function initPool(puzzle) {
+  return shuffle(puzzle.pieces.map((emoji, index) => ({ emoji, index })));
+}
+
+export default function PicturePuzzle({ onSuccess, onExit, sharedDifficulty = 1 }) {
+  const puzzles = getPuzzlePack(sharedDifficulty);
+  const firstPuzzle = puzzles[0];
+
   const [puzzleIdx, setPuzzleIdx] = useState(0);
-  const [pool, setPool]           = useState(() => initPool(0));
-  const [placed, setPlaced]       = useState(Array(9).fill(null)); // piece objects
-  const [selected, setSelected]   = useState(null); // pool slot index
+  const [pool, setPool] = useState(() => initPool(firstPuzzle));
+  const [placed, setPlaced] = useState(() => Array(firstPuzzle.pieces.length).fill(null));
+  const [selected, setSelected] = useState(null);
   const [flashSlot, setFlashSlot] = useState(null);
   const [wrongSlot, setWrongSlot] = useState(null);
-  const [stars, setStars]         = useState(0);
-  const [done, setDone]           = useState(false);
+  const [stars, setStars] = useState(0);
+  const [done, setDone] = useState(false);
 
-  const puzzle = PUZZLES[puzzleIdx];
+  const puzzle = puzzles[puzzleIdx];
+  const filledCount = placed.filter((piece) => piece !== null).length;
+  const completedPieces = puzzles
+    .slice(0, puzzleIdx)
+    .reduce((total, entry) => total + entry.pieces.length, 0) + filledCount;
+  const totalPieces = puzzles.reduce((total, entry) => total + entry.pieces.length, 0);
+  const progress = (completedPieces / totalPieces) * 100;
+  const previewSize = puzzle.cols === 4 ? '28px' : puzzle.cols === 3 ? '36px' : '50px';
+  const boardCellSize = puzzle.cols === 4 ? '54px' : puzzle.cols === 3 ? '72px' : '92px';
 
-  function handlePoolTap(i) {
-    if (pool[i] === null) return;
-    setSelected(selected === i ? null : i);
+  function handlePoolTap(index) {
+    if (pool[index] === null) return;
+    setSelected((current) => (current === index ? null : index));
   }
 
   function handleSlotTap(slotIdx) {
-    if (placed[slotIdx]) return; // already filled
-    if (selected === null) return;
+    if (placed[slotIdx] || selected === null) return;
 
     const piece = pool[selected];
     if (!piece) return;
 
-    if (piece.idx === slotIdx) {
-      // Correct placement!
-      const newPool = [...pool];
-      newPool[selected] = null;
-      setPool(newPool);
+    if (piece.index === slotIdx) {
+      const nextPool = [...pool];
+      nextPool[selected] = null;
+      setPool(nextPool);
       setSelected(null);
 
-      const newPlaced = [...placed];
-      newPlaced[slotIdx] = piece;
-      setPlaced(newPlaced);
+      const nextPlaced = [...placed];
+      nextPlaced[slotIdx] = piece;
+      setPlaced(nextPlaced);
 
       setFlashSlot(slotIdx);
       setTimeout(() => setFlashSlot(null), 500);
-
       speak(puzzle.pieces[slotIdx], 'en');
 
-      // Check level complete
-      if (newPlaced.every(p => p !== null)) {
+      if (nextPlaced.every((entry) => entry !== null)) {
         speak(`${puzzle.name}! Amazing!`, 'en');
-        setStars(s => s + 1);
+        setStars((value) => value + 1);
         setTimeout(() => {
-          const next = puzzleIdx + 1;
-          if (next >= PUZZLES.length) {
+          const nextPuzzleIdx = puzzleIdx + 1;
+          if (nextPuzzleIdx >= puzzles.length) {
             setDone(true);
-          } else {
-            setPuzzleIdx(next);
-            setPool(initPool(next));
-            setPlaced(Array(9).fill(null));
+            return;
           }
+
+          const nextPuzzle = puzzles[nextPuzzleIdx];
+          setPuzzleIdx(nextPuzzleIdx);
+          setPool(initPool(nextPuzzle));
+          setPlaced(Array(nextPuzzle.pieces.length).fill(null));
+          setSelected(null);
         }, 1200);
       }
-    } else {
-      // Wrong placement — shake the slot
-      setWrongSlot(slotIdx);
-      setTimeout(() => setWrongSlot(null), 500);
-      setSelected(null);
-      speak('Try again!', 'en');
+      return;
     }
+
+    setWrongSlot(slotIdx);
+    setTimeout(() => setWrongSlot(null), 500);
+    setSelected(null);
+    speak('Try again!', 'en');
   }
 
   if (done) {
@@ -109,7 +139,7 @@ export default function PicturePuzzle({ onSuccess, onExit }) {
         <div className="pp-done">
           <div>🧩✨🧩</div>
           <h2>Puzzle Master! 🎉</h2>
-          <p>You completed all {PUZZLES.length} puzzles!</p>
+          <p>You completed all {puzzles.length} puzzles!</p>
           <div>{'⭐'.repeat(stars)}</div>
           <button className="pp-btn pp-btn--primary" onClick={onSuccess}>Collect Sticker 🌟</button>
           <button className="pp-btn pp-btn--ghost" onClick={onExit}>Back</button>
@@ -117,9 +147,6 @@ export default function PicturePuzzle({ onSuccess, onExit }) {
       </div>
     );
   }
-
-  const filledCount = placed.filter(p => p !== null).length;
-  const progress = ((puzzleIdx * 9 + filledCount) / (PUZZLES.length * 9)) * 100;
 
   return (
     <div className="pp-root">
@@ -133,51 +160,59 @@ export default function PicturePuzzle({ onSuccess, onExit }) {
         <div className="pp-progress-fill" style={{ width: `${progress}%` }} />
       </div>
 
-      {/* Target picture */}
       <div className="pp-target-label">Build this picture:</div>
-      <div className="pp-target-grid">
-        {puzzle.pieces.map((e, i) => (
-          <div key={i} className="pp-target-cell">{e}</div>
+      <div
+        className="pp-target-grid"
+        style={{
+          gridTemplateColumns: `repeat(${puzzle.cols}, 1fr)`,
+          '--pp-preview-size': previewSize,
+        }}
+      >
+        {puzzle.pieces.map((piece, index) => (
+          <div key={index} className="pp-target-cell">{piece}</div>
         ))}
       </div>
 
-      {/* Hint */}
       <div className="pp-hint">
-        {selected !== null ? '👆 Now tap a slot in the grid below!' : '👆 Pick a piece first!'}
+        {selected !== null ? '👆 Now tap the matching slot below!' : '👆 Pick a piece first!'}
       </div>
 
-      {/* Board */}
-      <div className="pp-board">
-        {placed.map((piece, i) => (
+      <div
+        className="pp-board"
+        style={{
+          gridTemplateColumns: `repeat(${puzzle.cols}, 1fr)`,
+          '--pp-cell-size': boardCellSize,
+        }}
+      >
+        {placed.map((piece, index) => (
           <button
-            key={i}
+            key={index}
             className={[
               'pp-slot',
-              piece      ? 'pp-slot--filled' : 'pp-slot--empty',
-              flashSlot === i ? 'pp-slot--flash' : '',
-              wrongSlot === i ? 'pp-slot--wrong' : '',
+              piece ? 'pp-slot--filled' : 'pp-slot--empty',
+              flashSlot === index ? 'pp-slot--flash' : '',
+              wrongSlot === index ? 'pp-slot--wrong' : '',
             ].join(' ')}
-            onClick={() => handleSlotTap(i)}
+            onClick={() => handleSlotTap(index)}
           >
             {piece ? piece.emoji : ''}
           </button>
         ))}
       </div>
 
-      {/* Piece pool */}
-      <div className="pp-pool-label">{9 - filledCount} pieces left</div>
+      <div className="pp-pool-label">{puzzle.pieces.length - filledCount} pieces left</div>
       <div className="pp-pool">
-        {pool.map((piece, i) => (
+        {pool.map((piece, index) => (
           piece ? (
             <button
-              key={i}
-              className={`pp-piece ${selected === i ? 'pp-piece--selected' : ''}`}
-              onClick={() => handlePoolTap(i)}
+              key={index}
+              className={`pp-piece ${selected === index ? 'pp-piece--selected' : ''}`}
+              onClick={() => handlePoolTap(index)}
             >
               {piece.emoji}
             </button>
           ) : (
-            <div key={i} className="pp-piece-gone" />
+            <div key={index} className="pp-piece-gone" />
           )
         ))}
       </div>

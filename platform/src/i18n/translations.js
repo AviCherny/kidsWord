@@ -143,7 +143,7 @@ export const T = {
     pjMasksName: 'PJ Masks',
     pjMasksDesc: 'Sort by hero colors!',
     sonicName: 'Sonic',
-    sonicDesc: 'Race through Green Hill, collect rings, and reach the goal sign.',
+    sonicDesc: 'Race through Green Hill, eat good food, avoid bad food, and reach the goal sign.',
     // Category labels
     catLanguage: 'Language & Words',
     catLogic: 'Logic & Thinking',
@@ -204,6 +204,8 @@ export const T = {
     ],
   },
 };
+
+T.he.sonicDesc = 'רוץ בגרין היל, אכול אוכל טוב, הימנע מאוכל לא טוב והגע לשלט הסיום.';
 
 export function t(lang, key) {
   return T[lang]?.[key] ?? T['en'][key] ?? key;

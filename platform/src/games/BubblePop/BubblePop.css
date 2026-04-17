@@ -22,6 +22,10 @@
 }
 .bp-title { font-size: 22px; font-weight: 800; margin: 0; }
 .bp-stars { font-size: 20px; min-width: 40px; text-align: right; }
+.bp-root[dir='rtl'] .bp-header { flex-direction: row-reverse; }
+.bp-root[dir='rtl'] .bp-stars { text-align: left; }
+.bp-root[dir='rtl'] .bp-level-info,
+.bp-root[dir='rtl'] .bp-done { text-align: center; }
 
 /* ── Progress bar ── */
 .bp-progress {

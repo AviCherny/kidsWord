@@ -108,17 +108,47 @@ const WORD_ALIASES = {
   rocket: ['rockit'],
 };
 
-const TURBO_BOOST = 18;
 const AI_TICK_MS = 800;
-const AI_STEP = 2.5;
-const AI_STEP_SLOW = 0.8;
-const CHALLENGE_DELAY = 2500;
 const FEEDBACK_DELAY = 1500;
-const WINS_REQUIRED = 12;
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 const HAS_SPEECH = !!SpeechRecognition;
 const CONFETTI_COLORS = ['#ffcf53', '#ff8b5e', '#ff5f7a', '#6dd3ff', '#53e0a1', '#c38bff'];
+
+const WORD_RACE_DIFFICULTIES = {
+  1: {
+    aiStep: 1.8,
+    aiStepSlow: 0.45,
+    challengeDelay: 2800,
+    turboBoost: 22,
+    winsRequired: 6,
+    wordFilter: (word) => word.en.length <= 4,
+  },
+  2: {
+    aiStep: 2.3,
+    aiStepSlow: 0.6,
+    challengeDelay: 2550,
+    turboBoost: 20,
+    winsRequired: 8,
+    wordFilter: (word) => word.en.length <= 5,
+  },
+  3: {
+    aiStep: 2.8,
+    aiStepSlow: 0.8,
+    challengeDelay: 2300,
+    turboBoost: 18,
+    winsRequired: 10,
+    wordFilter: (word) => word.en.length <= 7,
+  },
+  4: {
+    aiStep: 3.2,
+    aiStepSlow: 1,
+    challengeDelay: 2050,
+    turboBoost: 16,
+    winsRequired: 12,
+    wordFilter: (word) => word.en.length >= 5,
+  },
+};
 
 function normalizeSpokenText(text, lang) {
   const pattern = lang === 'he' ? /[^א-ת\s]/g : /[^a-z\s]/g;
@@ -182,9 +212,15 @@ function shuffle(arr) {
   return clone;
 }
 
-function getFallbackChoices(target, all) {
+function getFallbackChoices(target, all, count = 3) {
   const others = all.filter((item) => item.en !== target.en);
-  return shuffle([target, ...shuffle(others).slice(0, 2)]);
+  return shuffle([target, ...shuffle(others).slice(0, Math.max(2, count - 1))]);
+}
+
+function getWordPool(sharedDifficulty) {
+  const difficulty = WORD_RACE_DIFFICULTIES[sharedDifficulty] || WORD_RACE_DIFFICULTIES[1];
+  const pool = WORDS.filter(difficulty.wordFilter);
+  return pool.length >= 3 ? pool : WORDS;
 }
 
 function Confetti({ id }) {
@@ -397,9 +433,11 @@ function ChallengeCard({
   );
 }
 
-export default function WordRace({ onSuccess, onExit }) {
+export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
   const { lang, dir, setLang } = useLanguage();
   const copy = COPY[lang] || COPY.en;
+  const difficulty = WORD_RACE_DIFFICULTIES[sharedDifficulty] || WORD_RACE_DIFFICULTIES[1];
+  const wordPool = getWordPool(sharedDifficulty);
 
   const [screen, setScreen] = useState('intro');
   const [playerPos, setPlayerPos] = useState(0);
@@ -431,10 +469,10 @@ export default function WordRace({ onSuccess, onExit }) {
 
   const nextWordFromDeck = useCallback(() => {
     if (wordDeckRef.current.length === 0) {
-      wordDeckRef.current = shuffle([...WORDS]);
+      wordDeckRef.current = shuffle([...wordPool]);
     }
     return wordDeckRef.current.pop();
-  }, []);
+  }, [wordPool]);
 
   const replayCurrentWord = useCallback(() => {
     const word = currentWordRef.current;
@@ -442,9 +480,9 @@ export default function WordRace({ onSuccess, onExit }) {
     speak(getWordText(word, lang), lang);
   }, [lang]);
 
-  function checkWin(nextPlayerPos, nextAiPos, nextCorrectCount) {
+  const checkWin = useCallback((nextPlayerPos, nextAiPos, nextCorrectCount) => {
     if (doneRef.current) return false;
-    if (nextPlayerPos >= 100 || nextCorrectCount >= WINS_REQUIRED) {
+    if (nextPlayerPos >= 100 || nextCorrectCount >= difficulty.winsRequired) {
       doneRef.current = true;
       setWinner('player');
       setScreen('done');
@@ -457,40 +495,40 @@ export default function WordRace({ onSuccess, onExit }) {
       return true;
     }
     return false;
-  }
+  }, [difficulty.winsRequired]);
 
   useEffect(() => {
     if (screen !== 'race') return undefined;
     const interval = setInterval(() => {
       if (doneRef.current) return;
       const step = ['challenge', 'listening', 'correct', 'wrong'].includes(subPhaseRef.current)
-        ? AI_STEP_SLOW
-        : AI_STEP;
+        ? difficulty.aiStepSlow
+        : difficulty.aiStep;
       const nextAiPos = Math.min(aiPosRef.current + step, 100);
       aiPosRef.current = nextAiPos;
       setAiPos(nextAiPos);
       checkWin(playerPosRef.current, nextAiPos, correctCountRef.current);
     }, AI_TICK_MS);
     return () => clearInterval(interval);
-  }, [screen]);
+  }, [checkWin, difficulty.aiStep, difficulty.aiStepSlow, screen]);
 
   const presentChallenge = useCallback(() => {
     if (doneRef.current) return;
     const word = nextWordFromDeck();
     currentWordRef.current = word;
     setCurrentWord(word);
-    setFallbackChoices(getFallbackChoices(word, WORDS));
+    setFallbackChoices(getFallbackChoices(word, wordPool, sharedDifficulty >= 3 ? 4 : 3));
     setHeardText('');
     setFailedAttempts(0);
     setSubPhase('challenge');
     speak(getWordText(word, lang), lang);
-  }, [lang, nextWordFromDeck]);
+  }, [lang, nextWordFromDeck, sharedDifficulty, wordPool]);
 
   useEffect(() => {
     if (screen !== 'race' || subPhase !== 'driving') return undefined;
-    const timer = setTimeout(presentChallenge, CHALLENGE_DELAY);
+    const timer = setTimeout(presentChallenge, difficulty.challengeDelay);
     return () => clearTimeout(timer);
-  }, [screen, subPhase, presentChallenge]);
+  }, [difficulty.challengeDelay, screen, subPhase, presentChallenge]);
 
   function handleResult(correct) {
     if (doneRef.current) return;
@@ -505,7 +543,7 @@ export default function WordRace({ onSuccess, onExit }) {
       speak(lang === 'he' ? 'כל הכבוד!' : 'Amazing!', lang);
 
       const nextCorrectCount = correctCountRef.current + 1;
-      const nextPlayerPos = Math.min(playerPosRef.current + TURBO_BOOST, 100);
+      const nextPlayerPos = Math.min(playerPosRef.current + difficulty.turboBoost, 100);
       setCorrectCount(nextCorrectCount);
       setPlayerPos(nextPlayerPos);
       playerPosRef.current = nextPlayerPos;
@@ -575,7 +613,7 @@ export default function WordRace({ onSuccess, onExit }) {
 
   function startRace() {
     doneRef.current = false;
-    wordDeckRef.current = shuffle([...WORDS]);
+    wordDeckRef.current = shuffle([...wordPool]);
     setScreen('countdown');
     setPlayerPos(0);
     setAiPos(0);
@@ -679,7 +717,7 @@ export default function WordRace({ onSuccess, onExit }) {
           >
             {lang === 'he' ? 'EN' : 'עב'}
           </button>
-          <div className="wr-score">{correctCount} / {WINS_REQUIRED}</div>
+          <div className="wr-score">{correctCount} / {difficulty.winsRequired}</div>
         </div>
       </div>
 

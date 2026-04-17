@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { speak } from '../../speak';
+import { useLanguage } from '../../context/LanguageContext';
 import './BubblePop.css';
 
-// ── Synthesized sounds ────────────────────────────────────────────────────────
 function playPopSound() {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const buf = ctx.createBuffer(1, ctx.sampleRate * 0.12, ctx.sampleRate);
   const data = buf.getChannelData(0);
-  for (let i = 0; i < data.length; i++) {
+  for (let i = 0; i < data.length; i += 1) {
     data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, 3);
   }
   const src = ctx.createBufferSource();
@@ -24,138 +24,222 @@ function playPopSound() {
 
 function playSuccessSound() {
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const notes = [523, 659, 784, 1047]; // C5 E5 G5 C6
-  notes.forEach((freq, i) => {
+  const notes = [523, 659, 784, 1047];
+  notes.forEach((freq, index) => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
     osc.frequency.value = freq;
-    gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.1);
-    gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + i * 0.1 + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.1 + 0.18);
+    gain.gain.setValueAtTime(0, ctx.currentTime + index * 0.1);
+    gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + index * 0.1 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + index * 0.1 + 0.18);
     osc.connect(gain);
     gain.connect(ctx.destination);
-    osc.start(ctx.currentTime + i * 0.1);
-    osc.stop(ctx.currentTime + i * 0.1 + 0.2);
+    osc.start(ctx.currentTime + index * 0.1);
+    osc.stop(ctx.currentTime + index * 0.1 + 0.2);
   });
   setTimeout(() => ctx.close(), 800);
 }
 
-// ── Math question generator ───────────────────────────────────────────────────
-const LEVELS = [
-  { label: 'Level 1', ops: ['+'], max: 5  },
-  { label: 'Level 2', ops: ['+'], max: 10 },
-  { label: 'Level 3', ops: ['+', '-'], max: 10 },
-];
-const QUESTIONS_PER_LEVEL = 5;
+const BUBBLE_DIFFICULTIES = {
+  1: {
+    questionsPerLevel: 4,
+    bubbleCount: 4,
+    levels: [
+      { ops: ['+'], max: 5 },
+      { ops: ['+'], max: 8 },
+    ],
+  },
+  2: {
+    questionsPerLevel: 5,
+    bubbleCount: 5,
+    levels: [
+      { ops: ['+'], max: 5 },
+      { ops: ['+'], max: 10 },
+      { ops: ['+', '-'], max: 10 },
+    ],
+  },
+  3: {
+    questionsPerLevel: 5,
+    bubbleCount: 5,
+    levels: [
+      { ops: ['+'], max: 10 },
+      { ops: ['+', '-'], max: 14 },
+      { ops: ['+', '-'], max: 18 },
+      { ops: ['+', '-', '×'], max: 20, factorMax: 5 },
+    ],
+  },
+  4: {
+    questionsPerLevel: 6,
+    bubbleCount: 6,
+    levels: [
+      { ops: ['+', '-'], max: 15 },
+      { ops: ['+', '-'], max: 20 },
+      { ops: ['+', '-', '×'], max: 24, factorMax: 6 },
+      { ops: ['+', '-', '×'], max: 30, factorMax: 8 },
+    ],
+  },
+};
 
-function makeQuestion(levelCfg) {
-  const op = levelCfg.ops[Math.floor(Math.random() * levelCfg.ops.length)];
-  let a, b, answer;
-  if (op === '+') {
-    a = 1 + Math.floor(Math.random() * (levelCfg.max - 1));
-    b = 1 + Math.floor(Math.random() * (levelCfg.max - a));
-    answer = a + b;
-  } else {
-    a = 2 + Math.floor(Math.random() * (levelCfg.max - 1));
-    b = 1 + Math.floor(Math.random() * (a - 1));
-    answer = a - b;
-  }
-  return { a, b, op, answer };
-}
-
-// Build a shuffled deck of unique questions for a level (no back-to-back repeats)
-function buildDeck(levelCfg) {
-  const pool = [];
-  const seen = new Set();
-  let attempts = 0;
-  while (pool.length < QUESTIONS_PER_LEVEL * 3 && attempts < 200) {
-    attempts++;
-    const q = makeQuestion(levelCfg);
-    const key = `${q.a}${q.op}${q.b}`;
-    if (!seen.has(key)) { seen.add(key); pool.push(q); }
-  }
-  // Fisher-Yates shuffle
-  for (let i = pool.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [pool[i], pool[j]] = [pool[j], pool[i]];
-  }
-  return pool;
-}
-
-function makeDistractors(answer, count) {
-  const set = new Set([answer]);
-  const candidates = [];
-  for (let d = 1; d <= 5; d++) {
-    if (answer - d > 0) candidates.push(answer - d);
-    candidates.push(answer + d);
-  }
-  for (let i = candidates.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
-  }
-  const result = [answer];
-  for (const c of candidates) {
-    if (!set.has(c) && result.length < count) { set.add(c); result.push(c); }
-  }
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [result[i], result[j]] = [result[j], result[i]];
-  }
-  return result;
-}
+const COPY = {
+  en: {
+    title: 'Balloon Pop',
+    hearAgain: 'Hear again',
+    back: 'Back',
+    champion: 'Math Champion!',
+    solvedAll: (count) => `You solved all ${count} questions!`,
+    collectSticker: 'Collect Sticker 🌟',
+    finishedAllLevels: (count) => `Amazing! You finished all ${count} levels!`,
+    tryAgain: 'Try again!',
+    keepGoing: (levelNumber) => `Level ${levelNumber}! Keep going!`,
+    questionPrompt: (a, op, b) => {
+      if (op === '+') return `What is ${a} plus ${b}?`;
+      if (op === '-') return `What is ${a} minus ${b}?`;
+      return `What is ${a} times ${b}?`;
+    },
+  },
+  he: {
+    title: 'פיצוץ בלונים',
+    hearAgain: 'שומעים שוב',
+    back: 'חזרה',
+    champion: 'אלוף החשבון!',
+    solvedAll: (count) => `פתרת את כל ${count} התרגילים!`,
+    collectSticker: 'קבל מדבקה 🌟',
+    finishedAllLevels: (count) => `מדהים! סיימת את כל ${count} השלבים!`,
+    tryAgain: 'נסה שוב!',
+    keepGoing: (levelNumber) => `שלב ${levelNumber}! ממשיכים!`,
+    questionPrompt: (a, op, b) => {
+      if (op === '+') return `כמה זה ${a} ועוד ${b}?`;
+      if (op === '-') return `כמה זה ${a} פחות ${b}?`;
+      return `כמה זה ${a} כפול ${b}?`;
+    },
+  },
+};
 
 const BALLOON_COLORS = [
   '#f44336', '#9c27b0', '#2196f3', '#00897b',
   '#ff5722', '#43a047', '#3f51b5', '#ff9800',
 ];
 
+function makeQuestion(levelCfg) {
+  const op = levelCfg.ops[Math.floor(Math.random() * levelCfg.ops.length)];
+
+  if (op === '+') {
+    const a = 1 + Math.floor(Math.random() * (levelCfg.max - 1));
+    const b = 1 + Math.floor(Math.random() * Math.max(1, levelCfg.max - a));
+    return { a, b, op, answer: a + b };
+  }
+
+  if (op === '-') {
+    const a = 2 + Math.floor(Math.random() * (levelCfg.max - 1));
+    const b = 1 + Math.floor(Math.random() * Math.max(1, a - 1));
+    return { a, b, op, answer: a - b };
+  }
+
+  const factorMax = levelCfg.factorMax || 5;
+  const a = 2 + Math.floor(Math.random() * Math.max(1, factorMax - 1));
+  const b = 2 + Math.floor(Math.random() * Math.max(1, factorMax - 1));
+  return { a, b, op, answer: a * b };
+}
+
+function buildDeck(levelCfg, questionsPerLevel) {
+  const pool = [];
+  const seen = new Set();
+  let attempts = 0;
+
+  while (pool.length < questionsPerLevel * 3 && attempts < 240) {
+    attempts += 1;
+    const question = makeQuestion(levelCfg);
+    const key = `${question.a}${question.op}${question.b}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      pool.push(question);
+    }
+  }
+
+  for (let i = pool.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+
+  return pool;
+}
+
+function makeDistractors(answer, count) {
+  const seen = new Set([answer]);
+  const candidates = [];
+  const span = answer > 20 ? 8 : 5;
+
+  for (let delta = 1; delta <= span; delta += 1) {
+    if (answer - delta > 0) candidates.push(answer - delta);
+    candidates.push(answer + delta);
+  }
+
+  for (let i = candidates.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+  }
+
+  const values = [answer];
+  for (const candidate of candidates) {
+    if (!seen.has(candidate) && values.length < count) {
+      seen.add(candidate);
+      values.push(candidate);
+    }
+  }
+
+  for (let i = values.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [values[i], values[j]] = [values[j], values[i]];
+  }
+
+  return values;
+}
+
 function makeParticles(color) {
-  return Array.from({ length: 12 }, (_, i) => {
-    const angle = (i / 12) * 360 + (Math.random() - 0.5) * 30;
-    const dist  = 55 + Math.random() * 45;
-    const rad   = (angle * Math.PI) / 180;
+  return Array.from({ length: 12 }, (_, index) => {
+    const angle = (index / 12) * 360 + (Math.random() - 0.5) * 30;
+    const distance = 55 + Math.random() * 45;
+    const radians = (angle * Math.PI) / 180;
     return {
-      dx:   Math.round(Math.cos(rad) * dist),
-      dy:   Math.round(Math.sin(rad) * dist),
+      dx: Math.round(Math.cos(radians) * distance),
+      dy: Math.round(Math.sin(radians) * distance),
       size: 7 + Math.floor(Math.random() * 11),
-      // alternate between balloon color and white/yellow shards
-      color: i % 3 === 0 ? '#fff' : i % 3 === 1 ? color : '#ffd54f',
+      color: index % 3 === 0 ? '#fff' : index % 3 === 1 ? color : '#ffd54f',
     };
   });
 }
 
-function makeBubbles(answer, count = 5) {
+function makeBubbles(answer, count) {
   const values = makeDistractors(answer, count);
-  return values.map((val, i) => ({
-    id: Date.now() + i,
-    value: val,
-    isAnswer: val === answer,
-    color: BALLOON_COLORS[i % BALLOON_COLORS.length],
-    x: 10 + i * (80 / (count - 1)),
-    duration: 9 + Math.random() * 5,   // 9–14 s — slow drift
-    delay: -(Math.random() * 8),       // negative delay = already mid-flight on load
+  return values.map((value, index) => ({
+    id: Date.now() + index,
+    value,
+    isAnswer: value === answer,
+    color: BALLOON_COLORS[index % BALLOON_COLORS.length],
+    x: 10 + index * (80 / Math.max(1, count - 1)),
+    duration: 9 + Math.random() * 5,
+    delay: -(Math.random() * 8),
     wrong: false,
     popped: false,
   }));
 }
 
-// ── Pop burst overlay ─────────────────────────────────────────────────────────
 function PopBurst({ pop }) {
   return (
     <div className="bp-pop-root" style={{ left: pop.x, top: pop.y }}>
       <div className="bp-pop-flash" style={{ background: pop.color }} />
-      {pop.particles.map((p, i) => (
+      {pop.particles.map((particle, index) => (
         <div
-          key={i}
+          key={index}
           className="bp-particle"
           style={{
-            '--dx':   `${p.dx}px`,
-            '--dy':   `${p.dy}px`,
-            width:    p.size,
-            height:   p.size,
-            background: p.color,
-            animationDelay: `${i * 0.018}s`,
+            '--dx': `${particle.dx}px`,
+            '--dy': `${particle.dy}px`,
+            width: particle.size,
+            height: particle.size,
+            background: particle.color,
+            animationDelay: `${index * 0.018}s`,
           }}
         />
       ))}
@@ -163,131 +247,138 @@ function PopBurst({ pop }) {
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
-export default function BubblePop({ onSuccess, onExit }) {
+export default function BubblePop({ onSuccess, onExit, sharedDifficulty = 1 }) {
+  const { lang, dir } = useLanguage();
+  const copy = COPY[lang] || COPY.en;
+  const difficulty = BUBBLE_DIFFICULTIES[sharedDifficulty] || BUBBLE_DIFFICULTIES[1];
+  const totalQuestions = difficulty.levels.length * difficulty.questionsPerLevel;
+
   const [levelIdx, setLevelIdx] = useState(0);
-  const [qCount,   setQCount]   = useState(0);
-  const deckRef = useRef(buildDeck(LEVELS[0]));
+  const [qCount, setQCount] = useState(0);
+  const deckRef = useRef(buildDeck(difficulty.levels[0], difficulty.questionsPerLevel));
   const [question, setQuestion] = useState(() => deckRef.current[0]);
-  const [bubbles,  setBubbles]  = useState(() => makeBubbles(deckRef.current[0].answer));
-  const [stars,    setStars]    = useState(0);
-  const [done,     setDone]     = useState(false);
-  const [combo,    setCombo]    = useState(0);
-  const [pops,     setPops]     = useState([]);   // active pop bursts
+  const [bubbles, setBubbles] = useState(() => makeBubbles(deckRef.current[0].answer, difficulty.bubbleCount));
+  const [stars, setStars] = useState(0);
+  const [done, setDone] = useState(false);
+  const [combo, setCombo] = useState(0);
+  const [pops, setPops] = useState([]);
   const transitioning = useRef(false);
 
   useEffect(() => {
     const { a, b, op } = question;
-    speak(`What is ${a} ${op === '+' ? 'plus' : 'minus'} ${b}?`, 'en');
-  }, [question]);
+    speak(copy.questionPrompt(a, op, b), lang);
+  }, [copy, lang, question]);
 
-  const nextQuestion = useCallback((lvl, qc) => {
+  const nextQuestion = useCallback((currentLevelIdx, currentQuestionIdx) => {
     transitioning.current = false;
-    const nextQ = qc + 1;
-    if (nextQ >= QUESTIONS_PER_LEVEL) {
-      setStars(s => s + 1);
-      const nextLvl = lvl + 1;
-      if (nextLvl >= LEVELS.length) {
+    const nextQuestionIdx = currentQuestionIdx + 1;
+
+    if (nextQuestionIdx >= difficulty.questionsPerLevel) {
+      setStars((value) => value + 1);
+      const nextLevelIdx = currentLevelIdx + 1;
+
+      if (nextLevelIdx >= difficulty.levels.length) {
         setDone(true);
-        speak('Amazing! You finished all levels!', 'en');
+        speak(copy.finishedAllLevels(difficulty.levels.length), lang);
         return;
       }
-      speak(`Level ${nextLvl + 1}! Keep going!`, 'en');
-      deckRef.current = buildDeck(LEVELS[nextLvl]);
-      setLevelIdx(nextLvl);
-      setQCount(0);
-      const q = deckRef.current[0];
-      setQuestion(q);
-      setBubbles(makeBubbles(q.answer));
-    } else {
-      setQCount(nextQ);
-      const q = deckRef.current[nextQ] || makeQuestion(LEVELS[lvl]);
-      setQuestion(q);
-      setBubbles(makeBubbles(q.answer));
-    }
-  }, []);
 
-  const handleTap = useCallback((id, e) => {
+      speak(copy.keepGoing(nextLevelIdx + 1), lang);
+      deckRef.current = buildDeck(difficulty.levels[nextLevelIdx], difficulty.questionsPerLevel);
+      setLevelIdx(nextLevelIdx);
+      setQCount(0);
+      const next = deckRef.current[0];
+      setQuestion(next);
+      setBubbles(makeBubbles(next.answer, difficulty.bubbleCount));
+      return;
+    }
+
+    setQCount(nextQuestionIdx);
+    const next = deckRef.current[nextQuestionIdx] || makeQuestion(difficulty.levels[currentLevelIdx]);
+    setQuestion(next);
+    setBubbles(makeBubbles(next.answer, difficulty.bubbleCount));
+  }, [copy, difficulty.bubbleCount, difficulty.levels, difficulty.questionsPerLevel, lang]);
+
+  const handleTap = useCallback((id, event) => {
     if (transitioning.current) return;
 
-    // Capture position before any state updates
-    const rect = e.currentTarget.getBoundingClientRect();
-    const cx = rect.left + rect.width  / 2;
-    const cy = rect.top  + rect.height / 2;
+    const rect = event.currentTarget.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
 
-    setBubbles(prev => {
-      const bubble = prev.find(b => b.id === id);
-      if (!bubble || bubble.popped || bubble.wrong) return prev;
+    setBubbles((currentBubbles) => {
+      const bubble = currentBubbles.find((entry) => entry.id === id);
+      if (!bubble || bubble.popped || bubble.wrong) return currentBubbles;
 
       if (bubble.isAnswer) {
         transitioning.current = true;
-        setCombo(c => c + 1);
+        setCombo((value) => value + 1);
         playPopSound();
         playSuccessSound();
 
-        // Spawn particle burst
-        const popEntry = {
+        const pop = {
           id: Date.now(),
           x: cx,
           y: cy,
           color: bubble.color,
           particles: makeParticles(bubble.color),
         };
-        setPops(p => [...p, popEntry]);
-        setTimeout(() => setPops(p => p.filter(pop => pop.id !== popEntry.id)), 900);
+
+        setPops((currentPops) => [...currentPops, pop]);
+        setTimeout(() => {
+          setPops((currentPops) => currentPops.filter((entry) => entry.id !== pop.id));
+        }, 900);
 
         setTimeout(() => nextQuestion(levelIdx, qCount), 650);
-        return prev.map(b => b.id === id ? { ...b, popped: true } : b);
-
-      } else {
-        setCombo(0);
-        speak('Try again!', 'en');
-        setTimeout(() => {
-          setBubbles(p => p.map(b => b.id === id ? { ...b, wrong: false } : b));
-        }, 700);
-        return prev.map(b => b.id === id ? { ...b, wrong: true } : b);
+        return currentBubbles.map((entry) => (entry.id === id ? { ...entry, popped: true } : entry));
       }
-    });
-  }, [levelIdx, qCount, nextQuestion]);
 
-  // ── Done screen ──────────────────────────────────────────────────────────────
+      setCombo(0);
+      speak(copy.tryAgain, lang);
+      setTimeout(() => {
+        setBubbles((latestBubbles) => latestBubbles.map((entry) => (
+          entry.id === id ? { ...entry, wrong: false } : entry
+        )));
+      }, 700);
+
+      return currentBubbles.map((entry) => (entry.id === id ? { ...entry, wrong: true } : entry));
+    });
+  }, [copy.tryAgain, lang, levelIdx, nextQuestion, qCount]);
+
   if (done) {
     return (
-      <div className="bp-root">
+      <div className="bp-root" dir={dir}>
         <div className="bp-done">
           <div className="bp-done-emoji">🎈🏆🎈</div>
-          <h2>Math Champion!</h2>
-          <p>You solved all {LEVELS.length * QUESTIONS_PER_LEVEL} questions!</p>
+          <h2>{copy.champion}</h2>
+          <p>{copy.solvedAll(totalQuestions)}</p>
           <div className="bp-done-stars">{'⭐'.repeat(stars)}</div>
-          <button className="bp-btn bp-btn--primary" onClick={onSuccess}>Collect Sticker 🌟</button>
-          <button className="bp-btn bp-btn--ghost"  onClick={onExit}>Back</button>
+          <button className="bp-btn bp-btn--primary" onClick={onSuccess}>{copy.collectSticker}</button>
+          <button className="bp-btn bp-btn--ghost" onClick={onExit}>{copy.back}</button>
         </div>
       </div>
     );
   }
 
   const { a, b, op } = question;
-  const progress = ((levelIdx * QUESTIONS_PER_LEVEL + qCount) / (LEVELS.length * QUESTIONS_PER_LEVEL)) * 100;
+  const progress = ((levelIdx * difficulty.questionsPerLevel + qCount) / totalQuestions) * 100;
+  const levelLabel = `${lang === 'he' ? 'שלב' : 'Level'} ${levelIdx + 1}`;
 
   return (
-    <div className="bp-root">
-      {/* Pop bursts — fixed overlay, outside all containers */}
-      {pops.map(pop => <PopBurst key={pop.id} pop={pop} />)}
+    <div className="bp-root" dir={dir}>
+      {pops.map((pop) => <PopBurst key={pop.id} pop={pop} />)}
 
-      {/* Header */}
       <div className="bp-header">
-        <button className="bp-back" onClick={onExit}>←</button>
-        <h1 className="bp-title">🎈 Balloon Pop</h1>
+        <button className="bp-back" onClick={onExit}>{dir === 'rtl' ? '→' : '←'}</button>
+        <h1 className="bp-title">🎈 {copy.title}</h1>
         <div className="bp-stars">{'⭐'.repeat(stars)}</div>
       </div>
 
-      {/* Progress */}
       <div className="bp-progress">
         <div className="bp-progress-fill" style={{ width: `${progress}%` }} />
       </div>
 
-      {/* Math equation */}
-      <div className="bp-equation">
+      <div className="bp-equation" dir="ltr">
         <span className="bp-eq-num">{a}</span>
         <span className="bp-eq-op">{op}</span>
         <span className="bp-eq-num">{b}</span>
@@ -295,15 +386,13 @@ export default function BubblePop({ onSuccess, onExit }) {
         <span className="bp-eq-q">?</span>
       </div>
 
-      {/* Level + question counter */}
       <div className="bp-level-info">
-        {LEVELS[levelIdx].label} &nbsp;·&nbsp; {qCount + 1} / {QUESTIONS_PER_LEVEL}
-        {combo >= 3 && <span className="bp-combo"> 🔥 ×{combo}</span>}
+        {levelLabel} &nbsp;·&nbsp; {qCount + 1} / {difficulty.questionsPerLevel}
+        {combo >= 3 && <span className="bp-combo"> 🔥 x{combo}</span>}
       </div>
 
-      {/* Balloon field */}
       <div className="bp-field">
-        {bubbles.map(bubble => {
+        {bubbles.map((bubble) => {
           if (bubble.popped) return null;
           return (
             <button
@@ -312,10 +401,10 @@ export default function BubblePop({ onSuccess, onExit }) {
               style={{
                 '--balloon-color': bubble.color,
                 left: `${bubble.x}%`,
-                '--rise-dur':   `${bubble.duration}s`,
+                '--rise-dur': `${bubble.duration}s`,
                 '--rise-delay': `${bubble.delay}s`,
               }}
-              onClick={e => handleTap(bubble.id, e)}
+              onClick={(event) => handleTap(bubble.id, event)}
             >
               <span className="bp-balloon-text">{bubble.value}</span>
             </button>
@@ -323,11 +412,13 @@ export default function BubblePop({ onSuccess, onExit }) {
         })}
       </div>
 
-      {/* Replay */}
-      <button className="bp-hear" onClick={() => {
-        speak(`What is ${a} ${op === '+' ? 'plus' : 'minus'} ${b}?`, 'en');
-      }}>
-        🔊 Hear again
+      <button
+        className="bp-hear"
+        onClick={() => {
+          speak(copy.questionPrompt(a, op, b), lang);
+        }}
+      >
+        🔊 {copy.hearAgain}
       </button>
     </div>
   );

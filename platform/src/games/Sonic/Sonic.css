@@ -1,6 +1,7 @@
 .sonic-runner {
-  min-height: calc(100dvh - 56px);
-  padding: 16px;
+  min-height: 100dvh;
+  height: 100dvh;
+  padding: 0;
   box-sizing: border-box;
   background:
     radial-gradient(circle at 14% 18%, rgba(255, 255, 255, 0.28), transparent 24%),
@@ -11,14 +12,14 @@
 
 .sonic-shell {
   position: relative;
-  width: min(100%, 1180px);
-  height: calc(100dvh - 82px);
-  min-height: 360px;
-  margin: 0 auto;
-  border-radius: 28px;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  margin: 0;
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  box-shadow: 0 30px 80px rgba(5, 21, 48, 0.34);
+  border: 0;
+  box-shadow: none;
   background: linear-gradient(180deg, rgba(7, 25, 51, 0.28), rgba(7, 25, 51, 0.12));
 }
 
@@ -42,7 +43,8 @@
   inset-inline: 0;
   display: flex;
   gap: 12px;
-  padding: 18px;
+  padding: calc(env(safe-area-inset-top, 0px) + 18px) calc(env(safe-area-inset-right, 0px) + 18px) 18px
+    calc(env(safe-area-inset-left, 0px) + 18px);
   pointer-events: none;
   z-index: 2;
 }
@@ -54,9 +56,9 @@
 }
 
 .sonic-overlay--stats {
-  top: 18px;
+  top: 0;
   flex-wrap: wrap;
-  max-width: calc(100% - 84px);
+  max-width: min(560px, calc(100% - 112px));
 }
 
 .sonic-overlay--bottom {
@@ -212,11 +214,11 @@
 .sonic-controls {
   position: absolute;
   inset-inline: 0;
-  bottom: 22px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-  padding: 0 18px;
+  padding: 0 calc(env(safe-area-inset-right, 0px) + 18px) 0 calc(env(safe-area-inset-left, 0px) + 18px);
   z-index: 3;
 }
 
@@ -340,24 +342,21 @@
 }
 
 @media (max-width: 720px) {
-  .sonic-runner {
-    padding: 0;
-  }
-
   .sonic-shell {
     width: 100%;
-    height: calc(100dvh - 56px);
+    height: 100dvh;
     border-radius: 0;
   }
 
   .sonic-overlay {
-    padding: 12px;
+    padding: calc(env(safe-area-inset-top, 0px) + 12px) calc(env(safe-area-inset-right, 0px) + 12px) 12px
+      calc(env(safe-area-inset-left, 0px) + 12px);
     gap: 8px;
   }
 
   .sonic-overlay--stats {
-    top: 12px;
-    max-width: calc(100% - 72px);
+    top: 0;
+    max-width: calc(100% - 84px);
   }
 
   .sonic-card {
@@ -388,7 +387,7 @@
 
   .sonic-controls {
     gap: 8px;
-    padding: 0 12px;
+    padding: 0 calc(env(safe-area-inset-right, 0px) + 12px) 0 calc(env(safe-area-inset-left, 0px) + 12px);
   }
 
   .sonic-control-btn {
