@@ -1,6 +1,6 @@
 .wr-root {
   min-height: 100vh;
-  padding: 18px 16px 28px;
+  padding: 12px 16px 28px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -280,11 +280,23 @@
 .wr-track-topline {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 20px;
   margin-bottom: 14px;
   font-size: 12px;
   font-weight: 800;
   color: rgba(255,249,239,0.76);
+}
+
+.wr-track-score {
+  margin-left: auto;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  font-size: 14px;
+  font-weight: 900;
+  color: #fff9ef;
+  white-space: nowrap;
 }
 
 .wr-track-topline-item {

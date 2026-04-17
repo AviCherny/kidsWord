@@ -1,19 +1,34 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { STICKERS, TOTAL_STICKERS } from '../data/stickers';
+import { CANDY, TOTAL_CANDY } from '../data/candy';
 
-export default function StickerCollection({ earnedIds, onBack }) {
+export default function StickerCollection({ earnedIds, earnedCandyIds = [], onBack }) {
   const { lang } = useLanguage();
   const dir = lang === 'he' ? 'rtl' : 'ltr';
-  const earnedCount = earnedIds.filter(id => STICKERS.some(s => s.id === id)).length;
+  const [tab, setTab] = useState('stickers');
 
+  const earnedCount = earnedIds.filter(id => STICKERS.some(s => s.id === id)).length;
+  const earnedCandyCount = earnedCandyIds.filter(id => CANDY.some(c => c.id === id)).length;
+
+  const backBtn  = lang === 'he' ? '→ חזרה' : '← Back';
   const title    = lang === 'he' ? '⭐ האוסף שלי' : '⭐ My Collection';
-  const backBtn  = lang === 'he' ? '→ חזרה'       : '← Back';
-  const progress = lang === 'he'
-    ? `${earnedCount} / ${TOTAL_STICKERS} מדבקות יער`
-    : `${earnedCount} / ${TOTAL_STICKERS} forest stickers`;
-  const complete = lang === 'he' ? '🎉 אספת את כל המדבקות!' : '🎉 You collected them all!';
-  const motivate = lang === 'he' ? '🎁 מדבקה חדשה מחכה לך אחרי כל משחק!' : '🎁 A new sticker waits after every game!';
+
+  const stickerTabLabel = lang === 'he' ? '🌿 מדבקות' : '🌿 Stickers';
+  const candyTabLabel   = lang === 'he' ? '🍭 ממתקים' : '🍭 Candy';
+  const motivate = lang === 'he' ? '🎁 פריט חדש מחכה לך אחרי כל משחק!' : '🎁 A new item waits after every game!';
+
+  const isStickers = tab === 'stickers';
+  const items       = isStickers ? STICKERS : CANDY;
+  const earnedList  = isStickers ? earnedIds : earnedCandyIds;
+  const total       = isStickers ? TOTAL_STICKERS : TOTAL_CANDY;
+  const earned      = isStickers ? earnedCount : earnedCandyCount;
+  const progress    = isStickers
+    ? (lang === 'he' ? `${earned} / ${total} מדבקות יער` : `${earned} / ${total} forest stickers`)
+    : (lang === 'he' ? `${earned} / ${total} ממתקים`     : `${earned} / ${total} candies`);
+  const complete    = isStickers
+    ? (lang === 'he' ? '🎉 אספת את כל המדבקות!' : '🎉 You collected them all!')
+    : (lang === 'he' ? '🎉 אספת את כל הממתקים!' : '🎉 You collected all the candy!');
 
   return (
     <div className="sticker-collection" dir={dir}>
@@ -24,34 +39,50 @@ export default function StickerCollection({ earnedIds, onBack }) {
         <div style={{ width: 64 }} />
       </div>
 
+      {/* Tabs */}
+      <div className="sticker-collection-tabs">
+        <button
+          className={`sticker-collection-tab${tab === 'stickers' ? ' sticker-collection-tab--active' : ''}`}
+          onClick={() => setTab('stickers')}
+        >
+          {stickerTabLabel}
+        </button>
+        <button
+          className={`sticker-collection-tab${tab === 'candy' ? ' sticker-collection-tab--active' : ''}`}
+          onClick={() => setTab('candy')}
+        >
+          {candyTabLabel}
+        </button>
+      </div>
+
       {/* Progress banner */}
       <div className="sticker-collection-banner">
         <p className="sticker-collection-progress">{progress}</p>
         <div className="sticker-collection-bar">
           <div
             className="sticker-collection-bar-fill"
-            style={{ width: `${(earnedCount / TOTAL_STICKERS) * 100}%` }}
+            style={{ width: `${(earned / total) * 100}%` }}
           />
         </div>
-        {earnedCount === TOTAL_STICKERS && (
+        {earned === total && (
           <p className="sticker-collection-complete">{complete}</p>
         )}
       </div>
 
       {/* Grid */}
       <div className="sticker-collection-grid">
-        {STICKERS.map(sticker => {
-          const earned = earnedIds.includes(sticker.id);
-          const name = lang === 'he' ? sticker.he : sticker.en;
+        {items.map(item => {
+          const isEarned = earnedList.includes(item.id);
+          const name = lang === 'he' ? item.he : item.en;
           return (
             <div
-              key={sticker.id}
-              className={`sticker-cell ${earned ? 'sticker-cell--earned' : 'sticker-cell--locked'}`}
+              key={item.id}
+              className={`sticker-cell ${isEarned ? 'sticker-cell--earned' : 'sticker-cell--locked'}`}
             >
               <span className="sticker-cell-emoji">
-                {earned ? sticker.emoji : '❓'}
+                {isEarned ? item.emoji : '❓'}
               </span>
-              {earned && (
+              {isEarned && (
                 <span className="sticker-cell-name">{name}</span>
               )}
             </div>
@@ -59,7 +90,7 @@ export default function StickerCollection({ earnedIds, onBack }) {
         })}
       </div>
 
-      {earnedCount < TOTAL_STICKERS && (
+      {earned < total && (
         <p className="sticker-collection-motivate">{motivate}</p>
       )}
     </div>

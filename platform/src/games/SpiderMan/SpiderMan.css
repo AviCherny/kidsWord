@@ -511,3 +511,40 @@
   background: rgba(255, 255, 255, 0.22);
 }
 
+/* ── Compact layout for short screens ─────────────────────────────────────── */
+@media (max-height: 680px) {
+  .spider-hint-emoji {
+    font-size: clamp(2.2rem, 10vw, 3.2rem);
+    margin-bottom: 4px;
+  }
+
+  .spider-word-area {
+    padding: 2px 16px 4px;
+  }
+
+  .spider-bubble {
+    max-width: 108px;
+  }
+
+  .spider-bubbles {
+    gap: clamp(8px, 2vw, 14px);
+    padding-top: 4px;
+  }
+
+  .spider-man-area {
+    padding: 2px 0 4px;
+    gap: 0;
+  }
+
+  .spider-man-char {
+    font-size: clamp(2.2rem, 8vw, 3rem);
+  }
+
+  .spider-web-cue {
+    font-size: 11px;
+  }
+
+  .spider-hud {
+    padding: 6px 14px 4px;
+  }
+}

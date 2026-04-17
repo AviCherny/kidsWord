@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { speak } from '../../speak';
 import './WordRace.css';
@@ -437,7 +437,7 @@ export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
   const { lang, dir } = useLanguage();
   const copy = COPY[lang] || COPY.en;
   const difficulty = WORD_RACE_DIFFICULTIES[sharedDifficulty] || WORD_RACE_DIFFICULTIES[1];
-  const wordPool = getWordPool(sharedDifficulty);
+  const wordPool = useMemo(() => getWordPool(sharedDifficulty), [sharedDifficulty]);
 
   const [screen, setScreen] = useState('intro');
   const [playerPos, setPlayerPos] = useState(0);
@@ -701,14 +701,6 @@ export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
       <div className="wr-bg-stars" />
       {showFlash && <div className="wr-flash" />}
 
-      <div className="wr-header">
-        <div className="wr-header-main">
-          <div className="wr-header-title">{copy.title}</div>
-          <div className="wr-header-subtitle">{copy.score}</div>
-        </div>
-        <div className="wr-score">{correctCount} / {difficulty.winsRequired}</div>
-      </div>
-
       <div className="wr-track-wrap">
         {confettiId > 0 && <Confetti id={confettiId} />}
 
@@ -721,6 +713,7 @@ export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
             <span className="wr-track-topline-dot wr-track-topline-dot--ai" />
             <span>{copy.ai}</span>
           </div>
+          <div className="wr-track-score">{correctCount} / {difficulty.winsRequired}</div>
         </div>
 
         <div className="wr-lane">
@@ -728,7 +721,7 @@ export default function WordRace({ onSuccess, onExit, sharedDifficulty = 1 }) {
           <div className={`wr-road ${roadMoving ? '' : 'wr-road--paused'}`}>
             <div
               className={`wr-car ${turboActive ? 'wr-car--turbo' : ''}`}
-              style={{ left: `calc(${playerPos}% * 0.88)`, transform: 'scaleX(-1)' }}
+              style={{ left: `calc(${playerPos}% * 0.88)`, transform: 'translateY(-50%) scaleX(-1)' }}
             >
               🏎️
               {subPhase === 'driving' && <span className="wr-exhaust" style={{ transform: 'scaleX(-1)' }}>💨</span>}
