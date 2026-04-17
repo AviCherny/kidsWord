@@ -290,28 +290,17 @@ export default function SpiderMan({ onSuccess, onExit }) {
   return (
     <div className="spider-game" dir={dir}>
       {/* Decorative spider webs — four corners */}
-      <svg className="spider-web-deco spider-web-deco-tl" aria-hidden="true" viewBox="0 0 160 160" fill="none">
-        <WebCornerPaths size={160} />
+      <svg className="spider-web-deco spider-web-deco-tl" aria-hidden="true" viewBox="0 0 480 480" fill="none">
+        <WebCornerPaths size={480} />
       </svg>
-      <svg className="spider-web-deco spider-web-deco-tr" aria-hidden="true" viewBox="0 0 160 160" fill="none">
-        <WebCornerPaths size={160} />
+      <svg className="spider-web-deco spider-web-deco-tr" aria-hidden="true" viewBox="0 0 480 480" fill="none">
+        <WebCornerPaths size={480} />
       </svg>
-      <svg className="spider-web-deco spider-web-deco-bl" aria-hidden="true" viewBox="0 0 120 120" fill="none">
-        <WebCornerPaths size={120} />
+      <svg className="spider-web-deco spider-web-deco-bl" aria-hidden="true" viewBox="0 0 360 360" fill="none">
+        <WebCornerPaths size={360} />
       </svg>
-      <svg className="spider-web-deco spider-web-deco-br" aria-hidden="true" viewBox="0 0 120 120" fill="none">
-        <WebCornerPaths size={120} />
-      </svg>
-      {/* Top bridge — connects the two top corner webs */}
-      <svg className="spider-web-bridge spider-web-bridge-top" aria-hidden="true" viewBox="0 0 400 90" preserveAspectRatio="none" fill="none">
-        <WebTopBridge />
-      </svg>
-      {/* Side bridges — connect top corners to bottom corners */}
-      <svg className="spider-web-bridge spider-web-bridge-left" aria-hidden="true" viewBox="0 0 90 400" preserveAspectRatio="none" fill="none">
-        <WebSideBridge />
-      </svg>
-      <svg className="spider-web-bridge spider-web-bridge-right" aria-hidden="true" viewBox="0 0 90 400" preserveAspectRatio="none" fill="none">
-        <WebSideBridge />
+      <svg className="spider-web-deco spider-web-deco-br" aria-hidden="true" viewBox="0 0 360 360" fill="none">
+        <WebCornerPaths size={360} />
       </svg>
 
       <div className="spider-city" aria-hidden="true">
@@ -488,63 +477,6 @@ function WebCornerPaths({ size = 160 }) {
           );
         })
       )}
-    </>
-  );
-}
-
-// Full-width SVG strip connecting the two top corner webs with sagging threads
-function WebTopBridge() {
-  // viewBox 0 0 400 90, preserveAspectRatio none → stretches to screen width
-  // Anchor points on the left side (coming out of left corner web ~x=0)
-  // and right side (mirrored ~x=400)
-  const threads = [
-    // [x1, y1, cx, cy, x2, y2]  — quadratic bezier (sagging)
-    [0,  2,  200,  8,  400,  2],   // nearly flat top thread
-    [0, 18,  200, 34,  400, 18],   // first sag
-    [0, 36,  200, 58,  400, 36],   // second sag
-    [0, 54,  200, 78,  400, 54],   // third sag
-  ];
-  // Vertical drop lines at intervals
-  const drops = [60, 110, 160, 200, 240, 290, 340];
-
-  return (
-    <>
-      {threads.map(([x1, y1, cx, cy, x2, y2], i) => (
-        <path key={i}
-          d={`M${x1},${y1} Q${cx},${cy} ${x2},${y2}`}
-          stroke="rgba(255,255,255,0.13)" strokeWidth="0.8" fill="none" />
-      ))}
-      {/* Vertical connecting threads between the horizontal sags */}
-      {drops.map((x, i) => (
-        <line key={`d${i}`} x1={x} y1={0} x2={x} y2={88}
-          stroke="rgba(255,255,255,0.08)" strokeWidth="0.7" />
-      ))}
-    </>
-  );
-}
-
-// Vertical SVG strip on the side, connecting top corner to bottom corner
-function WebSideBridge() {
-  // viewBox 0 0 90 400, preserveAspectRatio none → stretches to screen height
-  const threads = [
-    [2,   0,  8,  200, 2,   400],
-    [18,  0, 34,  200, 18,  400],
-    [36,  0, 58,  200, 36,  400],
-    [54,  0, 78,  200, 54,  400],
-  ];
-  const drops = [60, 110, 160, 200, 250, 300, 350];
-
-  return (
-    <>
-      {threads.map(([x1, y1, cx, cy, x2, y2], i) => (
-        <path key={i}
-          d={`M${x1},${y1} Q${cx},${cy} ${x2},${y2}`}
-          stroke="rgba(255,255,255,0.10)" strokeWidth="0.8" fill="none" />
-      ))}
-      {drops.map((y, i) => (
-        <line key={`d${i}`} x1={0} y1={y} x2={88} y2={y}
-          stroke="rgba(255,255,255,0.07)" strokeWidth="0.7" />
-      ))}
     </>
   );
 }
