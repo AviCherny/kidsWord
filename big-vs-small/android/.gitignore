@@ -1,5 +1,9 @@
 # Using Android gitignore template: https://github.com/github/gitignore/blob/HEAD/Android.gitignore
 
+# Local build environment caches
+.android-home/
+.gradle-user-home/
+
 # Built application files
 *.apk
 *.aar
