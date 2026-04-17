@@ -1,80 +1,187 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import './SpiderMan.css';
 import { useLanguage } from '../../context/LanguageContext';
 import { speak } from '../../speak';
 import StarBar from '../../components/StarBar';
 
 const WORDS = [
-  { word: 'WEB', hint: '🕸️' },
-  { word: 'CAT', hint: '🐱' },
-  { word: 'DOG', hint: '🐶' },
-  { word: 'SUN', hint: '☀️' },
-  { word: 'RUN', hint: '🏃' },
-  { word: 'FLY', hint: '🦋' },
-  { word: 'HOP', hint: '🐸' },
-  { word: 'MAP', hint: '🗺️' },
-  { word: 'NET', hint: '🏐' },
-  { word: 'ZIP', hint: '⚡' },
-  { word: 'BIG', hint: '🦕' },
-  { word: 'RED', hint: '🔴' },
+  // Easy — 3–4 letter English words, all animals
+  { word: 'CAT',       heWord: 'חתול',     hint: '🐱', level: 'easy'   },
+  { word: 'DOG',       heWord: 'כלב',      hint: '🐶', level: 'easy'   },
+  { word: 'COW',       heWord: 'פרה',      hint: '🐮', level: 'easy'   },
+  { word: 'PIG',       heWord: 'חזיר',     hint: '🐷', level: 'easy'   },
+  { word: 'BEE',       heWord: 'דבורה',    hint: '🐝', level: 'easy'   },
+  { word: 'ANT',       heWord: 'נמלה',     hint: '🐜', level: 'easy'   },
+  { word: 'FROG',      heWord: 'צפרדע',    hint: '🐸', level: 'easy'   },
+  { word: 'DUCK',      heWord: 'ברווז',    hint: '🦆', level: 'easy'   },
+  { word: 'BEAR',      heWord: 'דוב',      hint: '🐻', level: 'easy'   },
+  { word: 'FISH',      heWord: 'דג',       hint: '🐟', level: 'easy'   },
+  { word: 'BIRD',      heWord: 'ציפור',    hint: '🐦', level: 'easy'   },
+  { word: 'CRAB',      heWord: 'סרטן',     hint: '🦀', level: 'easy'   },
+  // Medium — 5–6 letter English words
+  { word: 'TIGER',     heWord: 'נמר',      hint: '🐯', level: 'medium' },
+  { word: 'SHARK',     heWord: 'כריש',     hint: '🦈', level: 'medium' },
+  { word: 'EAGLE',     heWord: 'נשר',      hint: '🦅', level: 'medium' },
+  { word: 'WHALE',     heWord: 'לוויתן',   hint: '🐋', level: 'medium' },
+  { word: 'HORSE',     heWord: 'סוס',      hint: '🐴', level: 'medium' },
+  { word: 'SNAKE',     heWord: 'נחש',      hint: '🐍', level: 'medium' },
+  { word: 'CAMEL',     heWord: 'גמל',      hint: '🐪', level: 'medium' },
+  { word: 'KOALA',     heWord: 'קואלה',    hint: '🐨', level: 'medium' },
+  { word: 'PANDA',     heWord: 'פנדה',     hint: '🐼', level: 'medium' },
+  { word: 'SHEEP',     heWord: 'כבש',      hint: '🐑', level: 'medium' },
+  // Hard — 7+ letter English words
+  { word: 'PENGUIN',   heWord: 'פינגווין', hint: '🐧', level: 'hard'   },
+  { word: 'GORILLA',   heWord: 'גורילה',   hint: '🦍', level: 'hard'   },
+  { word: 'DOLPHIN',   heWord: 'דולפין',   hint: '🐬', level: 'hard'   },
+  { word: 'OCTOPUS',   heWord: 'תמנון',    hint: '🐙', level: 'hard'   },
+  { word: 'KANGAROO',  heWord: 'קנגורו',   hint: '🦘', level: 'hard'   },
+  { word: 'CROCODILE', heWord: 'תנין',     hint: '🐊', level: 'hard'   },
 ];
 
-const ALL_LETTERS = 'ABCDEFGHIJKLMNOPRSTUVWXYZ';
+const HE_LETTERS = 'אבגדהוזחטיכלמנסעפצקרשת'.split('');
+const EN_LETTERS = 'ABCDEFGHIJKLMNOPRSTUVWXYZ'.split('');
 
-function getChoices(correctLetter) {
-  const pool = ALL_LETTERS.replace(correctLetter, '').split('');
+function getChoices(correctLetter, isHebrew) {
+  const pool = (isHebrew ? HE_LETTERS : EN_LETTERS).filter(l => l !== correctLetter);
   const distractors = [];
-  while (distractors.length < 3) {
+  const used = new Set();
+  while (distractors.length < 3 && pool.length > 0) {
     const idx = Math.floor(Math.random() * pool.length);
-    const l = pool.splice(idx, 1)[0];
-    if (l !== correctLetter) distractors.push(l);
+    const l = pool[idx];
+    if (!used.has(l)) { used.add(l); distractors.push(l); }
   }
-  const choices = [correctLetter, ...distractors];
-  for (let i = choices.length - 1; i > 0; i--) {
+  const result = [correctLetter, ...distractors];
+  for (let i = result.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [choices[i], choices[j]] = [choices[j], choices[i]];
+    [result[i], result[j]] = [result[j], result[i]];
   }
-  return choices;
+  return result;
 }
 
-function shuffleWords(words) {
-  const arr = [...words];
-  for (let i = arr.length - 1; i > 0; i--) {
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  return arr;
+  return a;
+}
+
+function buildSession(level, lang) {
+  const isHebrew = lang === 'he';
+  const pool = shuffleArray(WORDS.filter(w => w.level === level));
+  const choices = pool.map(w => {
+    const letters = (isHebrew ? w.heWord : w.word).split('');
+    return letters.map(l => getChoices(l, isHebrew));
+  });
+  return { wordList: pool, choices };
+}
+
+const COPY = {
+  en: {
+    easy: 'Easy',
+    medium: 'Medium',
+    hard: 'Hard',
+    letterOf: (i, n) => `Letter ${i} of ${n}`,
+    amazing: 'Amazing, Spider-Kid!',
+    webAll: 'You webbed all the words!',
+    collectSticker: 'Collect Sticker! 🌟',
+    playAgain: 'Play Again',
+    webCue: '🕸️ Web the right letter!',
+  },
+  he: {
+    easy: 'קל',
+    medium: 'בינוני',
+    hard: 'קשה',
+    letterOf: (i, n) => `אות ${i} מתוך ${n}`,
+    amazing: 'מדהים!',
+    webAll: 'איתת את כל המילים!',
+    collectSticker: 'קבל מדבקה! 🌟',
+    playAgain: 'שחק שוב',
+    webCue: '🕸️ ירה ברשת לאות הנכונה!',
+  },
+};
+
+function makeBlankState() {
+  return {
+    wordIdx: 0,
+    letterIdx: 0,
+    typed: '',
+    flash: null,
+    locked: false,
+    stars: 0,
+    balloons: 0,
+    webShot: null,
+    spiderState: 'idle',
+  };
 }
 
 export default function SpiderMan({ onSuccess, onExit }) {
   const { lang, dir } = useLanguage();
-  const [{ wordList, choices }] = useState(() => {
-    const wl = shuffleWords(WORDS);
-    return { wordList: wl, choices: wl.map(w => w.word.split('').map(l => getChoices(l))) };
-  });
-  const [wordIdx, setWordIdx]     = useState(0);
-  const [letterIdx, setLetterIdx] = useState(0);
-  const [typed, setTyped]         = useState('');
-  const [flash, setFlash]         = useState(null); // 'good' | 'bad'
-  const [locked, setLocked]       = useState(false);
-  const [stars, setStars]         = useState(0);
-  const [balloons, setBalloons]   = useState(0);
-  const [webShot, setWebShot]     = useState(null); // {fromX, fromY, toX, toY}
-  const [spiderState, setSpiderState] = useState('idle'); // 'idle' | 'shoot'
-  const soundOnRef  = useRef(true);
-  const spiderRef   = useRef(null);
-  const bubbleRefs  = useRef([]);
+  const copy = COPY[lang] || COPY.en;
 
+  const [level, setLevel] = useState('easy');
+  const [session, setSession] = useState(() => buildSession('easy', lang));
+  const [wordIdx, setWordIdx] = useState(0);
+  const [letterIdx, setLetterIdx] = useState(0);
+  const [typed, setTyped] = useState('');
+  const [flash, setFlash] = useState(null); // null | 'good' | 'bad' | 'word-done'
+  const [locked, setLocked] = useState(false);
+  const [stars, setStars] = useState(0);
+  const [balloons, setBalloons] = useState(0);
+  const [webShot, setWebShot] = useState(null);
+  const [spiderState, setSpiderState] = useState('idle');
+
+  const spiderRef = useRef(null);
+  const bubbleRefs = useRef([]);
+  const prevLangRef = useRef(lang);
+  const levelRef = useRef(level);
+  levelRef.current = level;
+
+  // Reset when language changes
+  useEffect(() => {
+    if (prevLangRef.current === lang) return;
+    prevLangRef.current = lang;
+    const s = makeBlankState();
+    setSession(buildSession(levelRef.current, lang));
+    setWordIdx(s.wordIdx);
+    setLetterIdx(s.letterIdx);
+    setTyped(s.typed);
+    setFlash(s.flash);
+    setLocked(s.locked);
+    setStars(s.stars);
+    setBalloons(s.balloons);
+    setWebShot(s.webShot);
+    setSpiderState(s.spiderState);
+  }, [lang]);
+
+  const startLevel = useCallback((newLevel, currentLang) => {
+    const s = makeBlankState();
+    setLevel(newLevel);
+    setSession(buildSession(newLevel, currentLang));
+    setWordIdx(s.wordIdx);
+    setLetterIdx(s.letterIdx);
+    setTyped(s.typed);
+    setFlash(s.flash);
+    setLocked(s.locked);
+    setStars(s.stars);
+    setBalloons(s.balloons);
+    setWebShot(s.webShot);
+    setSpiderState(s.spiderState);
+  }, []);
+
+  const { wordList, choices } = session;
   const done = wordIdx >= wordList.length;
-  const currentWord   = wordList[Math.min(wordIdx, wordList.length - 1)];
-  const targetLetter  = currentWord.word[letterIdx];
-  const starsInCycle  = stars % 5 === 0 && stars > 0 ? 5 : stars % 5;
+  const currentWord = wordList[Math.min(wordIdx, wordList.length - 1)];
+  const spelledWord = lang === 'he' ? currentWord.heWord : currentWord.word;
+  const targetLetter = spelledWord[letterIdx];
+  const starsInCycle = stars % 5 === 0 && stars > 0 ? 5 : stars % 5;
+  const currentChoices = choices[wordIdx]?.[letterIdx] || [];
 
   const handleLetter = useCallback((letter, bubbleIdx) => {
     if (locked) return;
 
     if (letter === targetLetter) {
-      // Shoot web at this bubble
       const spiderEl = spiderRef.current;
       const bubbleEl = bubbleRefs.current[bubbleIdx];
       if (spiderEl && bubbleEl) {
@@ -91,58 +198,62 @@ export default function SpiderMan({ onSuccess, onExit }) {
 
       setFlash('good');
       setLocked(true);
-      if (soundOnRef.current) speak(letter, lang);
+      speak(letter, lang);
       const newTyped = typed + letter;
 
       setTimeout(() => {
         setWebShot(null);
         setSpiderState('idle');
-        setFlash(null);
-        setLocked(false);
 
-        if (letterIdx + 1 >= currentWord.word.length) {
+        if (letterIdx + 1 >= spelledWord.length) {
+          // Word complete — show celebration
           const newStars = stars + 1;
           setStars(newStars);
           if (newStars % 5 === 0) setBalloons(b => b + 1);
-          if (soundOnRef.current) speak(currentWord.word, lang);
-          setTimeout(() => {
-            setWordIdx(i => i + 1);
-            setLetterIdx(0);
-            setTyped('');
-          }, 900);
+          setFlash('word-done');
+          const speakText = lang === 'he' ? currentWord.heWord : currentWord.word.toLowerCase();
+          speak(speakText, lang, () => {
+            setTimeout(() => {
+              setFlash(null);
+              setLocked(false);
+              setWordIdx(i => i + 1);
+              setLetterIdx(0);
+              setTyped('');
+            }, 800);
+          });
         } else {
+          setFlash(null);
           setLetterIdx(l => l + 1);
           setTyped(newTyped);
+          setLocked(false);
         }
-      }, 650);
+      }, 600);
+
     } else {
+      // Wrong — brief lock to prevent spam, shake feedback
       setFlash('bad');
-      if (soundOnRef.current) speak(lang === 'he' ? 'נסה שוב' : 'Try again', lang);
-      setTimeout(() => setFlash(null), 600);
+      setLocked(true);
+      speak(lang === 'he' ? 'נסה שוב' : 'Try again', lang);
+      setTimeout(() => {
+        setFlash(null);
+        setLocked(false);
+      }, 700);
     }
-  }, [locked, targetLetter, letterIdx, typed, currentWord, stars, lang]);
+  }, [locked, targetLetter, letterIdx, typed, spelledWord, currentWord, stars, lang]);
 
   if (done) {
     return (
       <div className="spider-game spider-win" dir={dir}>
         <div className="spider-win-top">🕷️🏆🕷️</div>
-        <h1 className="spider-win-title">{lang === 'he' ? 'מדהים!' : 'Amazing, Spider-Kid!'}</h1>
-        <p className="spider-win-sub">{lang === 'he' ? 'איתת את כל המילים!' : 'You webbed all the words!'}</p>
+        <h1 className="spider-win-title">{copy.amazing}</h1>
+        <p className="spider-win-sub">{copy.webAll}</p>
         <div className="spider-win-stars">
           {Array.from({ length: wordList.length }).map((_, i) => (
             <span key={i}>{i < stars ? '⭐' : '☆'}</span>
           ))}
         </div>
-        <button className="spider-collect-btn" onClick={onSuccess}>
-          {lang === 'he' ? 'קבל מדבקה! 🌟' : 'Collect Sticker! 🌟'}
-        </button>
-        <button className="spider-play-again" onClick={() => {
-          setWordIdx(0); setLetterIdx(0); setTyped('');
-          setStars(0); setBalloons(0); setFlash(null);
-          setWebShot(null); setSpiderState('idle');
-        }}>
-          {lang === 'he' ? 'שחק שוב' : 'Play Again'}
-        </button>
+        <button className="spider-collect-btn" onClick={onSuccess}>{copy.collectSticker}</button>
+        <button className="spider-play-again" onClick={() => startLevel(level, lang)}>{copy.playAgain}</button>
         <button className="spider-exit-link" onClick={onExit}>←</button>
       </div>
     );
@@ -150,48 +261,80 @@ export default function SpiderMan({ onSuccess, onExit }) {
 
   return (
     <div className="spider-game" dir={dir}>
-      {/* City buildings silhouette */}
       <div className="spider-city" aria-hidden="true">
         {[65,110,80,130,70,95,85,115,75].map((h, i) => (
           <div key={i} className="spider-building" style={{ height: h }} />
         ))}
       </div>
 
+      {/* HUD: exit left | stars center | spacer right (for fixed EN button) */}
       <header className="spider-hud">
-        <StarBar starsInCycle={starsInCycle} balloons={balloons} />
         <button className="spider-exit-btn" onClick={onExit} aria-label="Exit">✕</button>
+        <div className="spider-hud-stars">
+          <StarBar starsInCycle={starsInCycle} balloons={balloons} />
+        </div>
+        <div className="spider-hud-end" aria-hidden="true" />
       </header>
 
-      {/* Word display */}
-      <div className="spider-word-area">
-        <div className="spider-hint-emoji">{currentWord.hint}</div>
-        <div className="spider-word-display">
-          {currentWord.word.split('').map((l, i) => (
-            <span
-              key={i}
-              className={[
-                'spider-letter-slot',
-                i < letterIdx  ? 'spider-slot-filled' : '',
-                i === letterIdx ? 'spider-slot-active' : '',
-              ].join(' ')}
-            >
-              {i < letterIdx ? typed[i] : i === letterIdx ? '?' : '_'}
-            </span>
-          ))}
-        </div>
-        <p className="spider-letter-count">
-          {lang === 'he'
-            ? `אות ${letterIdx + 1} מתוך ${currentWord.word.length}`
-            : `Letter ${letterIdx + 1} of ${currentWord.word.length}`}
-        </p>
+      {/* Difficulty pills */}
+      <div className="spider-levels">
+        {['easy', 'medium', 'hard'].map(l => (
+          <button
+            key={l}
+            className={`spider-level-pill${level === l ? ' is-active' : ''}`}
+            onClick={() => startLevel(l, lang)}
+          >
+            {copy[l]}
+          </button>
+        ))}
       </div>
 
-      {/* Web bubble letter choices */}
+      {/* Word area */}
+      <div className="spider-word-area">
+        <div className="spider-hint-emoji">{currentWord.hint}</div>
+
+        {flash === 'word-done' ? (
+          <div className="spider-word-done">
+            <div className="spider-word-display" dir="ltr">
+              {spelledWord.split('').map((l, i) => (
+                <span key={i} className="spider-letter-slot spider-slot-filled spider-slot-done">{l}</span>
+              ))}
+            </div>
+            <div className="spider-animal-label">
+              {lang === 'he'
+                ? `${currentWord.heWord} · ${currentWord.word}`
+                : currentWord.word}
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="spider-word-display" dir="ltr">
+              {spelledWord.split('').map((l, i) => (
+                <span
+                  key={i}
+                  className={[
+                    'spider-letter-slot',
+                    i < letterIdx  ? 'spider-slot-filled' : '',
+                    i === letterIdx ? 'spider-slot-active' : '',
+                  ].join(' ')}
+                >
+                  {i < letterIdx ? typed[i] : i === letterIdx ? '?' : '_'}
+                </span>
+              ))}
+            </div>
+            <p className="spider-letter-count">
+              {copy.letterOf(letterIdx + 1, spelledWord.length)}
+            </p>
+          </>
+        )}
+      </div>
+
+      {/* Letter choice bubbles */}
       <div className={`spider-bubbles${flash === 'bad' ? ' spider-shake' : ''}`}>
-        {choices[wordIdx][letterIdx].map((letter, i) => (
+        {currentChoices.map((letter, i) => (
           <button
-            key={letter}
-            ref={el => bubbleRefs.current[i] = el}
+            key={`${wordIdx}-${letterIdx}-${i}`}
+            ref={el => { bubbleRefs.current[i] = el; }}
             className={`spider-bubble${flash === 'good' && letter === targetLetter ? ' spider-bubble-hit' : ''}`}
             onClick={() => handleLetter(letter, i)}
             aria-label={letter}
@@ -204,17 +347,14 @@ export default function SpiderMan({ onSuccess, onExit }) {
         ))}
       </div>
 
-      {/* Spider-Man character */}
+      {/* Spider-Man */}
       <div className="spider-man-area">
         <div ref={spiderRef} className={`spider-man-char spider-man-${spiderState}`}>
           🕷️
         </div>
-        <p className="spider-web-cue">
-          {lang === 'he' ? '🕸️ ירה ברשת לאות הנכונה!' : '🕸️ Web the right letter!'}
-        </p>
+        <p className="spider-web-cue">{copy.webCue}</p>
       </div>
 
-      {/* Web line */}
       {webShot && <WebLine pos={webShot} />}
     </div>
   );
@@ -224,7 +364,7 @@ function WebLine({ pos }) {
   const dx = pos.toX - pos.fromX;
   const dy = pos.toY - pos.fromY;
   const length = Math.sqrt(dx * dx + dy * dy);
-  const angle  = Math.atan2(dy, dx) * (180 / Math.PI);
+  const angle = Math.atan2(dy, dx) * (180 / Math.PI);
   return (
     <div
       className="spider-web-line-wrap"
