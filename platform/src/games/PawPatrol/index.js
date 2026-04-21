@@ -18,9 +18,9 @@ const WORDS = [
 ];
 
 const DOG_DEFS = [
-  { name:'Chase',    src:'/paw-patrol/chase.jpg',    color:'#1565C0', legColor:'#8B6914', tagline:"Chase is on the case!" },
-  { name:'Marshall', src:'/paw-patrol/marshall.jpg', color:'#C62828', legColor:'#CCCCCC', tagline:"I'm all fired up!"     },
-  { name:'Rubble',   src:'/paw-patrol/rubble.jpg',   color:'#F9A825', legColor:'#7B4F2E', tagline:"Rubble on the double!" },
+  { name:'Chase',    color:'#1565C0', tagline:"Chase is on the case!" },
+  { name:'Marshall', color:'#C62828', tagline:"I'm all fired up!"     },
+  { name:'Rubble',   color:'#F9A825', tagline:"Rubble on the double!" },
 ];
 
 // ─────────────────────────────────────────────
@@ -63,13 +63,187 @@ function runGame(canvas, { onSuccess, difficulty }) {
     window.speechSynthesis.speak(u);
   }
 
-  // ── image loading ────────────────────────────
-  const dogImages = {};
-  DOG_DEFS.forEach(d => {
-    const img = new Image();
-    img.src = d.src;
-    dogImages[d.name] = img;
-  });
+  // ── dog drawing helpers ──────────────────────
+  function getDogsColors(name) {
+    if (name === 'Chase') return {
+      body:'#C8960C', dark:'#8B5A00', belly:'#E8D090',
+      ear:'#8B5A00', earInner:'#E8AA90', earStyle:'pointy',
+      collar:'#1565C0', leg:'#C8960C', paw:'#D4B048',
+      nose:'#1A0800', spots:null,
+    };
+    if (name === 'Marshall') return {
+      body:'#F2EDE0', dark:'#F2EDE0', belly:'#F2EDE0',
+      ear:'#E0D5C5', earInner:'#FFB8B8', earStyle:'floppy',
+      collar:'#C62828', leg:'#F2EDE0', paw:'#F2EDE0',
+      nose:'#111', spots:'#2A2A2A',
+    };
+    return { // Rubble
+      body:'#8B5E30', dark:'#5C3A18', belly:'#C49060',
+      ear:'#5C3A18', earInner:'#E8A890', earStyle:'folded',
+      collar:'#F9A825', leg:'#8B5E30', paw:'#C49060',
+      nose:'#111', spots:null,
+    };
+  }
+
+  function drawLegSeg(attX, attY, uLen, lLen, legW, pawR, uAng, kAng, legCol, pawCol) {
+    ctx.save();
+    ctx.translate(attX, attY); ctx.rotate(uAng);
+    ctx.fillStyle = legCol;
+    ctx.beginPath(); ctx.roundRect(-legW/2, 0, legW, uLen, legW*0.45); ctx.fill();
+    ctx.translate(0, uLen); ctx.rotate(kAng);
+    ctx.beginPath(); ctx.roundRect(-legW/2, 0, legW, lLen, legW*0.45); ctx.fill();
+    ctx.translate(0, lLen);
+    ctx.fillStyle = pawCol;
+    ctx.beginPath(); ctx.ellipse(0, 0, pawR, pawR*0.55, 0, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDogFull(w, h, name, state, runT, vy, onGround) {
+    const c = getDogsColors(name);
+    const ph = runT * 0.38;
+    const running = state === 'run';
+    const jumping = !onGround;
+    const celebrate = state === 'celebrate';
+
+    // Layout (local coords: ground = y:0, dog faces right = +x)
+    const bCY  = -h * 0.54;
+    const bRx  = w * 0.40;
+    const bRy  = h * 0.175;
+    const legY  = bCY + bRy * 0.95;
+    const fLX  =  w * 0.22;
+    const bLX  = -w * 0.18;
+    const uLen = h * 0.23;
+    const lLen = h * 0.20;
+    const legW = w * 0.09;
+    const pawR = w * 0.075;
+    const hR   = w * 0.235;
+    const hX   =  w * 0.30;
+    const hY   = bCY - bRy * 0.85 - hR * 0.7;
+    const tX   = -bRx * 0.85;
+    const tY   = bCY - bRy * 0.15;
+
+    // Leg angles — diagonal trot
+    const sw = 0.52;
+    let fA=0, fB=0, bA=0, bB=0, fKA=0, fKB=0, bKA=0, bKB=0;
+    if (running) {
+      fA =  Math.sin(ph) * sw;
+      fB = -Math.sin(ph) * sw;
+      bA = -Math.sin(ph) * sw * 0.85;
+      bB =  Math.sin(ph) * sw * 0.85;
+      const kn = 0.38;
+      fKA = Math.max(0, Math.sin(ph + 0.8)) * kn;
+      fKB = Math.max(0, Math.sin(ph + 0.8 + Math.PI)) * kn;
+      bKA = Math.max(0, Math.sin(ph + 0.8 + Math.PI)) * kn * 0.7;
+      bKB = Math.max(0, Math.sin(ph + 0.8)) * kn * 0.7;
+    } else if (jumping) {
+      const ext = vy < 0 ? 0.40 : -0.28;
+      fA = fB = ext * 0.9; bA = bB = -ext * 0.6;
+    }
+
+    // Tail wag
+    const wag = Math.sin(bgTick * (running||celebrate ? 0.28 : 0.1)) * (running||celebrate ? 0.5 : 0.2);
+
+    // ── Tail
+    ctx.save();
+    ctx.strokeStyle = c.body; ctx.lineWidth = legW * 1.1; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(tX, tY);
+    const tLen = w * 0.4;
+    ctx.bezierCurveTo(
+      tX - tLen*0.3, tY - tLen*0.5,
+      tX - tLen*0.55 + Math.cos(-0.8+wag)*tLen*0.25, tY - tLen*0.75 + Math.sin(-0.8+wag)*tLen*0.25,
+      tX - tLen*0.6  + Math.cos(-0.8+wag)*tLen*0.45, tY - tLen     + Math.sin(-0.8+wag)*tLen*0.45
+    );
+    ctx.stroke(); ctx.restore();
+
+    // ── Far legs (behind body — slightly dimmed)
+    ctx.save(); ctx.globalAlpha = 0.72;
+    drawLegSeg(fLX, legY, uLen, lLen, legW, pawR, fB, fKB, c.leg, c.paw);
+    drawLegSeg(bLX, legY, uLen, lLen, legW, pawR, bB, bKB, c.leg, c.paw);
+    ctx.restore();
+
+    // ── Body
+    ctx.fillStyle = c.body;
+    ctx.beginPath(); ctx.ellipse(0, bCY, bRx, bRy, 0, 0, Math.PI*2); ctx.fill();
+    if (c.dark !== c.body) {
+      ctx.fillStyle = c.dark;
+      ctx.beginPath(); ctx.ellipse(-bRx*0.12, bCY - bRy*0.28, bRx*0.58, bRy*0.56, 0, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.fillStyle = c.belly;
+    ctx.beginPath(); ctx.ellipse(bRx*0.08, bCY + bRy*0.32, bRx*0.48, bRy*0.45, 0, 0, Math.PI*2); ctx.fill();
+    if (c.spots) {
+      ctx.fillStyle = c.spots;
+      [[-bRx*0.3, bCY-bRy*0.35, 5.5],[bRx*0.12, bCY-bRy*0.08, 7],
+       [-bRx*0.55, bCY+bRy*0.1, 4.5],[bRx*0.4, bCY+bRy*0.25, 4]].forEach(([sx,sy,sr]) => {
+         ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
+       });
+    }
+
+    // ── Neck + Collar
+    ctx.fillStyle = c.body;
+    ctx.beginPath(); ctx.ellipse(fLX + w*0.08, bCY - bRy*0.72, w*0.14, bRy*0.6, -0.25, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = c.collar;
+    ctx.beginPath(); ctx.ellipse(fLX + w*0.08, bCY - bRy*0.62, w*0.15, w*0.055, -0.25, 0, Math.PI*2); ctx.fill();
+
+    // ── Ears (drawn before head for depth)
+    if (c.earStyle === 'pointy') {
+      [[-hR*0.28, -0.15],[hR*0.28, 0.15]].forEach(([ex, rot]) => {
+        ctx.save(); ctx.translate(hX + ex, hY - hR*0.55); ctx.rotate(rot);
+        ctx.fillStyle = c.ear;
+        ctx.beginPath(); ctx.moveTo(-hR*0.2, hR*0.3); ctx.lineTo(0, -hR*0.55); ctx.lineTo(hR*0.2, hR*0.3); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = c.earInner;
+        ctx.beginPath(); ctx.moveTo(-hR*0.1, hR*0.2); ctx.lineTo(0, -hR*0.35); ctx.lineTo(hR*0.1, hR*0.2); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      });
+    } else if (c.earStyle === 'floppy') {
+      [[-hR*0.38, hR*0.55],[hR*0.15, hR*0.5]].forEach(([ex, ey], i) => {
+        ctx.fillStyle = c.ear;
+        ctx.beginPath(); ctx.ellipse(hX+ex, hY - hR*0.4 + ey, hR*0.2, hR*0.46, i===0 ? -0.3 : 0.3, 0, Math.PI*2); ctx.fill();
+        if (c.spots) { ctx.fillStyle = c.spots; ctx.beginPath(); ctx.arc(hX+ex, hY-hR*0.2+ey*0.6, 3, 0, Math.PI*2); ctx.fill(); }
+      });
+    } else { // folded (Rubble)
+      [[-hR*0.55, -hR*0.45],[hR*0.5, -hR*0.4]].forEach(([ex, ey]) => {
+        ctx.fillStyle = c.ear;
+        ctx.beginPath(); ctx.ellipse(hX+ex, hY+ey, hR*0.24, hR*0.18, ex>0 ? 0.5 : -0.5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = c.earInner;
+        ctx.beginPath(); ctx.ellipse(hX+ex, hY+ey, hR*0.13, hR*0.1, ex>0 ? 0.5 : -0.5, 0, Math.PI*2); ctx.fill();
+      });
+    }
+
+    // ── Head
+    ctx.fillStyle = c.body;
+    ctx.beginPath(); ctx.arc(hX, hY, hR, 0, Math.PI*2); ctx.fill();
+    if (c.spots) {
+      ctx.fillStyle = c.spots;
+      [[hR*0.3, -hR*0.28, 4],[-hR*0.1, hR*0.2, 3.5]].forEach(([sx,sy,sr]) => {
+        ctx.beginPath(); ctx.arc(hX+sx, hY+sy, sr, 0, Math.PI*2); ctx.fill();
+      });
+    }
+
+    // Snout
+    const snRx = name==='Rubble' ? hR*0.42 : hR*0.35;
+    const snRy = name==='Rubble' ? hR*0.32 : hR*0.24;
+    const snX  = hX + hR*0.62;
+    const snY  = hY + hR*0.15;
+    ctx.fillStyle = c.belly;
+    ctx.beginPath(); ctx.ellipse(snX, snY, snRx, snRy, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = c.nose;
+    ctx.beginPath(); ctx.ellipse(snX + snRx*0.52, snY - snRy*0.3, snRx*0.38, snRy*0.52, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.beginPath(); ctx.arc(snX + snRx*0.38, snY - snRy*0.5, snRx*0.12, 0, Math.PI*2); ctx.fill();
+
+    // Eye + brow
+    const eR = hR*0.2, eX = hX + hR*0.22, eY = hY - hR*0.22;
+    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(eX, eY, eR*1.15, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111';  ctx.beginPath(); ctx.arc(eX, eY, eR, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(eX+eR*0.35, eY-eR*0.35, eR*0.35, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = c.dark !== c.body ? c.dark : '#555';
+    ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(eX-eR, eY-eR*1.35); ctx.lineTo(eX+eR, eY-eR*1.6); ctx.stroke();
+
+    // ── Near legs (front plane)
+    drawLegSeg(fLX, legY, uLen, lLen, legW, pawR, fA, fKA, c.leg, c.paw);
+    drawLegSeg(bLX, legY, uLen, lLen, legW, pawR, bA, bKA, c.leg, c.paw);
+  }
 
   // ── scrolling bg ─────────────────────────────
   let clouds = [];
@@ -181,7 +355,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
   class Dog {
     constructor(data) {
       this.data = data;
-      this.img  = dogImages[data.name];
       this.vx = 0; this.vy = 0;
       this.onGround = true; this.facing = 1;
       this.runT = 0;
@@ -282,20 +455,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.translate(0, bY);
 
       const w = this.w, h = this.h;
-      const img = this.img;
-      if (img && img.complete && img.naturalWidth) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(0, -h * 0.50, w * 0.46, h * 0.48, 0, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(img, -w * 0.5, -h, w, h);
-        ctx.restore();
-      } else {
-        ctx.fillStyle = this.data.color;
-        ctx.beginPath(); ctx.ellipse(0, -h * 0.5, w * 0.45, h * 0.46, 0, 0, Math.PI * 2); ctx.fill();
-      }
-
-      this._drawLegs(w, h);
+      drawDogFull(w, h, this.data.name, this.state, this.runT, this.vy, this.onGround);
 
       // Speed lines
       if (Math.abs(this.vx) > 3.5 && this.onGround) {
@@ -307,26 +467,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
         ctx.restore();
       }
       ctx.restore();
-    }
-    _drawLegs(w, h) {
-      const lc = this.data.legColor;
-      const phase = this.runT * 0.38;
-      const running = this.state === 'run';
-      const jumping = !this.onGround;
-      const legW = w * 0.115, legH = w * 0.22;
-      [
-        { x: -w * 0.20, ph: 0 }, { x: -w * 0.06, ph: Math.PI },
-        { x:  w * 0.06, ph: Math.PI }, { x:  w * 0.20, ph: 0 },
-      ].forEach(({ x, ph }) => {
-        let angle = 0;
-        if (running) angle = Math.sin(phase + ph) * 0.45;
-        if (jumping) angle = this.vy < 0 ? -0.5 : 0.2;
-        ctx.save(); ctx.translate(x, -legH * 0.1); ctx.rotate(angle);
-        ctx.fillStyle = lc;
-        ctx.beginPath(); ctx.roundRect(-legW / 2, 0, legW, legH, legW * 0.5); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(0, legH + 3, legW * 0.72, legW * 0.48, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
-      });
     }
     bounds() {
       return { left: this.x - this.w * 0.38, right: this.x + this.w * 0.38,
@@ -591,11 +731,15 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.beginPath(); ctx.roundRect(0, 0, cW, cH, 18); ctx.fill();
       if (hov) { ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 4; ctx.stroke(); }
 
-      const img = dogImages[d.name];
-      if (img && img.complete && img.naturalWidth) {
+      {
+        const baseW = 90, baseH = baseW * 1.28;
+        const scale = (cW * 0.60) / baseW;
         ctx.save();
-        ctx.beginPath(); ctx.roundRect(5, 5, cW-10, cH*0.74, 14); ctx.clip();
-        ctx.drawImage(img, 5, 5, cW-10, cH*0.74); ctx.restore();
+        ctx.beginPath(); ctx.roundRect(5, 5, cW-10, cH*0.74-2, 14); ctx.clip();
+        ctx.translate(cW/2, cH*0.74 - 10);
+        ctx.scale(scale, scale);
+        drawDogFull(baseW, baseH, d.name, 'run', bgTick * 0.7, 0, true);
+        ctx.restore();
       }
 
       ctx.fillStyle = 'white';
