@@ -53,37 +53,37 @@ export const PICTURES = [
     category: 'animals',
     viewBox: '0 0 240 180',
     regions: [
-      // tail on left
+      // tail on left — wide fan, sits fully left of the body
       {
         id: 'tail',
         type: 'path',
-        attrs: { d: 'M 55,90 L 20,50 L 20,130 Z' },
+        attrs: { d: 'M 78,90 L 15,35 L 15,145 Z' },
       },
-      // body faces right
-      { id: 'body', type: 'ellipse', attrs: { cx: 130, cy: 90, rx: 80, ry: 48 } },
+      // body faces right — shifted right so tail is fully exposed
+      { id: 'body', type: 'ellipse', attrs: { cx: 148, cy: 90, rx: 74, ry: 52 } },
       // dorsal fin on top
       {
         id: 'top_fin',
         type: 'path',
-        attrs: { d: 'M 100,44 C 115,15 145,12 160,42 L 130,42 Z' },
+        attrs: { d: 'M 118,40 C 132,10 162,8 172,38 L 148,38 Z' },
       },
       // pectoral fin bottom
       {
         id: 'bottom_fin',
         type: 'path',
-        attrs: { d: 'M 115,132 C 125,155 150,158 155,135 L 130,132 Z' },
+        attrs: { d: 'M 130,138 C 142,162 168,165 170,140 L 148,138 Z' },
       },
       // eye
-      { id: 'eye', type: 'circle', attrs: { cx: 188, cy: 82, r: 13 } },
+      { id: 'eye', type: 'circle', attrs: { cx: 200, cy: 80, r: 14 } },
     ],
     decorations: [
       // pupil
-      { type: 'circle', attrs: { cx: 191, cy: 80, r: 5 }, fill: '#222' },
+      { type: 'circle', attrs: { cx: 203, cy: 78, r: 6 }, fill: '#222' },
       // mouth
-      { type: 'path', attrs: { d: 'M 210,92 Q 218,98 210,104' }, stroke: '#555', strokeWidth: 2, fill: 'none' },
+      { type: 'path', attrs: { d: 'M 218,95 Q 226,102 218,110' }, stroke: '#555', strokeWidth: 2, fill: 'none' },
       // scale lines
-      { type: 'path', attrs: { d: 'M 140,58 Q 155,75 140,90' }, stroke: '#aaa', strokeWidth: 1.5, fill: 'none' },
-      { type: 'path', attrs: { d: 'M 115,55 Q 130,72 115,88' }, stroke: '#aaa', strokeWidth: 1.5, fill: 'none' },
+      { type: 'path', attrs: { d: 'M 152,52 Q 168,72 152,90' }, stroke: '#aaa', strokeWidth: 1.5, fill: 'none' },
+      { type: 'path', attrs: { d: 'M 124,50 Q 140,70 124,88' }, stroke: '#aaa', strokeWidth: 1.5, fill: 'none' },
     ],
   },
 

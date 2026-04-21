@@ -76,7 +76,7 @@ function SvgElement({ shape, fill, stroke, strokeWidth, onClick, style, classNam
     case 'rect':
       return <rect {...commonProps} />;
     case 'path':
-      return <path d={attrs.d} {...{ ...commonProps, d: undefined }} />;
+      return <path {...commonProps} />;
     case 'line':
       return <line {...commonProps} />;
     default:
