@@ -126,6 +126,15 @@ const SHARED_DIFFICULTY_GAMES = {
     settingsKey: 'spiderman',
     ...createDifficultyConfig(),
   },
+  sonic: {
+    settingsKey: 'sonic',
+    title: { en: 'Stages', he: 'שלבים' },
+    levels: {
+      1: { en: 'Easy (1 stage)', he: 'קל (שלב 1)' },
+      2: { en: 'Medium (2 stages)', he: 'בינוני (2 שלבים)' },
+      3: { en: 'Hard (3 stages)', he: 'קשה (3 שלבים)' },
+    },
+  },
 };
 
 export default function App() {
@@ -268,7 +277,7 @@ export default function App() {
                     role="menu"
                     aria-label={sharedDifficultyConfig.title[lang] || sharedDifficultyConfig.title.en}
                   >
-                    {[1, 2, 3, 4].map((value) => (
+                    {Object.keys(sharedDifficultyConfig.levels).map(Number).map((value) => (
                       <button
                         key={value}
                         className={`game-difficulty-option${value === currentDifficulty ? ' is-active' : ''}`}

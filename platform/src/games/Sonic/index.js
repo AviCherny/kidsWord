@@ -160,7 +160,7 @@ function shouldPublish(prev, next) {
   );
 }
 
-export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
+export default function Sonic({ onSuccess, onExit, facilitatorMode = false, sharedDifficulty = 3 }) {
   const { lang, dir } = useLanguage();
   const copy = { ...COPY.en, ...(COPY[lang] || {}) };
 
@@ -230,7 +230,7 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
     const canvas = canvasRef.current;
     if (!wrapper || !canvas) return undefined;
 
-    const engine = new SonicPlatformerEngine({ facilitatorMode });
+    const engine = new SonicPlatformerEngine({ facilitatorMode, levelCount: sharedDifficulty });
     const ctx = canvas.getContext('2d');
     if (!ctx) return undefined;
 
@@ -313,7 +313,7 @@ export default function Sonic({ onSuccess, onExit, facilitatorMode = false }) {
       else window.removeEventListener('resize', queueResize);
       engineRef.current = null;
     };
-  }, [facilitatorMode, publishSnapshot]);
+  }, [facilitatorMode, sharedDifficulty, publishSnapshot]);
 
   useEffect(() => {
     const onKeyDown = (event) => {

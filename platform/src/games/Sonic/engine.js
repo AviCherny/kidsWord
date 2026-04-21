@@ -18,7 +18,7 @@ const GRAVITY = 1960;
 const JUMP_VELOCITY = -810;
 const SPRING_VELOCITY = -1140;
 const CAMERA_SMOOTHING = 0.14;
-const DEFAULT_OPTIONS = { facilitatorMode: false };
+const DEFAULT_OPTIONS = { facilitatorMode: false, levelCount: 0 };
 const FOOD_GOOD = 'good';
 
 function makeGround() {
@@ -265,7 +265,8 @@ export class SonicPlatformerEngine {
     this.viewportWidth = 1024;
     this.viewportHeight = WORLD_HEIGHT;
     this.controls = { left: false, right: false, down: false };
-    this.levels = LEVELS;
+    const count = this.options.levelCount > 0 ? Math.min(this.options.levelCount, LEVELS.length) : LEVELS.length;
+    this.levels = LEVELS.slice(0, count);
     this.reset();
   }
 
