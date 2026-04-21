@@ -23,6 +23,7 @@ import SpiderMan from './games/SpiderMan';
 import PJMasks from './games/PJMasks';
 import Sonic from './games/Sonic';
 import PizzaParty from './games/PizzaParty';
+import PawPatrol from './games/PawPatrol';
 import { getEarnedStickers, earnSticker, migrateLegacyStickers, getEarnedCandy, earnCandy } from './lib/storage';
 import { getNextSticker } from './data/stickers';
 import { getNextCandy } from './data/candy';
@@ -47,6 +48,7 @@ const GAME_COMPONENTS = {
   pjmasks: PJMasks,
   sonic: Sonic,
   pizzaparty: PizzaParty,
+  pawpatrol: PawPatrol,
 };
 
 function createDifficultyConfig(title = 'Difficulty') {
@@ -203,7 +205,7 @@ export default function App() {
   }, []);
 
   const ActiveGame = currentGame ? GAME_COMPONENTS[currentGame] : null;
-  const isFullscreenGame = currentGame === 'sonic';
+  const isFullscreenGame = currentGame === 'sonic' || currentGame === 'pawpatrol';
   const sharedDifficultyConfig = currentGame ? SHARED_DIFFICULTY_GAMES[currentGame] : null;
   const currentDifficulty = sharedDifficultyConfig
     ? getGameDifficulty(

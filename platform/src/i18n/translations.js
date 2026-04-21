@@ -44,6 +44,8 @@ export const T = {
     pjMasksDesc: 'מיין לפי צבעי הגיבורים!',
     sonicName: 'סוניק',
     sonicDesc: 'רוץ בגרין היל, אסוף טבעות והגע לשלט הסיום.',
+    pawPatrolName: 'פאו פטרול',
+    pawPatrolDesc: 'בחר גור, רוץ וקפוץ כדי לתפוס את המילה הנכונה!',
     // Category labels
     catLanguage: 'שפה ומילים',
     catLogic: 'חשיבה והיגיון',
@@ -148,6 +150,8 @@ export const T = {
     pjMasksDesc: 'Sort by hero colors!',
     sonicName: 'Sonic',
     sonicDesc: 'Race through Green Hill, eat good food, avoid bad food, and reach the goal sign.',
+    pawPatrolName: 'Paw Patrol',
+    pawPatrolDesc: 'Pick a pup, run & jump to catch the right word!',
     // Category labels
     catLanguage: 'Language & Words',
     catLogic: 'Logic & Thinking',

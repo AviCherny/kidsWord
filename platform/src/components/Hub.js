@@ -140,6 +140,14 @@ const CATEGORIES = [
         bg: 'linear-gradient(145deg, #006abc, #42b3f5)',
         glow: 'rgba(0,106,188,0.4)',
       },
+      {
+        id: 'pawpatrol',
+        emoji: '🐾',
+        nameKey: 'pawPatrolName',
+        descKey: 'pawPatrolDesc',
+        bg: 'linear-gradient(145deg, #1565C0, #42a5f5)',
+        glow: 'rgba(21,101,192,0.45)',
+      },
     ],
   },
   {
