@@ -585,8 +585,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
   }
 
   // ── Falling word item ─────────────────────────
-  const BADGE_COLORS = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#DDA0DD','#F4A261'];
-
   class WordItem {
     constructor(wordObj, isTarget, x, startY) {
       this.w      = wordObj;
@@ -596,52 +594,60 @@ function runGame(canvas, { onSuccess, difficulty }) {
       this.vx = (Math.random() - 0.5) * 0.6;
       this.bobT = Math.random() * Math.PI * 2;
       this.alive  = true; this.catchT = 0; this.rot = 0; this.sparkT = 0;
-      this.bw = 110; this.bh = 72;
-      this.color  = isTarget ? '#FFD700' : BADGE_COLORS[Math.floor(Math.random() * BADGE_COLORS.length)];
+      this.r = 38; // collision radius
     }
     update() {
       if (this.catchT > 0) {
-        this.catchT--; this.rot += 0.18; this.y -= 4;
+        this.catchT--; this.rot += 0.15; this.y -= 5;
         if (this.catchT === 0) this.alive = false;
         return;
       }
-      this.y += this.vy; this.x += this.vx + Math.sin(this.bobT) * 0.6;
+      this.y += this.vy; this.x += this.vx + Math.sin(this.bobT) * 0.5;
       this.bobT += 0.028;
-      if (this.target) this.sparkT += 0.12;
-      if (this.x < this.bw / 2 + 5 || this.x > canvas.width - this.bw / 2 - 5) this.vx *= -1;
-      if (this.y > canvas.height + 70) this.alive = false;
+      if (this.target) this.sparkT += 0.10;
+      if (this.x < this.r + 5 || this.x > canvas.width - this.r - 5) this.vx *= -1;
+      if (this.y > canvas.height + 80) this.alive = false;
     }
     draw() {
+      const r = this.r;
       ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rot);
-      const w = this.bw, h = this.bh;
-      if (this.target) { ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 16 + Math.sin(this.sparkT) * 8; }
-      ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, 13);
-      ctx.fillStyle = this.color; ctx.fill();
-      ctx.strokeStyle = this.target ? '#E65100' : 'rgba(255,255,255,0.65)';
-      ctx.lineWidth = this.target ? 3.5 : 2; ctx.stroke(); ctx.shadowBlur = 0;
-      // word emoji — top-left corner, small
-      ctx.font = '14px serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      ctx.fillText(this.w.emoji, -w/2 + 5, -h/2 + 12);
-      // word text — centered, bold
-      ctx.fillStyle = this.target ? '#1A1A1A' : '#FFFFFF';
-      ctx.font = `bold ${Math.floor(w * 0.22)}px 'Arial Black', Arial`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 3;
-      ctx.fillText(this.w.word, 0, -6); ctx.shadowBlur = 0;
-      // hint emoji — visual picture of the item, replaces text label
-      ctx.font = '19px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(this.w.hint || this.w.emoji, 0, h/2 - 14);
-      ctx.restore();
+
       if (this.target) {
-        for (let i = 0; i < 3; i++) {
-          const a = this.sparkT + i * (Math.PI * 2 / 3);
-          ctx.save(); ctx.translate(this.x + Math.cos(a) * this.bw * 0.58, this.y + Math.sin(a) * this.bh * 0.65);
-          ctx.fillStyle = '#FFD700'; ctx.globalAlpha = 0.8;
-          ctx.beginPath(); ctx.arc(0, 0, 3.5, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+        // pulsing gold ring for the correct item
+        const pulse = 0.5 + Math.sin(this.sparkT * 1.8) * 0.5;
+        ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 20 + pulse * 16;
+        ctx.strokeStyle = `rgba(255,210,0,${0.7 + pulse * 0.3})`;
+        ctx.lineWidth = 4 + pulse * 3;
+        ctx.beginPath(); ctx.arc(0, 0, r + 4 + pulse * 5, 0, Math.PI * 2); ctx.stroke();
+        ctx.shadowBlur = 0;
+      }
+
+      // soft bubble background so items stand out against the sky
+      ctx.fillStyle = this.target ? 'rgba(255,240,100,0.55)' : 'rgba(255,255,255,0.40)';
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+
+      // the real item emoji — large and clear
+      ctx.font = `${r * 1.35}px serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(this.w.emoji, 0, 2);
+
+      ctx.restore();
+
+      // orbiting gold sparkle dots on the target
+      if (this.target) {
+        for (let i = 0; i < 4; i++) {
+          const a = this.sparkT + i * (Math.PI / 2);
+          const sx = this.x + Math.cos(a) * (r + 12);
+          const sy = this.y + Math.sin(a) * (r + 12);
+          ctx.save(); ctx.fillStyle = '#FFD700'; ctx.globalAlpha = 0.85;
+          ctx.beginPath(); ctx.arc(sx, sy, 4, 0, Math.PI * 2); ctx.fill(); ctx.restore();
         }
       }
     }
-    bounds() { return { left: this.x-this.bw/2, right: this.x+this.bw/2, top: this.y-this.bh/2, bottom: this.y+this.bh/2 }; }
+    bounds() {
+      return { left: this.x - this.r, right: this.x + this.r,
+               top:  this.y - this.r, bottom: this.y + this.r };
+    }
   }
 
   function hits(a, b) {
