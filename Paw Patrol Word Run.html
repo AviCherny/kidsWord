@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Paw Patrol Word Run!</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1565C0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+canvas { display: block; position: fixed; top: 0; left: 0; }
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+<script>
+// =============================================
+// PAW PATROL WORD RUN — Game Engine
+// =============================================
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', () => { resize(); if (dog) dog.resetGround(); });
+
+// =============================================
+// CONSTANTS
+// =============================================
+const GRAVITY      = 0.52;
+const JUMP_VY      = -15;
+const MOVE_SPEED   = 5.5;
+const GROUND_RATIO = 0.76; // fraction of canvas height
+
+// =============================================
+// WORD CURRICULUM
+// =============================================
+const WORDS = [
+  { word:'CAT', emoji:'🐱' }, { word:'DOG', emoji:'🐶' }, { word:'SUN', emoji:'☀️'  },
+  { word:'BUS', emoji:'🚌' }, { word:'RUN', emoji:'🏃' }, { word:'HAT', emoji:'🎩' },
+  { word:'BED', emoji:'🛏️'}, { word:'CUP', emoji:'☕' }, { word:'MAP', emoji:'🗺️' },
+  { word:'PIG', emoji:'🐷' }, { word:'HEN', emoji:'🐔' }, { word:'FOX', emoji:'🦊' },
+  { word:'FAN', emoji:'💨' }, { word:'JAM', emoji:'🍓' }, { word:'NET', emoji:'🕸️' },
+  { word:'PEN', emoji:'✏️' }, { word:'TEN', emoji:'🔟' }, { word:'HOP', emoji:'🐸' },
+  { word:'TOP', emoji:'🌀' }, { word:'MOP', emoji:'🧹' }, { word:'HUG', emoji:'🤗' },
+  { word:'BUG', emoji:'🐛' }, { word:'MUG', emoji:'🍵' }, { word:'NUT', emoji:'🥜' },
+  { word:'BAT', emoji:'🦇' }, { word:'CAR', emoji:'🚗' }, { word:'COW', emoji:'🐄' },
+  { word:'EGG', emoji:'🥚' }, { word:'FLY', emoji:'🦋' }, { word:'GUN', emoji:'🔫' },
+];
+
+// =============================================
+// DOGS
+// =============================================
+const DOGS = [
+  { name:'Chase',    file:'6480cfcfb9e10cf1a8d0dc5e_chase-poster.jpg',    color:'#1565C0', legColor:'#8B6914', tagline:"Chase is on the case!" },
+  { name:'Marshall', file:'6480cfc173fb15e8d2f8ffd9_marshall-poster.jpg', color:'#C62828', legColor:'#CCCCCC', tagline:"I'm all fired up!"      },
+  { name:'Rubble',   file:'6480cfba9a811083fadca42d_rubble-poster.jpg',   color:'#F9A825', legColor:'#7B4F2E', tagline:"Rubble on the double!"  },
+];
+const dogImages = {};
+
+function loadAssets(cb) {
+  let n = 0;
+  DOGS.forEach(d => {
+    const img = new Image();
+    img.onload = img.onerror = () => { if (++n === DOGS.length) cb(); };
+    img.src = d.file;
+    dogImages[d.name] = img;
+  });
+}
+
+// =============================================
+// SPEECH
+// =============================================
+function speak(text, rate = 0.85) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = rate; u.pitch = 1.2;
+  speechSynthesis.speak(u);
+}
+
+// =============================================
+// UTILITIES
+// =============================================
+function shuffle(a) {
+  const arr = [...a];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+// =============================================
+// SCROLLING BACKGROUND
+// =============================================
+let clouds = [];
+let bgTime = 0;
+
+function initBg() {
+  clouds = Array.from({ length: 7 }, () => ({
+    x: Math.random() * canvas.width,
+    y: 30 + Math.random() * 140,
+    rx: 50 + Math.random() * 60,
+    ry: 25 + Math.random() * 20,
+    speed: 0.25 + Math.random() * 0.45,
+    alpha: 0.55 + Math.random() * 0.35,
+  }));
+}
+
+function drawBg() {
+  bgTime++;
+  const gY = canvas.height * GROUND_RATIO;
+
+  // Sky
+  const sky = ctx.createLinearGradient(0, 0, 0, gY);
+  sky.addColorStop(0, '#5CB8FF');
+  sky.addColorStop(1, '#D6F0FF');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, canvas.width, gY);
+
+  // Clouds
+  clouds.forEach(c => {
+    c.x -= c.speed;
+    if (c.x < -c.rx * 2.5) c.x = canvas.width + c.rx;
+    ctx.save();
+    ctx.globalAlpha = c.alpha;
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.ellipse(c.x,          c.y,     c.rx,       c.ry,       0, 0, Math.PI * 2);
+    ctx.ellipse(c.x - c.rx * 0.45, c.y + 6, c.rx * 0.65, c.ry * 0.7, 0, 0, Math.PI * 2);
+    ctx.ellipse(c.x + c.rx * 0.45, c.y + 6, c.rx * 0.65, c.ry * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+
+  // Ground gradient
+  const grd = ctx.createLinearGradient(0, gY, 0, canvas.height);
+  grd.addColorStop(0,    '#5DA83B');
+  grd.addColorStop(0.12, '#4A8B2A');
+  grd.addColorStop(0.12, '#7B5020');
+  grd.addColorStop(1,    '#5A3810');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, gY, canvas.width, canvas.height - gY);
+
+  // Scrolling grass tufts
+  const tW = 55;
+  const off = (bgTime * 1.8) % tW;
+  ctx.fillStyle = '#6DC242';
+  for (let x = -off; x < canvas.width + tW; x += tW) {
+    ctx.beginPath();
+    ctx.ellipse(x, gY, 18, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Road stripe
+  const stripeH = 6;
+  const stripeOff = (bgTime * 1.8) % 60;
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  for (let x = -stripeOff; x < canvas.width + 60; x += 60) {
+    ctx.fillRect(x, gY + 4, 36, stripeH);
+  }
+}
+
+// =============================================
+// PARTICLES
+// =============================================
+let particles = [];
+
+function burst(x, y, color, count = 14, type = 'dot') {
+  for (let i = 0; i < count; i++) {
+    const a = (Math.PI * 2 * i / count) + Math.random() * 0.6;
+    const sp = 3 + Math.random() * 7;
+    particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 2,
+      life: 1, decay: 0.018 + Math.random() * 0.015,
+      size: 5 + Math.random() * 8, color, type });
+  }
+}
+function starBurst(x, y) {
+  ['⭐','🌟','✨','🎉'].forEach((em, i) => {
+    const a = (Math.PI * 2 * i / 4) - Math.PI / 2;
+    const sp = 5 + Math.random() * 5;
+    particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 4,
+      life: 1, decay: 0.013, size: 22, color: em, type: 'emoji' });
+  });
+}
+
+function tickParticles() {
+  particles = particles.filter(p => {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.life -= p.decay;
+    return p.life > 0;
+  });
+}
+function drawParticles() {
+  particles.forEach(p => {
+    ctx.save(); ctx.globalAlpha = p.life;
+    if (p.type === 'emoji') {
+      ctx.font = `${p.size}px serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(p.color, p.x, p.y);
+    } else {
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  });
+}
+
+// =============================================
+// PAW PRINTS
+// =============================================
+let pawPrints = [];
+let pawTimer = 0;
+
+function addPaw(x, y) { pawPrints.push({ x, y, alpha: 0.6 }); }
+function tickPaws() {
+  pawPrints = pawPrints.filter(p => { p.alpha -= 0.005; return p.alpha > 0; });
+}
+function drawPaws() {
+  ctx.save(); ctx.font = '14px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  pawPrints.forEach(p => { ctx.globalAlpha = p.alpha; ctx.fillText('🐾', p.x, p.y); });
+  ctx.restore();
+}
+
+// =============================================
+// DOG
+// =============================================
+class Dog {
+  constructor(data) {
+    this.data = data;
+    this.img  = dogImages[data.name];
+    this.resetGround();
+    this.vx = 0; this.vy = 0;
+    this.onGround = true;
+    this.facing = 1;
+    this.runT   = 0;
+    this.leftHeld = false;
+    this.rightHeld = false;
+    this.state = 'idle'; // idle run jump celebrate ouch
+    this.stateT = 0;
+    this.landSquash = 0;
+    this.w = clamp(canvas.width * 0.15, 70, 110);
+    this.h = this.w * 1.28;
+  }
+  resetGround() {
+    this.gY = canvas.height * GROUND_RATIO;
+    if (this.onGround || this.y === undefined) this.y = this.gY;
+    if (this.x === undefined) this.x = canvas.width / 2;
+  }
+  jump() {
+    if (this.onGround && this.state !== 'celebrate' && this.state !== 'ouch') {
+      this.vy = JUMP_VY; this.onGround = false; this.state = 'jump';
+    }
+  }
+  celebrate() {
+    this.state = 'celebrate'; this.stateT = 100;
+    starBurst(this.x, this.y - this.h * 0.9);
+    burst(this.x, this.y - this.h * 0.5, '#FFD700', 18, 'dot');
+  }
+  ouch() {
+    this.state = 'ouch'; this.stateT = 45;
+    this.vx = -this.facing * 7; this.vy = -7;
+    this.onGround = false;
+    burst(this.x, this.y - this.h * 0.5, '#FF4444', 10, 'dot');
+  }
+  update() {
+    // State timer
+    if (this.stateT > 0) {
+      this.stateT--;
+      if (this.stateT === 0 && (this.state === 'celebrate' || this.state === 'ouch')) {
+        this.state = this.onGround ? 'idle' : 'jump';
+      }
+    }
+
+    // Input movement (blocked during special states)
+    const locked = this.state === 'celebrate' || this.state === 'ouch';
+    if (!locked) {
+      if (this.leftHeld)       { this.vx = -MOVE_SPEED; this.facing = -1; }
+      else if (this.rightHeld) { this.vx =  MOVE_SPEED; this.facing =  1; }
+      else { this.vx *= 0.68; if (Math.abs(this.vx) < 0.4) this.vx = 0; }
+    } else {
+      this.vx *= 0.8;
+    }
+
+    // Physics
+    if (!this.onGround) this.vy += GRAVITY;
+    this.x += this.vx;
+    this.y += this.vy;
+
+    // Ground
+    if (this.y >= this.gY) {
+      const wasAir = !this.onGround;
+      this.y = this.gY; this.vy = 0; this.onGround = true;
+      if (wasAir && this.state === 'jump') {
+        this.landSquash = 9;
+        this.state = Math.abs(this.vx) > 0.5 ? 'run' : 'idle';
+      }
+    }
+
+    // Walls
+    const hw = this.w * 0.5;
+    this.x = clamp(this.x, hw, canvas.width - hw);
+
+    // Run state
+    if (this.onGround && !locked) {
+      this.state = Math.abs(this.vx) > 0.5 ? 'run' : 'idle';
+    }
+    if (this.state === 'run') {
+      this.runT++;
+      pawTimer++;
+      if (pawTimer % 20 === 0) addPaw(this.x - this.facing * this.w * 0.2, this.gY + 9);
+    }
+
+    if (this.landSquash > 0) this.landSquash--;
+  }
+
+  draw() {
+    // Dynamic shadow
+    const airH = Math.max(0, this.gY - this.y);
+    const shScale = lerp(1, 0.35, airH / 220);
+    ctx.save();
+    ctx.translate(this.x, this.gY + 12);
+    ctx.scale(shScale, 0.28);
+    ctx.beginPath();
+    ctx.ellipse(0, 0, this.w * 0.52, this.w * 0.52, 0, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0,0,0,${0.22 * shScale})`;
+    ctx.fill();
+    ctx.restore();
+
+    // Body transform
+    const t = this.runT;
+    let tilt = 0, sx = 1, sy = 1, bY = 0;
+
+    switch (this.state) {
+      case 'run':
+        bY   = Math.sin(t * 0.38) * 4;
+        tilt = Math.sin(t * 0.22) * 0.07 + 0.10;
+        break;
+      case 'jump':
+        tilt = 0.12 * this.facing;
+        if (this.vy < 0) { sx = 0.84; sy = 1.16; }   // stretch up
+        else             { sx = 1.12; sy = 0.90; }    // squash down
+        break;
+      case 'celebrate':
+        bY   = Math.sin(bgTime * 0.3) * 10;
+        tilt = Math.sin(bgTime * 0.25) * 0.25;
+        sx   = 1 + Math.abs(Math.sin(bgTime * 0.3)) * 0.12;
+        sy   = sx;
+        break;
+      case 'ouch':
+        tilt = -0.5 * this.facing;
+        sx = 1.2; sy = 0.8;
+        break;
+    }
+    if (this.landSquash > 0) {
+      const q = this.landSquash / 9;
+      sx = 1 + q * 0.28; sy = 1 - q * 0.22; bY = q * 4;
+    }
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.scale(this.facing, 1);
+    ctx.rotate(tilt);
+    ctx.scale(sx, sy);
+    ctx.translate(0, bY);
+
+    // Draw image clipped to ellipse (removes coloured background)
+    const w = this.w, h = this.h;
+    if (this.img && this.img.complete && this.img.naturalWidth) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(0, -h * 0.50, w * 0.46, h * 0.48, 0, 0, Math.PI * 2);
+      ctx.clip();
+      ctx.drawImage(this.img, -w * 0.5, -h, w, h);
+      ctx.restore();
+    } else {
+      // Placeholder
+      ctx.fillStyle = this.data.color;
+      ctx.beginPath(); ctx.ellipse(0, -h * 0.5, w * 0.45, h * 0.46, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'white'; ctx.font = `bold ${w * 0.25}px Arial`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(this.data.name[0], 0, -h * 0.5);
+    }
+
+    // Animated legs
+    this.drawLegs(w, h);
+
+    // Speed lines
+    if (Math.abs(this.vx) > 3.5 && this.onGround) {
+      ctx.save(); ctx.globalAlpha = 0.35; ctx.strokeStyle = 'white'; ctx.lineWidth = 2.5;
+      for (let i = 0; i < 3; i++) {
+        const ly = -h * (0.45 + i * 0.13);
+        const lx = w * 0.35;
+        ctx.beginPath();
+        ctx.moveTo(lx, ly); ctx.lineTo(lx + w * (0.35 + i * 0.1), ly);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    ctx.restore(); // body transform
+  }
+
+  drawLegs(w, h) {
+    const lc = this.data.legColor;
+    const phase = this.runT * 0.38;
+    const running = this.state === 'run';
+    const jumping = !this.onGround;
+    const legW = w * 0.115;
+    const legH = w * 0.22;
+
+    // 4 legs: front-left, front-right, back-left, back-right
+    const legDefs = [
+      { x: -w * 0.20, phaseOff: 0 },
+      { x: -w * 0.06, phaseOff: Math.PI },
+      { x:  w * 0.06, phaseOff: Math.PI },
+      { x:  w * 0.20, phaseOff: 0 },
+    ];
+
+    legDefs.forEach(({ x, phaseOff }) => {
+      let angle = 0;
+      if (running) angle = Math.sin(phase + phaseOff) * 0.45;
+      if (jumping) angle = (this.vy < 0 ? -0.5 : 0.2);
+
+      ctx.save();
+      ctx.translate(x, -legH * 0.1);
+      ctx.rotate(angle);
+      ctx.fillStyle = lc;
+      ctx.beginPath();
+      ctx.roundRect(-legW / 2, 0, legW, legH, legW * 0.5);
+      ctx.fill();
+      // Paw
+      ctx.beginPath();
+      ctx.ellipse(0, legH + 3, legW * 0.72, legW * 0.48, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  getBounds() {
+    return {
+      left:   this.x - this.w * 0.38,
+      right:  this.x + this.w * 0.38,
+      top:    this.y - this.h * 0.95,
+      bottom: this.y + 15,
+    };
+  }
+}
+
+// =============================================
+// FALLING WORD ITEM
+// =============================================
+const BADGE_COLORS = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#DDA0DD','#F4A261'];
+
+class WordItem {
+  constructor(wordObj, isTarget, x, startY) {
+    this.w       = wordObj;       // { word, emoji }
+    this.target  = isTarget;
+    this.x       = x;
+    this.y       = startY;
+    this.vy      = 1.4 + Math.random() * 0.8;
+    this.vx      = (Math.random() - 0.5) * 0.6;
+    this.bobT    = Math.random() * Math.PI * 2;
+    this.bw      = 96; this.bh = 54;
+    this.alive   = true;
+    this.catchT  = 0;  // >0 = catch animation playing
+    this.rot     = 0;
+    this.sparkT  = 0;
+    this.color   = isTarget ? '#FFD700' : BADGE_COLORS[Math.floor(Math.random() * BADGE_COLORS.length)];
+    this.fallSpeed = 1; // multiplier, increases each round
+  }
+  update() {
+    if (this.catchT > 0) {
+      this.catchT--; this.rot += 0.18; this.y -= 4;
+      if (this.catchT === 0) this.alive = false;
+      return;
+    }
+    this.y += this.vy * this.fallSpeed;
+    this.x += this.vx + Math.sin(this.bobT) * 0.6;
+    this.bobT += 0.028;
+    if (this.target) this.sparkT += 0.12;
+    if (this.x < this.bw / 2 + 5 || this.x > canvas.width - this.bw / 2 - 5) this.vx *= -1;
+    if (this.y > canvas.height + 70) this.alive = false;
+  }
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(this.rot);
+
+    const w = this.bw, h = this.bh;
+
+    // Glow for target
+    if (this.target) {
+      ctx.shadowColor = '#FFD700';
+      ctx.shadowBlur = 16 + Math.sin(this.sparkT) * 8;
+    }
+
+    // Badge body
+    ctx.beginPath();
+    ctx.roundRect(-w/2, -h/2, w, h, 13);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.strokeStyle = this.target ? '#E65100' : 'rgba(255,255,255,0.65)';
+    ctx.lineWidth   = this.target ? 3.5 : 2;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Emoji top-left corner
+    ctx.font = '14px serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(this.w.emoji, -w/2 + 5, -h/2 + 11);
+
+    // Word text
+    ctx.fillStyle   = this.target ? '#1A1A1A' : '#FFFFFF';
+    ctx.font        = `bold ${Math.floor(w * 0.25)}px 'Arial Black', Arial`;
+    ctx.textAlign   = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 3;
+    ctx.fillText(this.w.word, 0, 4);
+    ctx.shadowBlur = 0;
+
+    ctx.restore();
+
+    // Orbiting sparkle dots for target
+    if (this.target) {
+      for (let i = 0; i < 3; i++) {
+        const a = this.sparkT + i * (Math.PI * 2 / 3);
+        const rx = this.bw * 0.58, ry = this.bh * 0.65;
+        ctx.save();
+        ctx.translate(this.x + Math.cos(a) * rx, this.y + Math.sin(a) * ry);
+        ctx.fillStyle = '#FFD700';
+        ctx.globalAlpha = 0.8;
+        ctx.beginPath(); ctx.arc(0, 0, 3.5, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      }
+    }
+  }
+  bounds() {
+    return { left: this.x - this.bw/2, right: this.x + this.bw/2,
+             top:  this.y - this.bh/2, bottom: this.y + this.bh/2 };
+  }
+}
+
+function hits(db, ib) {
+  return db.right > ib.left && db.left < ib.right &&
+         db.bottom > ib.top && db.top < ib.bottom;
+}
+
+// =============================================
+// GAME STATE
+// =============================================
+const S = { MENU:'menu', PLAY:'play', OVER:'over' };
+let state = S.MENU;
+
+let dog        = null;
+let selectedDog = null;
+let score      = 0;
+let lives      = 3;
+let combo      = 0;
+let round      = 0;
+
+let wordPool   = shuffle(WORDS);
+let wordIdx    = 0;
+let curWord    = null;
+let items      = [];
+let roundPhase = 'idle'; // idle announce active won missed
+let roundTimer = 0;
+let fallSpeed  = 1;
+
+// =============================================
+// ROUND LOGIC
+// =============================================
+function nextWord() {
+  if (wordIdx >= wordPool.length) { wordPool = shuffle(WORDS); wordIdx = 0; }
+  return wordPool[wordIdx++];
+}
+
+function startRound() {
+  round++;
+  fallSpeed = 1 + Math.floor(round / 5) * 0.15;
+  curWord = nextWord();
+  const distractors = shuffle(WORDS.filter(w => w.word !== curWord.word)).slice(0, 3);
+  const all = shuffle([curWord, ...distractors]);
+
+  items = [];
+  const cols = 4;
+  const spacing = canvas.width / (cols + 1);
+  all.forEach((w, i) => {
+    const it = new WordItem(w, w === curWord, spacing * (i + 1), -70 - i * 90);
+    it.fallSpeed = fallSpeed;
+    items.push(it);
+  });
+
+  roundPhase = 'announce';
+  roundTimer = 55;
+  speak(curWord.word);
+}
+
+function updateRound() {
+  if (roundTimer > 0) {
+    roundTimer--;
+    if (roundTimer === 0) {
+      if      (roundPhase === 'announce') roundPhase = 'active';
+      else if (roundPhase === 'won')      startRound();
+      else if (roundPhase === 'missed')   { lives > 0 ? startRound() : endGame(); }
+    }
+  }
+
+  items.forEach(it => it.update());
+
+  if (roundPhase === 'active') {
+    const db = dog.getBounds();
+    for (const it of items) {
+      if (!it.alive || it.catchT > 0) continue;
+      if (hits(db, it.bounds())) {
+        if (it.target) {
+          it.catchT = 22;
+          dog.celebrate();
+          score += 10 * Math.max(1, combo);
+          combo++;
+          roundPhase = 'won';
+          roundTimer = 90;
+          speak('Great job!');
+        } else {
+          if (dog.state !== 'ouch') {
+            it.catchT = 10;
+            dog.ouch();
+            lives--;
+            combo = 0;
+            speak('Try again!');
+            if (lives <= 0) { endGame(); return; }
+          }
+        }
+        break;
+      }
+    }
+
+    // Check if target has fallen off screen
+    const tgt = items.find(i => i.target);
+    if (!tgt || (!tgt.alive && tgt.catchT === 0)) {
+      lives--;
+      combo = 0;
+      speak('Missed!');
+      if (lives <= 0) { endGame(); return; }
+      roundPhase = 'missed';
+      roundTimer = 55;
+    }
+  }
+
+  items = items.filter(i => i.alive || i.catchT > 0);
+}
+
+function endGame() {
+  roundPhase = 'idle';
+  state = S.OVER;
+}
+
+// =============================================
+// HUD
+// =============================================
+function drawHUD() {
+  const px = 18, py = 14;
+
+  // Score pill
+  ctx.fillStyle = 'rgba(0,0,0,0.42)';
+  ctx.beginPath(); ctx.roundRect(px, py, 124, 42, 12); ctx.fill();
+  ctx.fillStyle = '#FFD700';
+  ctx.font = 'bold 21px "Arial Black", Arial';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText(`⭐ ${score}`, px + 12, py + 21);
+
+  // Combo
+  if (combo >= 2) {
+    ctx.save();
+    const sz = Math.min(28, 18 + combo * 1.5);
+    ctx.font = `bold ${sz}px "Arial Black", Arial`;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#FF6B35';
+    ctx.fillText(`🔥 ×${combo}`, px + 130, py + 21);
+    ctx.restore();
+  }
+
+  // Lives pill (right)
+  ctx.fillStyle = 'rgba(0,0,0,0.42)';
+  ctx.beginPath(); ctx.roundRect(canvas.width - px - 124, py, 124, 42, 12); ctx.fill();
+  const hearts = '❤️'.repeat(clamp(lives, 0, 3)) + '🖤'.repeat(clamp(3 - lives, 0, 3));
+  ctx.font = '20px serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  ctx.fillText(hearts, canvas.width - px - 10, py + 21);
+
+  // Word prompt (top center)
+  if (curWord) {
+    const pw = Math.min(290, canvas.width * 0.68);
+    const ph = 68;
+    const px2 = canvas.width / 2 - pw / 2;
+    const py2 = py;
+
+    ctx.fillStyle = 'rgba(10,25,80,0.78)';
+    ctx.beginPath(); ctx.roundRect(px2, py2, pw, ph, 16); ctx.fill();
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.5; ctx.stroke();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.font = '13px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText('CATCH:', canvas.width / 2, py2 + 9);
+
+    ctx.fillStyle = '#FFD700';
+    ctx.font = `bold 28px "Arial Black", Arial`;
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${curWord.emoji}  ${curWord.word}`, canvas.width / 2, py2 + ph * 0.67);
+  }
+
+  // Touch control hint (bottom)
+  if ('ontouchstart' in window) {
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = '13px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('← Swipe → to run   Tap to jump', canvas.width / 2, canvas.height - 10);
+  } else {
+    ctx.fillStyle = 'rgba(255,255,255,0.25)';
+    ctx.font = '13px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText('← → Arrow keys to run   Space / ↑ to jump', canvas.width / 2, canvas.height - 10);
+  }
+}
+
+// =============================================
+// ON-SCREEN BUTTONS (touch)
+// =============================================
+let btnLeft = {}, btnRight = {}, btnJump = {};
+
+function drawTouchButtons() {
+  if (!('ontouchstart' in window)) return;
+  const bh = 70, bw = 80, by = canvas.height - bh - 20, br = 16;
+
+  const draw = (b, label, x) => {
+    b.x = x; b.y = by; b.w = bw; b.h = bh;
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.beginPath(); ctx.roundRect(x, by, bw, bh, br); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = 'white'; ctx.font = 'bold 28px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x + bw / 2, by + bh / 2);
+  };
+
+  draw(btnLeft,  '◀',  22);
+  draw(btnRight, '▶',  22 + bw + 14);
+  draw(btnJump,  '🦘', canvas.width - bw - 22);
+}
+
+function inBtn(b, x, y) {
+  return b.x && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h;
+}
+
+// =============================================
+// MENU
+// =============================================
+let hoverDog = -1;
+let menuCards = [];
+
+function drawMenu() {
+  // Background
+  const sky = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  sky.addColorStop(0, '#0D47A1'); sky.addColorStop(1, '#1976D2');
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Paw prints pattern
+  ctx.globalAlpha = 0.07; ctx.font = '32px serif';
+  ctx.textAlign = 'center';
+  for (let row = 0; row < 5; row++)
+    for (let col = 0; col < 6; col++)
+      ctx.fillText('🐾', col * 80 + 40, row * 80 + 40);
+  ctx.globalAlpha = 1;
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  // Title
+  const titleY = canvas.height * 0.10;
+  const ts = Math.min(54, canvas.width * 0.11);
+  ctx.font = `bold ${ts}px "Arial Black", Arial`;
+  ctx.strokeStyle = '#C62828'; ctx.lineWidth = 7;
+  ctx.strokeText('PAW PATROL', canvas.width / 2, titleY);
+  ctx.fillStyle = '#FFD700';
+  ctx.fillText('PAW PATROL', canvas.width / 2, titleY);
+
+  ctx.font = `bold ${Math.min(34, canvas.width * 0.07)}px "Arial Black", Arial`;
+  ctx.fillStyle = 'white';
+  ctx.fillText('WORD RUN!', canvas.width / 2, canvas.height * 0.19);
+
+  ctx.font = `${Math.min(20, canvas.width * 0.05)}px Arial`;
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.fillText('Pick your pup!', canvas.width / 2, canvas.height * 0.28);
+
+  // Dog cards
+  const cW = clamp(canvas.width * 0.26, 95, 145);
+  const cH = cW * 1.52;
+  const gap = 18;
+  const totalW = cW * 3 + gap * 2;
+  const startX = canvas.width / 2 - totalW / 2;
+  const cardY  = canvas.height * 0.33;
+
+  menuCards = [];
+
+  DOGS.forEach((d, i) => {
+    const cx   = startX + i * (cW + gap);
+    const hov  = hoverDog === i;
+    const sc   = hov ? 1.07 : 1;
+    const midX = cx + cW / 2, midY = cardY + cH / 2;
+
+    ctx.save();
+    ctx.translate(midX, midY);
+    ctx.scale(sc, sc);
+    ctx.translate(-cW/2, -cH/2);
+
+    // Card shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath(); ctx.roundRect(4, 6, cW, cH, 18); ctx.fill();
+
+    // Card body
+    ctx.fillStyle = d.color;
+    ctx.beginPath(); ctx.roundRect(0, 0, cW, cH, 18); ctx.fill();
+    if (hov) { ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 4; ctx.stroke(); }
+
+    // Dog image clipped to top part of card
+    const img = dogImages[d.name];
+    if (img && img.complete && img.naturalWidth) {
+      ctx.save();
+      ctx.beginPath(); ctx.roundRect(5, 5, cW - 10, cH * 0.74, 14); ctx.clip();
+      ctx.drawImage(img, 5, 5, cW - 10, cH * 0.74);
+      ctx.restore();
+    }
+
+    // Name
+    ctx.fillStyle = 'white';
+    ctx.font = `bold ${Math.floor(cW * 0.155)}px "Arial Black", Arial`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 3;
+    ctx.strokeText(d.name.toUpperCase(), cW/2, cH * 0.88);
+    ctx.fillText(d.name.toUpperCase(), cW/2, cH * 0.88);
+
+    ctx.restore();
+    menuCards[i] = { x: midX - cW/2 * sc, y: midY - cH/2 * sc, w: cW * sc, h: cH * sc };
+  });
+
+  // Controls reminder
+  ctx.fillStyle = 'rgba(255,255,255,0.5)';
+  ctx.font = `${Math.min(15, canvas.width * 0.038)}px Arial`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillText('Run with arrow keys · Space to jump · Catch the right word!', canvas.width / 2, canvas.height - 18);
+}
+
+// =============================================
+// GAME OVER
+// =============================================
+let goBtn = {};
+
+function drawGameOver() {
+  ctx.fillStyle = 'rgba(0,0,0,0.62)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const bw = clamp(canvas.width * 0.78, 260, 360);
+  const bh = 290;
+  const bx = canvas.width/2 - bw/2, by = canvas.height/2 - bh/2;
+
+  ctx.fillStyle = '#1A237E';
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 24); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 4; ctx.stroke();
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  ctx.fillStyle = '#FF6B6B';
+  ctx.font = `bold ${clamp(canvas.width * 0.1, 32, 44)}px "Arial Black", Arial`;
+  ctx.fillText('GAME OVER', canvas.width/2, by + bh * 0.22);
+
+  ctx.fillStyle = '#FFD700';
+  ctx.font = `bold 30px "Arial Black", Arial`;
+  ctx.fillText(`Score: ${score}`, canvas.width/2, by + bh * 0.42);
+
+  const stars = score >= 150 ? 3 : score >= 70 ? 2 : score >= 20 ? 1 : 0;
+  ctx.font = '38px serif';
+  ctx.fillText('⭐'.repeat(stars) + '☆'.repeat(3 - stars), canvas.width/2, by + bh * 0.60);
+
+  const btnW = 200, btnH = 52;
+  const btnX = canvas.width/2 - btnW/2, btnY = by + bh * 0.77 - btnH/2;
+  ctx.fillStyle = '#43A047';
+  ctx.beginPath(); ctx.roundRect(btnX, btnY, btnW, btnH, 14); ctx.fill();
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 21px "Arial Black", Arial';
+  ctx.fillText('PLAY AGAIN! 🐾', canvas.width/2, btnY + btnH/2);
+  goBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
+}
+
+// =============================================
+// INPUT
+// =============================================
+document.addEventListener('keydown', e => {
+  if (state === S.PLAY && dog) {
+    if (e.key === 'ArrowLeft')  { e.preventDefault(); dog.leftHeld  = true; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); dog.rightHeld = true; }
+    if (e.key === ' ' || e.key === 'ArrowUp') { e.preventDefault(); dog.jump(); }
+  }
+});
+document.addEventListener('keyup', e => {
+  if (dog) {
+    if (e.key === 'ArrowLeft')  dog.leftHeld  = false;
+    if (e.key === 'ArrowRight') dog.rightHeld = false;
+  }
+});
+
+let touchAnchorX = 0;
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  touchAnchorX = t.clientX;
+
+  if (state === S.PLAY && dog) {
+    if (inBtn(btnJump, t.clientX, t.clientY)) { dog.jump(); return; }
+    if (inBtn(btnLeft, t.clientX, t.clientY)) { dog.leftHeld = true; return; }
+    if (inBtn(btnRight, t.clientX, t.clientY)) { dog.rightHeld = true; return; }
+    dog.jump();
+  }
+  if (state === S.MENU) handleMenuTap(t.clientX, t.clientY);
+  if (state === S.OVER) handleOverTap(t.clientX, t.clientY);
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (state !== S.PLAY || !dog) return;
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchAnchorX;
+  if (dx > 25)       { dog.rightHeld = true;  dog.leftHeld  = false; }
+  else if (dx < -25) { dog.leftHeld  = true;  dog.rightHeld = false; }
+  else               { dog.leftHeld  = false; dog.rightHeld = false; }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  if (dog) { dog.leftHeld = false; dog.rightHeld = false; }
+}, { passive: false });
+
+canvas.addEventListener('click', e => {
+  if (state === S.MENU) handleMenuTap(e.clientX, e.clientY);
+  if (state === S.OVER) handleOverTap(e.clientX, e.clientY);
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (state !== S.MENU) return;
+  hoverDog = -1;
+  menuCards.forEach((c, i) => {
+    if (c && e.clientX >= c.x && e.clientX <= c.x + c.w &&
+             e.clientY >= c.y && e.clientY <= c.y + c.h) hoverDog = i;
+  });
+});
+
+function handleMenuTap(x, y) {
+  menuCards.forEach((c, i) => {
+    if (c && x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h) startGame(DOGS[i]);
+  });
+}
+function handleOverTap(x, y) {
+  if (goBtn.x && x >= goBtn.x && x <= goBtn.x + goBtn.w &&
+                 y >= goBtn.y && y <= goBtn.y + goBtn.h) {
+    state = S.MENU; score = 0; lives = 3; combo = 0; round = 0;
+    wordPool = shuffle(WORDS); wordIdx = 0;
+  }
+}
+
+// =============================================
+// START GAME
+// =============================================
+function startGame(dogData) {
+  selectedDog = dogData;
+  dog = new Dog(dogData);
+  score = 0; lives = 3; combo = 0; round = 0;
+  particles = []; pawPrints = []; items = [];
+  fallSpeed = 1;
+  wordPool = shuffle(WORDS); wordIdx = 0;
+  initBg();
+  state = S.PLAY;
+  speak(dogData.tagline, 0.9);
+  setTimeout(() => startRound(), 1200);
+}
+
+// =============================================
+// MAIN LOOP
+// =============================================
+let bgTime = 0;
+
+function loop() {
+  requestAnimationFrame(loop);
+  bgTime++;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (state === S.MENU) {
+    drawMenu();
+    return;
+  }
+
+  drawBg();
+  tickPaws(); drawPaws();
+  tickParticles(); drawParticles();
+
+  if (state === S.PLAY) {
+    items.forEach(it => it.draw());
+    dog.update();
+    updateRound();
+    dog.draw();
+    drawHUD();
+    drawTouchButtons();
+  }
+
+  if (state === S.OVER) {
+    if (dog) dog.draw();
+    drawGameOver();
+  }
+}
+
+// =============================================
+// INIT
+// =============================================
+loadAssets(() => {
+  initBg();
+  loop();
+});
+</script>
+</body>
+</html>
