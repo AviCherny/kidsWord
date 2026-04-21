@@ -5,21 +5,21 @@ import './PawPatrol.css';
 // WORD CURRICULUM
 // ─────────────────────────────────────────────
 const WORDS = [
-  { word:'CAT', emoji:'🐱', label:'an animal'     }, { word:'DOG', emoji:'🐶', label:'an animal'     },
-  { word:'SUN', emoji:'☀️', label:'in the sky'    }, { word:'BUS', emoji:'🚌', label:'a vehicle'     },
-  { word:'RUN', emoji:'🏃', label:'move fast'     }, { word:'HAT', emoji:'🎩', label:'wear on head'  },
-  { word:'BED', emoji:'🛏️', label:'sleep here'    }, { word:'CUP', emoji:'☕', label:'drink from it' },
-  { word:'MAP', emoji:'🗺️', label:'shows places'  }, { word:'PIG', emoji:'🐷', label:'on a farm'     },
-  { word:'HEN', emoji:'🐔', label:'a bird'        }, { word:'FOX', emoji:'🦊', label:'wild animal'   },
-  { word:'FAN', emoji:'💨', label:'moves air'     }, { word:'JAM', emoji:'🍓', label:'sweet spread'  },
-  { word:'NET', emoji:'🕸️', label:'catches things'}, { word:'PEN', emoji:'✏️', label:'write with it' },
-  { word:'TEN', emoji:'🔟', label:'a number'      }, { word:'HOP', emoji:'🐸', label:'jump around'   },
-  { word:'TOP', emoji:'🌀', label:'spins around'  }, { word:'MOP', emoji:'🧹', label:'cleans floors' },
-  { word:'HUG', emoji:'🤗', label:'show you care' }, { word:'BUG', emoji:'🐛', label:'tiny creature' },
-  { word:'MUG', emoji:'🍵', label:'big cup'       }, { word:'NUT', emoji:'🥜', label:'a small seed'  },
-  { word:'BAT', emoji:'🦇', label:'flies at night'}, { word:'CAR', emoji:'🚗', label:'a vehicle'     },
-  { word:'COW', emoji:'🐄', label:'gives milk'    }, { word:'EGG', emoji:'🥚', label:'from a hen'    },
-  { word:'FLY', emoji:'🦋', label:'goes up high'  }, { word:'BOX', emoji:'📦', label:'holds things'  },
+  { word:'CAT', emoji:'🐱', hint:'🐾'  }, { word:'DOG', emoji:'🐶', hint:'🦴'  },
+  { word:'SUN', emoji:'☀️', hint:'🌤️' }, { word:'BUS', emoji:'🚌', hint:'🛑'  },
+  { word:'RUN', emoji:'🏃', hint:'👟'  }, { word:'HAT', emoji:'🎩', hint:'👒'  },
+  { word:'BED', emoji:'🛏️', hint:'😴' }, { word:'CUP', emoji:'☕', hint:'🫖'  },
+  { word:'MAP', emoji:'🗺️', hint:'📍' }, { word:'PIG', emoji:'🐷', hint:'🐽'  },
+  { word:'HEN', emoji:'🐔', hint:'🥚'  }, { word:'FOX', emoji:'🦊', hint:'🌲'  },
+  { word:'FAN', emoji:'💨', hint:'🌬️' }, { word:'JAM', emoji:'🍓', hint:'🫙'  },
+  { word:'NET', emoji:'🕸️', hint:'🦋' }, { word:'PEN', emoji:'✏️', hint:'📝'  },
+  { word:'TEN', emoji:'🔟', hint:'🔢'  }, { word:'HOP', emoji:'🐸', hint:'🌿'  },
+  { word:'TOP', emoji:'🌀', hint:'🎯'  }, { word:'MOP', emoji:'🧹', hint:'🧽'  },
+  { word:'HUG', emoji:'🤗', hint:'💕'  }, { word:'BUG', emoji:'🐛', hint:'🌱'  },
+  { word:'MUG', emoji:'🍵', hint:'☕'  }, { word:'NUT', emoji:'🥜', hint:'🌰'  },
+  { word:'BAT', emoji:'🦇', hint:'🌙'  }, { word:'CAR', emoji:'🚗', hint:'🛣️' },
+  { word:'COW', emoji:'🐄', hint:'🥛'  }, { word:'EGG', emoji:'🥚', hint:'🍳'  },
+  { word:'FLY', emoji:'🦋', hint:'🌸'  }, { word:'BOX', emoji:'📦', hint:'🎁'  },
 ];
 
 const DOG_DEFS = [
@@ -619,19 +619,18 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.fillStyle = this.color; ctx.fill();
       ctx.strokeStyle = this.target ? '#E65100' : 'rgba(255,255,255,0.65)';
       ctx.lineWidth = this.target ? 3.5 : 2; ctx.stroke(); ctx.shadowBlur = 0;
-      // emoji top-left
-      ctx.font = '15px serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      // word emoji — top-left corner, small
+      ctx.font = '14px serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
       ctx.fillText(this.w.emoji, -w/2 + 5, -h/2 + 12);
-      // word (centered, bold)
+      // word text — centered, bold
       ctx.fillStyle = this.target ? '#1A1A1A' : '#FFFFFF';
       ctx.font = `bold ${Math.floor(w * 0.22)}px 'Arial Black', Arial`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 3;
-      ctx.fillText(this.w.word, 0, -5); ctx.shadowBlur = 0;
-      // label below word
-      ctx.fillStyle = this.target ? 'rgba(60,30,0,0.85)' : 'rgba(255,255,255,0.82)';
-      ctx.font = `${Math.floor(w * 0.115)}px Arial`;
-      ctx.fillText(this.w.label || '', 0, h/2 - 13);
+      ctx.fillText(this.w.word, 0, -6); ctx.shadowBlur = 0;
+      // hint emoji — visual picture of the item, replaces text label
+      ctx.font = '19px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(this.w.hint || this.w.emoji, 0, h/2 - 14);
       ctx.restore();
       if (this.target) {
         for (let i = 0; i < 3; i++) {
@@ -650,55 +649,74 @@ function runGame(canvas, { onSuccess, difficulty }) {
   }
 
   // ── Obstacles ────────────────────────────────
-  // Ground hazards the dog must jump over, plus running cat enemies
-  const GROUND_OBS = ['🪨','🌵','🪵','🏗️'];
+  // Road hazards drawn ON the ground surface, plus running enemies
+  const ROAD_OBS = ['🚧','🪨','🛢️','🌵','🪵'];
 
   class Obstacle {
     constructor() {
-      this.gY = canvas.height * GROUND_RATIO;
-      this.isEnemy = Math.random() < 0.32; // ~1-in-3 is a running cat
+      this.gY    = canvas.height * GROUND_RATIO;
+      this.isEnemy = Math.random() < 0.28; // running enemy
       if (this.isEnemy) {
-        this.emoji = '🐱';
-        this.w = 46; this.h = 46;
-        this.speed = (2.8 + Math.random() * 1.8) * speedMult;
-        this.dir = -1; // always from right → left
-        this.x = canvas.width + this.w;
+        // pick a running animal enemy
+        this.emoji = ['🐱','🐔','🐇'][Math.floor(Math.random() * 3)];
+        this.w = 52; this.h = 52;
+        this.speed = (3.2 + Math.random() * 2) * speedMult;
       } else {
-        this.emoji = GROUND_OBS[Math.floor(Math.random() * GROUND_OBS.length)];
-        this.w = 42; this.h = 42;
-        this.speed = (1.6 + Math.random() * 1.2) * speedMult;
-        this.dir = -1;
-        this.x = canvas.width + this.w;
+        this.emoji = ROAD_OBS[Math.floor(Math.random() * ROAD_OBS.length)];
+        this.w = 50; this.h = 52;
+        this.speed = (1.8 + Math.random() * 1.2) * speedMult;
       }
+      this.x = canvas.width + this.w;
       this.alive = true;
+      // warning pulse
+      this.warnT = 0;
     }
     update() {
-      this.x += this.dir * this.speed;
+      this.x -= this.speed;
+      this.warnT += 0.15;
       if (this.x < -this.w * 2) this.alive = false;
     }
     draw() {
+      const gY = this.gY;
       ctx.save();
+
+      // road shadow / sticker underneath — makes it look ON the road
+      ctx.fillStyle = 'rgba(0,0,0,0.20)';
+      ctx.beginPath();
+      ctx.ellipse(this.x, gY + 3, this.w * 0.52, 7, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // warning glow when within ~220 px of dog's default center
+      const warnAlpha = 0.55 + Math.sin(this.warnT) * 0.35;
+      if (this.x < canvas.width * 0.55) {
+        ctx.save();
+        ctx.globalAlpha = warnAlpha * 0.45;
+        ctx.fillStyle = this.isEnemy ? '#FF4444' : '#FF8800';
+        ctx.beginPath();
+        ctx.ellipse(this.x, gY - this.h * 0.5, this.w * 0.62, this.h * 0.55, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // the emoji, sitting on the ground
       ctx.font = `${this.h}px serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       if (this.isEnemy) {
-        // flip horizontally so the cat faces direction of movement
-        ctx.translate(this.x, this.gY + 6);
-        ctx.scale(-1, 1); // cat faces right (running left = looks right)
+        ctx.translate(this.x, gY + 4);
+        ctx.scale(-1, 1); // face the direction of travel
         ctx.fillText(this.emoji, 0, 0);
       } else {
-        ctx.fillText(this.emoji, this.x, this.gY + 6);
+        ctx.fillText(this.emoji, this.x, gY + 4);
       }
-      // small shadow
-      ctx.globalAlpha = 0.18; ctx.fillStyle = '#000';
-      ctx.beginPath(); ctx.ellipse(this.x, this.gY + 4, this.w * 0.38, 5, 0, 0, Math.PI * 2); ctx.fill();
+
       ctx.restore();
     }
     bounds() {
       return {
-        left:   this.x - this.w * 0.32,
-        right:  this.x + this.w * 0.32,
-        top:    this.gY - this.h * 0.88,
+        left:   this.x - this.w * 0.30,
+        right:  this.x + this.w * 0.30,
+        top:    this.gY - this.h * 0.90,
         bottom: this.gY + 4,
       };
     }
