@@ -189,6 +189,14 @@ const CATEGORIES = [
         bg: 'linear-gradient(145deg, #0d47a1, #42a5f5)',
         glow: 'rgba(13,71,161,0.4)',
       },
+      {
+        id: 'colorbook',
+        emoji: '🎨',
+        nameKey: 'colorBookName',
+        descKey: 'colorBookDesc',
+        bg: 'linear-gradient(145deg, #f06292, #ce93d8)',
+        glow: 'rgba(240,98,146,0.4)',
+      },
     ],
   },
 ];

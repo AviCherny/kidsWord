@@ -24,6 +24,7 @@ import PJMasks from './games/PJMasks';
 import Sonic from './games/Sonic';
 import PizzaParty from './games/PizzaParty';
 import PawPatrol from './games/PawPatrol';
+import ColorBook from './games/ColorBook';
 import { getEarnedStickers, earnSticker, migrateLegacyStickers, getEarnedCandy, earnCandy } from './lib/storage';
 import { getNextSticker } from './data/stickers';
 import { getNextCandy } from './data/candy';
@@ -49,6 +50,7 @@ const GAME_COMPONENTS = {
   sonic: Sonic,
   pizzaparty: PizzaParty,
   pawpatrol: PawPatrol,
+  colorbook: ColorBook,
 };
 
 function createDifficultyConfig(title = 'Difficulty') {

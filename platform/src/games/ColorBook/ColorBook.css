@@ -1,0 +1,200 @@
+/* ═══════════════════════════════════════════════════════
+   ColorBook – coloring-book game styles
+   ═══════════════════════════════════════════════════════ */
+
+.cb-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  min-height: 0;
+  background: #fdf6ff;
+  padding: 8px 12px 12px;
+  box-sizing: border-box;
+  gap: 6px;
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────── */
+
+.cb-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+.cb-pic-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #4a148c;
+  letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 100px;
+  justify-content: center;
+}
+
+.cb-pic-emoji {
+  font-size: 1.6rem;
+}
+
+.cb-nav-btn {
+  background: #ede7f6;
+  border: none;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: #6a1b9a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: 2px; /* optical alignment for ‹ › */
+}
+
+.cb-nav-btn:active {
+  background: #ce93d8;
+  transform: scale(0.92);
+}
+
+/* ── SVG Canvas ─────────────────────────────────────── */
+
+.cb-canvas {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.cb-canvas svg {
+  max-height: 55vh;
+  max-width: 100%;
+  height: 100%;
+  width: auto;
+  /* white drawing surface with a soft shadow */
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.10);
+  display: block;
+}
+
+.cb-region {
+  transition: fill 0.12s ease;
+}
+
+.cb-region:hover {
+  filter: brightness(0.92);
+}
+
+.cb-region:active {
+  filter: brightness(0.80);
+}
+
+/* ── Selected color indicator ───────────────────────── */
+
+.cb-color-selected {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border-radius: 30px;
+  padding: 6px 18px 6px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.10);
+  flex-shrink: 0;
+}
+
+.cb-selected-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.18);
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.cb-selected-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #37474f;
+  min-width: 50px;
+}
+
+/* ── Palette ─────────────────────────────────────────── */
+
+.cb-palette {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  flex-shrink: 0;
+}
+
+.cb-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2.5px solid rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.12s, box-shadow 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.cb-swatch:hover {
+  transform: scale(1.08);
+}
+
+.cb-swatch:active {
+  transform: scale(0.92);
+}
+
+.cb-swatch--selected {
+  transform: scale(1.22);
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 5px #7b1fa2;
+  z-index: 1;
+  position: relative;
+}
+
+/* ── Done button ─────────────────────────────────────── */
+
+.cb-done-btn {
+  background: linear-gradient(135deg, #43a047, #66bb6a);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 14px 40px;
+  font-size: 1.25rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(67, 160, 71, 0.45);
+  transition: transform 0.12s, box-shadow 0.12s;
+  -webkit-tap-highlight-color: transparent;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+
+.cb-done-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(67, 160, 71, 0.5);
+}
+
+.cb-done-btn:active {
+  transform: translateY(0) scale(0.96);
+}

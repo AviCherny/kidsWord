@@ -46,6 +46,8 @@ export const T = {
     sonicDesc: 'רוץ בגרין היל, אסוף טבעות והגע לשלט הסיום.',
     pawPatrolName: 'פאו פטרול',
     pawPatrolDesc: 'בחר גור, רוץ וקפוץ כדי לתפוס את המילה הנכונה!',
+    colorBookName: 'חוברת צביעה',
+    colorBookDesc: 'בחר צבע וצבע את הציור',
     // Category labels
     catLanguage: 'שפה ומילים',
     catLogic: 'חשיבה והיגיון',
@@ -152,6 +154,8 @@ export const T = {
     sonicDesc: 'Race through Green Hill, eat good food, avoid bad food, and reach the goal sign.',
     pawPatrolName: 'Paw Patrol',
     pawPatrolDesc: 'Pick a pup, run & jump to catch the right word!',
+    colorBookName: 'Coloring Book',
+    colorBookDesc: 'Pick a color and paint!',
     // Category labels
     catLanguage: 'Language & Words',
     catLogic: 'Logic & Thinking',
