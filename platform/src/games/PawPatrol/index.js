@@ -595,6 +595,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
       this.bobT = Math.random() * Math.PI * 2;
       this.alive  = true; this.catchT = 0; this.rot = 0; this.sparkT = 0;
       this.r = 38; // collision radius
+      const ITEM_COLORS = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#DDA0DD','#F4A261'];
+      this.bgColor = isTarget ? '#FFD700' : ITEM_COLORS[Math.floor(Math.random() * ITEM_COLORS.length)];
     }
     update() {
       if (this.catchT > 0) {
@@ -622,9 +624,13 @@ function runGame(canvas, { onSuccess, difficulty }) {
         ctx.shadowBlur = 0;
       }
 
-      // soft bubble background so items stand out against the sky
-      ctx.fillStyle = this.target ? 'rgba(255,240,100,0.55)' : 'rgba(255,255,255,0.40)';
+      // solid filled circle — fully opaque background
+      ctx.fillStyle = this.bgColor;
       ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+      // dark border ring to separate from sky
+      ctx.strokeStyle = this.target ? '#B8860B' : 'rgba(0,0,0,0.25)';
+      ctx.lineWidth = this.target ? 3 : 2;
+      ctx.stroke();
 
       // the real item emoji — large and clear
       ctx.font = `${r * 1.35}px serif`;
@@ -701,10 +707,10 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.arc(this.x, gY - this.h * 0.5, this.w * 0.58 + pulse * 6, 0, Math.PI * 2);
       ctx.stroke();
 
-      // inner filled glow
-      ctx.fillStyle = this.isEnemy ? `rgba(255,80,80,${0.18 + pulse * 0.18})` : `rgba(255,200,0,${0.18 + pulse * 0.18})`;
+      // solid filled circle background — fully opaque so emoji is never see-through
+      ctx.fillStyle = this.isEnemy ? '#FF5555' : '#FFA500';
       ctx.beginPath();
-      ctx.arc(this.x, gY - this.h * 0.5, this.w * 0.58 + pulse * 4, 0, Math.PI * 2);
+      ctx.arc(this.x, gY - this.h * 0.5, this.w * 0.52, 0, Math.PI * 2);
       ctx.fill();
 
       // the emoji — big, sitting on the ground
