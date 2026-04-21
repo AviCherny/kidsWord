@@ -5,16 +5,21 @@ import './PawPatrol.css';
 // WORD CURRICULUM
 // ─────────────────────────────────────────────
 const WORDS = [
-  { word:'CAT', emoji:'🐱' }, { word:'DOG', emoji:'🐶' }, { word:'SUN', emoji:'☀️'  },
-  { word:'BUS', emoji:'🚌' }, { word:'RUN', emoji:'🏃' }, { word:'HAT', emoji:'🎩' },
-  { word:'BED', emoji:'🛏️'}, { word:'CUP', emoji:'☕' }, { word:'MAP', emoji:'🗺️' },
-  { word:'PIG', emoji:'🐷' }, { word:'HEN', emoji:'🐔' }, { word:'FOX', emoji:'🦊' },
-  { word:'FAN', emoji:'💨' }, { word:'JAM', emoji:'🍓' }, { word:'NET', emoji:'🕸️' },
-  { word:'PEN', emoji:'✏️' }, { word:'TEN', emoji:'🔟' }, { word:'HOP', emoji:'🐸' },
-  { word:'TOP', emoji:'🌀' }, { word:'MOP', emoji:'🧹' }, { word:'HUG', emoji:'🤗' },
-  { word:'BUG', emoji:'🐛' }, { word:'MUG', emoji:'🍵' }, { word:'NUT', emoji:'🥜' },
-  { word:'BAT', emoji:'🦇' }, { word:'CAR', emoji:'🚗' }, { word:'COW', emoji:'🐄' },
-  { word:'EGG', emoji:'🥚' }, { word:'FLY', emoji:'🦋' }, { word:'BOX', emoji:'📦' },
+  { word:'CAT', emoji:'🐱', label:'an animal'     }, { word:'DOG', emoji:'🐶', label:'an animal'     },
+  { word:'SUN', emoji:'☀️', label:'in the sky'    }, { word:'BUS', emoji:'🚌', label:'a vehicle'     },
+  { word:'RUN', emoji:'🏃', label:'move fast'     }, { word:'HAT', emoji:'🎩', label:'wear on head'  },
+  { word:'BED', emoji:'🛏️', label:'sleep here'    }, { word:'CUP', emoji:'☕', label:'drink from it' },
+  { word:'MAP', emoji:'🗺️', label:'shows places'  }, { word:'PIG', emoji:'🐷', label:'on a farm'     },
+  { word:'HEN', emoji:'🐔', label:'a bird'        }, { word:'FOX', emoji:'🦊', label:'wild animal'   },
+  { word:'FAN', emoji:'💨', label:'moves air'     }, { word:'JAM', emoji:'🍓', label:'sweet spread'  },
+  { word:'NET', emoji:'🕸️', label:'catches things'}, { word:'PEN', emoji:'✏️', label:'write with it' },
+  { word:'TEN', emoji:'🔟', label:'a number'      }, { word:'HOP', emoji:'🐸', label:'jump around'   },
+  { word:'TOP', emoji:'🌀', label:'spins around'  }, { word:'MOP', emoji:'🧹', label:'cleans floors' },
+  { word:'HUG', emoji:'🤗', label:'show you care' }, { word:'BUG', emoji:'🐛', label:'tiny creature' },
+  { word:'MUG', emoji:'🍵', label:'big cup'       }, { word:'NUT', emoji:'🥜', label:'a small seed'  },
+  { word:'BAT', emoji:'🦇', label:'flies at night'}, { word:'CAR', emoji:'🚗', label:'a vehicle'     },
+  { word:'COW', emoji:'🐄', label:'gives milk'    }, { word:'EGG', emoji:'🥚', label:'from a hen'    },
+  { word:'FLY', emoji:'🦋', label:'goes up high'  }, { word:'BOX', emoji:'📦', label:'holds things'  },
 ];
 
 const DOG_DEFS = [
@@ -590,8 +595,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
       this.vy = (1.4 + Math.random() * 0.8) * speedMult;
       this.vx = (Math.random() - 0.5) * 0.6;
       this.bobT = Math.random() * Math.PI * 2;
-      this.bw = 96; this.bh = 54;
       this.alive  = true; this.catchT = 0; this.rot = 0; this.sparkT = 0;
+      this.bw = 110; this.bh = 72;
       this.color  = isTarget ? '#FFD700' : BADGE_COLORS[Math.floor(Math.random() * BADGE_COLORS.length)];
     }
     update() {
@@ -614,13 +619,19 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.fillStyle = this.color; ctx.fill();
       ctx.strokeStyle = this.target ? '#E65100' : 'rgba(255,255,255,0.65)';
       ctx.lineWidth = this.target ? 3.5 : 2; ctx.stroke(); ctx.shadowBlur = 0;
-      ctx.font = '14px serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-      ctx.fillText(this.w.emoji, -w/2 + 5, -h/2 + 11);
+      // emoji top-left
+      ctx.font = '15px serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText(this.w.emoji, -w/2 + 5, -h/2 + 12);
+      // word (centered, bold)
       ctx.fillStyle = this.target ? '#1A1A1A' : '#FFFFFF';
-      ctx.font = `bold ${Math.floor(w * 0.25)}px 'Arial Black', Arial`;
+      ctx.font = `bold ${Math.floor(w * 0.22)}px 'Arial Black', Arial`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 3;
-      ctx.fillText(this.w.word, 0, 4); ctx.shadowBlur = 0;
+      ctx.fillText(this.w.word, 0, -5); ctx.shadowBlur = 0;
+      // label below word
+      ctx.fillStyle = this.target ? 'rgba(60,30,0,0.85)' : 'rgba(255,255,255,0.82)';
+      ctx.font = `${Math.floor(w * 0.115)}px Arial`;
+      ctx.fillText(this.w.label || '', 0, h/2 - 13);
       ctx.restore();
       if (this.target) {
         for (let i = 0; i < 3; i++) {
@@ -636,6 +647,61 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
   function hits(a, b) {
     return a.right > b.left && a.left < b.right && a.bottom > b.top && a.top < b.bottom;
+  }
+
+  // ── Obstacles ────────────────────────────────
+  // Ground hazards the dog must jump over, plus running cat enemies
+  const GROUND_OBS = ['🪨','🌵','🪵','🏗️'];
+
+  class Obstacle {
+    constructor() {
+      this.gY = canvas.height * GROUND_RATIO;
+      this.isEnemy = Math.random() < 0.32; // ~1-in-3 is a running cat
+      if (this.isEnemy) {
+        this.emoji = '🐱';
+        this.w = 46; this.h = 46;
+        this.speed = (2.8 + Math.random() * 1.8) * speedMult;
+        this.dir = -1; // always from right → left
+        this.x = canvas.width + this.w;
+      } else {
+        this.emoji = GROUND_OBS[Math.floor(Math.random() * GROUND_OBS.length)];
+        this.w = 42; this.h = 42;
+        this.speed = (1.6 + Math.random() * 1.2) * speedMult;
+        this.dir = -1;
+        this.x = canvas.width + this.w;
+      }
+      this.alive = true;
+    }
+    update() {
+      this.x += this.dir * this.speed;
+      if (this.x < -this.w * 2) this.alive = false;
+    }
+    draw() {
+      ctx.save();
+      ctx.font = `${this.h}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      if (this.isEnemy) {
+        // flip horizontally so the cat faces direction of movement
+        ctx.translate(this.x, this.gY + 6);
+        ctx.scale(-1, 1); // cat faces right (running left = looks right)
+        ctx.fillText(this.emoji, 0, 0);
+      } else {
+        ctx.fillText(this.emoji, this.x, this.gY + 6);
+      }
+      // small shadow
+      ctx.globalAlpha = 0.18; ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.ellipse(this.x, this.gY + 4, this.w * 0.38, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+    bounds() {
+      return {
+        left:   this.x - this.w * 0.32,
+        right:  this.x + this.w * 0.32,
+        top:    this.gY - this.h * 0.88,
+        bottom: this.gY + 4,
+      };
+    }
   }
 
   // ── Game state ───────────────────────────────
@@ -655,6 +721,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
   let items     = [];
   let roundPhase = 'idle';
   let roundTimer = 0;
+  let obstacles  = [];
+  let obsTimer   = 0; // frames until next obstacle
 
   function nextWord() {
     if (wordIdx >= wordPool.length) { wordPool = shuffle(WORDS); wordIdx = 0; }
@@ -720,6 +788,25 @@ function runGame(canvas, { onSuccess, difficulty }) {
       }
     }
     items = items.filter(i => i.alive || i.catchT > 0);
+
+    // ── Obstacles
+    if (--obsTimer <= 0) {
+      obstacles.push(new Obstacle());
+      obsTimer = 280 + Math.floor(Math.random() * 180); // spawn every 4-8 seconds
+    }
+    obstacles.forEach(o => o.update());
+    if (roundPhase === 'active' && dog.state !== 'ouch') {
+      const db = dog.bounds();
+      for (const o of obstacles) {
+        if (hits(db, o.bounds())) {
+          dog.ouch(); lives--; combo = 0;
+          speak(o.isEnemy ? 'Watch out!' : 'Jump over it!');
+          if (lives <= 0) { endGame(); return; }
+          break;
+        }
+      }
+    }
+    obstacles = obstacles.filter(o => o.alive);
   }
 
   // ── HUD ──────────────────────────────────────
@@ -760,7 +847,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
     ctx.fillStyle = 'rgba(255,255,255,0.22)';
     ctx.font = '13px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText('← → run  |  Space / ↑ jump', canvas.width / 2, canvas.height - 10);
+    ctx.fillText('← → run  |  Space / ↑ jump  |  Jump over obstacles!', canvas.width / 2, canvas.height - 10);
   }
 
   // ── Touch buttons ────────────────────────────
@@ -894,7 +981,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
   function resetGame(dogData) {
     dog = new Dog(dogData);
     score = 0; lives = 3; combo = 0; roundNum = 0; catchCount = 0;
-    particles = []; pawPrints = []; items = [];
+    particles = []; pawPrints = []; items = []; obstacles = []; obsTimer = 220;
     wordPool = shuffle(WORDS); wordIdx = 0;
     initBg();
     state = ST.PLAY;
@@ -991,6 +1078,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
     tickParticles(); drawParticles();
 
     if (state === ST.PLAY) {
+      obstacles.forEach(o => o.draw());
       items.forEach(it => it.draw());
       dog.update(); updateRound(); dog.draw();
       drawHUD(); drawTouchBtns();
