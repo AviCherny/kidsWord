@@ -66,22 +66,28 @@ function runGame(canvas, { onSuccess, difficulty }) {
   // ── dog drawing helpers ──────────────────────
   function getDogsColors(name) {
     if (name === 'Chase') return {
-      body:'#C8960C', dark:'#8B5A00', belly:'#E8D090',
-      ear:'#8B5A00', earInner:'#E8AA90', earStyle:'pointy',
-      collar:'#1565C0', leg:'#C8960C', paw:'#D4B048',
-      nose:'#1A0800', spots:null,
+      body:'#D4A030', dark:'#7A4800', belly:'#ECD498',
+      ear:'#7A4800', earInner:'#FFCCAA', earStyle:'pointy',
+      uniform:'#1565C0', badge:'#FFD700',
+      leg:'#D4A030', paw:'#C49030',
+      nose:'#2A1200', eye:'#1E88E5',
+      spots:null, hat:'police',
     };
     if (name === 'Marshall') return {
-      body:'#F2EDE0', dark:'#F2EDE0', belly:'#F2EDE0',
-      ear:'#E0D5C5', earInner:'#FFB8B8', earStyle:'floppy',
-      collar:'#C62828', leg:'#F2EDE0', paw:'#F2EDE0',
-      nose:'#111', spots:'#2A2A2A',
+      body:'#F8F4EE', dark:'#1A1A1A', belly:'#F8F4EE',
+      ear:'#EDE5D8', earInner:'#FFBBBB', earStyle:'floppy',
+      uniform:'#D32F2F', badge:'#FFFFFF',
+      leg:'#F8F4EE', paw:'#F8F4EE',
+      nose:'#111', eye:'#3B2A1A',
+      spots:'#1A1A1A', hat:'fire',
     };
     return { // Rubble
-      body:'#8B5E30', dark:'#5C3A18', belly:'#C49060',
-      ear:'#5C3A18', earInner:'#E8A890', earStyle:'folded',
-      collar:'#F9A825', leg:'#8B5E30', paw:'#C49060',
-      nose:'#111', spots:null,
+      body:'#A0652A', dark:'#6B4018', belly:'#D4A060',
+      ear:'#6B4018', earInner:'#E8A890', earStyle:'folded',
+      uniform:'#F57C00', badge:'#FFD700',
+      leg:'#A0652A', paw:'#C48040',
+      nose:'#111', eye:'#3A2A10',
+      spots:null, hat:'hardhat',
     };
   }
 
@@ -106,7 +112,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
     const celebrate = state === 'celebrate';
 
     // Layout (local coords: ground = y:0, dog faces right = +x)
-    const bCY  = -h * 0.54;
+    const bCY  = -h * 0.52;
     const bRx  = w * 0.40;
     const bRy  = h * 0.175;
     const legY  = bCY + bRy * 0.95;
@@ -116,9 +122,9 @@ function runGame(canvas, { onSuccess, difficulty }) {
     const lLen = h * 0.20;
     const legW = w * 0.09;
     const pawR = w * 0.075;
-    const hR   = w * 0.235;
-    const hX   =  w * 0.30;
-    const hY   = bCY - bRy * 0.85 - hR * 0.7;
+    const hR   = w * 0.26;          // bigger cartoon head
+    const hX   =  w * 0.27;
+    const hY   = bCY - bRy * 0.82 - hR * 0.72;
     const tX   = -bRx * 0.85;
     const tY   = bCY - bRy * 0.15;
 
@@ -126,10 +132,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
     const sw = 0.52;
     let fA=0, fB=0, bA=0, bB=0, fKA=0, fKB=0, bKA=0, bKB=0;
     if (running) {
-      fA =  Math.sin(ph) * sw;
-      fB = -Math.sin(ph) * sw;
-      bA = -Math.sin(ph) * sw * 0.85;
-      bB =  Math.sin(ph) * sw * 0.85;
+      fA =  Math.sin(ph) * sw;   fB = -Math.sin(ph) * sw;
+      bA = -Math.sin(ph) * sw * 0.85; bB =  Math.sin(ph) * sw * 0.85;
       const kn = 0.38;
       fKA = Math.max(0, Math.sin(ph + 0.8)) * kn;
       fKB = Math.max(0, Math.sin(ph + 0.8 + Math.PI)) * kn;
@@ -140,7 +144,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
       fA = fB = ext * 0.9; bA = bB = -ext * 0.6;
     }
 
-    // Tail wag
     const wag = Math.sin(bgTick * (running||celebrate ? 0.28 : 0.1)) * (running||celebrate ? 0.5 : 0.2);
 
     // ── Tail
@@ -161,84 +164,186 @@ function runGame(canvas, { onSuccess, difficulty }) {
     drawLegSeg(bLX, legY, uLen, lLen, legW, pawR, bB, bKB, c.leg, c.paw);
     ctx.restore();
 
-    // ── Body
+    // ── Body (fur base)
     ctx.fillStyle = c.body;
     ctx.beginPath(); ctx.ellipse(0, bCY, bRx, bRy, 0, 0, Math.PI*2); ctx.fill();
-    if (c.dark !== c.body) {
+    if (c.dark !== c.body) { // saddle marking (Chase / Rubble)
       ctx.fillStyle = c.dark;
-      ctx.beginPath(); ctx.ellipse(-bRx*0.12, bCY - bRy*0.28, bRx*0.58, bRy*0.56, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-bRx*0.1, bCY - bRy*0.3, bRx*0.55, bRy*0.5, 0, 0, Math.PI*2); ctx.fill();
     }
     ctx.fillStyle = c.belly;
-    ctx.beginPath(); ctx.ellipse(bRx*0.08, bCY + bRy*0.32, bRx*0.48, bRy*0.45, 0, 0, Math.PI*2); ctx.fill();
-    if (c.spots) {
+    ctx.beginPath(); ctx.ellipse(bRx*0.1, bCY + bRy*0.3, bRx*0.45, bRy*0.42, 0, 0, Math.PI*2); ctx.fill();
+    if (c.spots) { // Marshall body spots
       ctx.fillStyle = c.spots;
-      [[-bRx*0.3, bCY-bRy*0.35, 5.5],[bRx*0.12, bCY-bRy*0.08, 7],
-       [-bRx*0.55, bCY+bRy*0.1, 4.5],[bRx*0.4, bCY+bRy*0.25, 4]].forEach(([sx,sy,sr]) => {
+      [[-bRx*0.28, bCY-bRy*0.32, 5.5],[bRx*0.14, bCY-bRy*0.05, 7],
+       [-bRx*0.52, bCY+bRy*0.12, 4.5],[bRx*0.38, bCY+bRy*0.28, 4]].forEach(([sx,sy,sr]) => {
          ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
        });
     }
 
-    // ── Neck + Collar
-    ctx.fillStyle = c.body;
-    ctx.beginPath(); ctx.ellipse(fLX + w*0.08, bCY - bRy*0.72, w*0.14, bRy*0.6, -0.25, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = c.collar;
-    ctx.beginPath(); ctx.ellipse(fLX + w*0.08, bCY - bRy*0.62, w*0.15, w*0.055, -0.25, 0, Math.PI*2); ctx.fill();
-
-    // ── Ears (drawn before head for depth)
-    if (c.earStyle === 'pointy') {
-      [[-hR*0.28, -0.15],[hR*0.28, 0.15]].forEach(([ex, rot]) => {
-        ctx.save(); ctx.translate(hX + ex, hY - hR*0.55); ctx.rotate(rot);
-        ctx.fillStyle = c.ear;
-        ctx.beginPath(); ctx.moveTo(-hR*0.2, hR*0.3); ctx.lineTo(0, -hR*0.55); ctx.lineTo(hR*0.2, hR*0.3); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = c.earInner;
-        ctx.beginPath(); ctx.moveTo(-hR*0.1, hR*0.2); ctx.lineTo(0, -hR*0.35); ctx.lineTo(hR*0.1, hR*0.2); ctx.closePath(); ctx.fill();
-        ctx.restore();
-      });
-    } else if (c.earStyle === 'floppy') {
-      [[-hR*0.38, hR*0.55],[hR*0.15, hR*0.5]].forEach(([ex, ey], i) => {
-        ctx.fillStyle = c.ear;
-        ctx.beginPath(); ctx.ellipse(hX+ex, hY - hR*0.4 + ey, hR*0.2, hR*0.46, i===0 ? -0.3 : 0.3, 0, Math.PI*2); ctx.fill();
-        if (c.spots) { ctx.fillStyle = c.spots; ctx.beginPath(); ctx.arc(hX+ex, hY-hR*0.2+ey*0.6, 3, 0, Math.PI*2); ctx.fill(); }
-      });
-    } else { // folded (Rubble)
-      [[-hR*0.55, -hR*0.45],[hR*0.5, -hR*0.4]].forEach(([ex, ey]) => {
-        ctx.fillStyle = c.ear;
-        ctx.beginPath(); ctx.ellipse(hX+ex, hY+ey, hR*0.24, hR*0.18, ex>0 ? 0.5 : -0.5, 0, Math.PI*2); ctx.fill();
-        ctx.fillStyle = c.earInner;
-        ctx.beginPath(); ctx.ellipse(hX+ex, hY+ey, hR*0.13, hR*0.1, ex>0 ? 0.5 : -0.5, 0, Math.PI*2); ctx.fill();
-      });
+    // ── Uniform vest (front half of body, character color)
+    ctx.save();
+    ctx.fillStyle = c.uniform;
+    ctx.beginPath(); ctx.ellipse(bRx*0.12, bCY, bRx*0.62, bRy*0.88, 0, 0, Math.PI*2); ctx.clip();
+    ctx.beginPath(); ctx.rect(0, bCY - bRy*1.2, bRx*1.3, bRy*2.4); ctx.fill();
+    ctx.restore();
+    // Vest detail
+    if (name === 'Chase') { // gold badge star on vest
+      ctx.fillStyle = c.badge;
+      ctx.beginPath(); ctx.arc(bRx*0.42, bCY, bRy*0.42, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#1565C0'; ctx.font = `bold ${Math.round(bRy*0.44)}px sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('★', bRx*0.42, bCY + 1);
+    } else if (name === 'Marshall') { // white cross on vest
+      ctx.fillStyle = 'white';
+      const cxB = bRx*0.4, vw = bRy*0.28, vl = bRy*0.75;
+      ctx.fillRect(cxB - vw/2, bCY - vl/2, vw, vl);
+      ctx.fillRect(cxB - vl/2, bCY - vw/2, vl, vw);
     }
+
+    // ── Neck + collar (uniform color)
+    ctx.fillStyle = c.body;
+    ctx.beginPath(); ctx.ellipse(fLX + w*0.08, bCY - bRy*0.72, w*0.13, bRy*0.58, -0.25, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = c.uniform;
+    ctx.beginPath(); ctx.ellipse(fLX + w*0.06, bCY - bRy*0.66, w*0.14, w*0.05, -0.2, 0, Math.PI*2); ctx.fill();
+
+    // ── Ears  (Chase: after hat; Marshall/Rubble: before hat, drawn here)
+    const drawEars = () => {
+      if (c.earStyle === 'pointy') { // Chase — upright German Shepherd ears
+        [[-hR*0.3, -0.12],[hR*0.25, 0.12]].forEach(([ex, rot]) => {
+          ctx.save(); ctx.translate(hX + ex, hY - hR*0.5); ctx.rotate(rot);
+          ctx.fillStyle = c.ear;
+          ctx.beginPath(); ctx.moveTo(-hR*0.22, hR*0.32); ctx.lineTo(0, -hR*0.6); ctx.lineTo(hR*0.22, hR*0.32); ctx.closePath(); ctx.fill();
+          ctx.fillStyle = c.earInner;
+          ctx.beginPath(); ctx.moveTo(-hR*0.11, hR*0.22); ctx.lineTo(0, -hR*0.38); ctx.lineTo(hR*0.11, hR*0.22); ctx.closePath(); ctx.fill();
+          ctx.restore();
+        });
+      } else if (c.earStyle === 'floppy') { // Marshall — Dalmatian floppy ears
+        [[-hR*0.42, hR*0.58],[hR*0.12, hR*0.52]].forEach(([ex, ey], i) => {
+          ctx.fillStyle = c.ear;
+          ctx.beginPath(); ctx.ellipse(hX+ex, hY - hR*0.38 + ey, hR*0.22, hR*0.5, i===0 ? -0.22 : 0.22, 0, Math.PI*2); ctx.fill();
+          if (c.spots) { ctx.fillStyle = c.spots; ctx.beginPath(); ctx.arc(hX+ex, hY-hR*0.1+ey*0.55, 3.5, 0, Math.PI*2); ctx.fill(); }
+        });
+      } else { // Rubble — bulldog side ears, small and folded
+        [[-hR*0.58, -hR*0.42],[hR*0.52, -hR*0.38]].forEach(([ex, ey]) => {
+          ctx.fillStyle = c.ear;
+          ctx.beginPath(); ctx.ellipse(hX+ex, hY+ey, hR*0.26, hR*0.2, ex>0 ? 0.6 : -0.6, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = c.earInner;
+          ctx.beginPath(); ctx.ellipse(hX+ex, hY+ey, hR*0.14, hR*0.11, ex>0 ? 0.6 : -0.6, 0, Math.PI*2); ctx.fill();
+        });
+      }
+    };
+
+    // Marshall/Rubble: ears behind helmet
+    if (c.hat !== 'police') drawEars();
 
     // ── Head
     ctx.fillStyle = c.body;
     ctx.beginPath(); ctx.arc(hX, hY, hR, 0, Math.PI*2); ctx.fill();
+
+    // Chase — darker mask/saddle pattern wraps around top of head
+    if (name === 'Chase') {
+      ctx.save(); ctx.globalAlpha = 0.55; ctx.fillStyle = c.dark;
+      ctx.beginPath(); ctx.ellipse(hX - hR*0.05, hY - hR*0.35, hR*0.88, hR*0.52, 0, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+    // Marshall head spots
     if (c.spots) {
       ctx.fillStyle = c.spots;
-      [[hR*0.3, -hR*0.28, 4],[-hR*0.1, hR*0.2, 3.5]].forEach(([sx,sy,sr]) => {
+      [[hR*0.32, -hR*0.26, 4],[-hR*0.08, hR*0.22, 3.5]].forEach(([sx,sy,sr]) => {
         ctx.beginPath(); ctx.arc(hX+sx, hY+sy, sr, 0, Math.PI*2); ctx.fill();
       });
     }
 
     // Snout
-    const snRx = name==='Rubble' ? hR*0.42 : hR*0.35;
-    const snRy = name==='Rubble' ? hR*0.32 : hR*0.24;
-    const snX  = hX + hR*0.62;
-    const snY  = hY + hR*0.15;
+    const snRx = name==='Rubble' ? hR*0.46 : hR*0.37;
+    const snRy = name==='Rubble' ? hR*0.34 : hR*0.26;
+    const snX  = hX + hR*0.60;
+    const snY  = hY + hR*0.18;
     ctx.fillStyle = c.belly;
     ctx.beginPath(); ctx.ellipse(snX, snY, snRx, snRy, 0, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = c.nose;
-    ctx.beginPath(); ctx.ellipse(snX + snRx*0.52, snY - snRy*0.3, snRx*0.38, snRy*0.52, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.beginPath(); ctx.arc(snX + snRx*0.38, snY - snRy*0.5, snRx*0.12, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(snX + snRx*0.5, snY - snRy*0.28, snRx*0.38, snRy*0.52, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.5)';
+    ctx.beginPath(); ctx.arc(snX + snRx*0.35, snY - snRy*0.48, snRx*0.12, 0, Math.PI*2); ctx.fill();
+    // Rubble underbite
+    if (name === 'Rubble') {
+      ctx.strokeStyle = c.dark; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(snX - snRx*0.22, snY + snRy*0.55);
+      ctx.quadraticCurveTo(snX, snY + snRy*0.95, snX + snRx*0.22, snY + snRy*0.55); ctx.stroke();
+    }
 
-    // Eye + brow
-    const eR = hR*0.2, eX = hX + hR*0.22, eY = hY - hR*0.22;
-    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(eX, eY, eR*1.15, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#111';  ctx.beginPath(); ctx.arc(eX, eY, eR, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(eX+eR*0.35, eY-eR*0.35, eR*0.35, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = c.dark !== c.body ? c.dark : '#555';
-    ctx.lineWidth = 2.5; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(eX-eR, eY-eR*1.35); ctx.lineTo(eX+eR, eY-eR*1.6); ctx.stroke();
+    // Eye — bigger, cartoon style, colored iris
+    const eR = hR * 0.25;
+    const eX = hX + hR * 0.16;
+    const eY = hY - hR * 0.18;
+    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(eX, eY, eR*1.1, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = name === 'Chase' ? '#1E88E5' : '#3A2A1A';
+    ctx.beginPath(); ctx.arc(eX, eY, eR*0.72, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(eX + eR*0.08, eY, eR*0.44, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(eX + eR*0.3, eY - eR*0.3, eR*0.28, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = c.dark; ctx.lineWidth = 2.8; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(eX-eR, eY-eR*1.28); ctx.lineTo(eX+eR*0.9, eY-eR*1.55); ctx.stroke();
+
+    // ── Hat — drawn last so it sits on top
+    if (c.hat === 'police') {
+      // Chase: blue police cap with flat top, brim, and forward visor
+      const hbY = hY - hR * 0.48; // brim Y
+      ctx.fillStyle = '#1565C0';
+      // Crown (flat-top cylinder shape)
+      ctx.beginPath(); ctx.roundRect(hX - hR*0.85, hbY - hR*0.55, hR*1.7, hR*0.58, [hR*0.18, hR*0.18, 0, 0]); ctx.fill();
+      // Hat band (darker stripe at base of crown)
+      ctx.fillStyle = '#0A3080';
+      ctx.beginPath(); ctx.roundRect(hX - hR*0.85, hbY - hR*0.18, hR*1.7, hR*0.18, 2); ctx.fill();
+      // Brim (wide flat ellipse)
+      ctx.fillStyle = '#0D47A1';
+      ctx.beginPath(); ctx.ellipse(hX, hbY, hR*1.12, hR*0.17, 0, 0, Math.PI*2); ctx.fill();
+      // Visor (forward peak, pointing right)
+      ctx.beginPath();
+      ctx.moveTo(hX + hR*0.82, hbY - hR*0.05);
+      ctx.lineTo(hX + hR*1.62, hbY + hR*0.08);
+      ctx.lineTo(hX + hR*0.82, hbY + hR*0.17);
+      ctx.closePath(); ctx.fill();
+      // Gold badge on crown
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath(); ctx.arc(hX, hbY - hR*0.36, hR*0.23, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#1565C0'; ctx.font = `bold ${Math.round(hR*0.22)}px sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('★', hX, hbY - hR*0.35);
+      // Chase's ears on TOP of hat (stick up from sides)
+      drawEars();
+
+    } else if (c.hat === 'fire') {
+      // Marshall: red fire helmet — dome + wide brim + white stripe
+      ctx.fillStyle = '#D32F2F';
+      ctx.save();
+      ctx.beginPath(); ctx.arc(hX, hY - hR*0.48, hR*1.12, -Math.PI, 0); ctx.closePath(); ctx.fill();
+      // Brim
+      ctx.beginPath(); ctx.ellipse(hX, hY - hR*0.48, hR*1.38, hR*0.2, 0, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+      // White reflective stripe across dome
+      ctx.save(); ctx.globalAlpha = 0.75; ctx.fillStyle = 'white';
+      ctx.save();
+      ctx.beginPath(); ctx.arc(hX, hY - hR*0.48, hR*1.12, -Math.PI, 0); ctx.closePath(); ctx.clip();
+      ctx.beginPath(); ctx.rect(hX - hR*1.4, hY - hR*0.72, hR*2.8, hR*0.23); ctx.fill();
+      ctx.restore(); ctx.restore();
+      // Front plate on helmet
+      ctx.fillStyle = '#B71C1C';
+      ctx.beginPath(); ctx.roundRect(hX + hR*0.12, hY - hR*0.68, hR*0.52, hR*0.32, 4); ctx.fill();
+
+    } else { // hardhat — Rubble's yellow construction hat
+      ctx.fillStyle = '#F9A825';
+      ctx.save();
+      ctx.beginPath(); ctx.arc(hX, hY - hR*0.38, hR*1.08, -Math.PI, 0); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(hX, hY - hR*0.38, hR*1.32, hR*0.19, 0, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+      // Darker accent band near brim
+      ctx.save(); ctx.globalAlpha = 0.45; ctx.fillStyle = '#E65100';
+      ctx.save();
+      ctx.beginPath(); ctx.arc(hX, hY - hR*0.38, hR*1.08, -Math.PI, 0); ctx.closePath(); ctx.clip();
+      ctx.beginPath(); ctx.rect(hX - hR*1.4, hY - hR*0.52, hR*2.8, hR*0.15); ctx.fill();
+      ctx.restore(); ctx.restore();
+    }
 
     // ── Near legs (front plane)
     drawLegSeg(fLX, legY, uLen, lLen, legW, pawR, fA, fKA, c.leg, c.paw);
