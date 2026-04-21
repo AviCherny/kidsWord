@@ -657,13 +657,12 @@ function runGame(canvas, { onSuccess, difficulty }) {
       this.gY    = canvas.height * GROUND_RATIO;
       this.isEnemy = Math.random() < 0.28; // running enemy
       if (this.isEnemy) {
-        // pick a running animal enemy
         this.emoji = ['🐱','🐔','🐇'][Math.floor(Math.random() * 3)];
-        this.w = 52; this.h = 52;
+        this.w = 72; this.h = 72;
         this.speed = (3.2 + Math.random() * 2) * speedMult;
       } else {
         this.emoji = ROAD_OBS[Math.floor(Math.random() * ROAD_OBS.length)];
-        this.w = 50; this.h = 52;
+        this.w = 70; this.h = 72;
         this.speed = (1.8 + Math.random() * 1.2) * speedMult;
       }
       this.x = canvas.width + this.w;
@@ -678,36 +677,52 @@ function runGame(canvas, { onSuccess, difficulty }) {
     }
     draw() {
       const gY = this.gY;
+      const pulse = 0.5 + Math.sin(this.warnT) * 0.5; // 0–1
+
       ctx.save();
 
-      // road shadow / sticker underneath — makes it look ON the road
-      ctx.fillStyle = 'rgba(0,0,0,0.20)';
+      // thick dark ground shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
       ctx.beginPath();
-      ctx.ellipse(this.x, gY + 3, this.w * 0.52, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(this.x, gY + 5, this.w * 0.58, 10, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // warning glow when within ~220 px of dog's default center
-      const warnAlpha = 0.55 + Math.sin(this.warnT) * 0.35;
-      if (this.x < canvas.width * 0.55) {
-        ctx.save();
-        ctx.globalAlpha = warnAlpha * 0.45;
-        ctx.fillStyle = this.isEnemy ? '#FF4444' : '#FF8800';
-        ctx.beginPath();
-        ctx.ellipse(this.x, gY - this.h * 0.5, this.w * 0.62, this.h * 0.55, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
+      // bright pulsing halo ring — always visible, even from far away
+      const haloColor = this.isEnemy ? `rgba(255,50,50,${0.55 + pulse * 0.45})` : `rgba(255,165,0,${0.55 + pulse * 0.45})`;
+      ctx.strokeStyle = haloColor;
+      ctx.lineWidth = 5 + pulse * 4;
+      ctx.beginPath();
+      ctx.arc(this.x, gY - this.h * 0.5, this.w * 0.58 + pulse * 6, 0, Math.PI * 2);
+      ctx.stroke();
 
-      // the emoji, sitting on the ground
+      // inner filled glow
+      ctx.fillStyle = this.isEnemy ? `rgba(255,80,80,${0.18 + pulse * 0.18})` : `rgba(255,200,0,${0.18 + pulse * 0.18})`;
+      ctx.beginPath();
+      ctx.arc(this.x, gY - this.h * 0.5, this.w * 0.58 + pulse * 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // the emoji — big, sitting on the ground
       ctx.font = `${this.h}px serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       if (this.isEnemy) {
-        ctx.translate(this.x, gY + 4);
-        ctx.scale(-1, 1); // face the direction of travel
+        ctx.translate(this.x, gY + 5);
+        ctx.scale(-1, 1);
         ctx.fillText(this.emoji, 0, 0);
       } else {
-        ctx.fillText(this.emoji, this.x, gY + 4);
+        ctx.fillText(this.emoji, this.x, gY + 5);
+      }
+
+      // "JUMP!" label when obstacle is in the danger zone
+      if (this.x < canvas.width * 0.60 && this.x > 0) {
+        ctx.font = `bold ${14 + pulse * 4}px "Arial Black", Arial`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillStyle = this.isEnemy ? '#FF3333' : '#FF8800';
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 3;
+        ctx.strokeText('JUMP!', this.x, gY - this.h - 4);
+        ctx.fillText('JUMP!', this.x, gY - this.h - 4);
       }
 
       ctx.restore();
