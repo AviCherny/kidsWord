@@ -31,6 +31,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
   const speedMult = 1 + (difficulty - 1) * 0.18; // difficulty 1-4
 
   // ── sizing ──────────────────────────────────
+  let dog = null; // declared here so resize() can safely reference it
+
   function resize() {
     canvas.width  = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -395,7 +397,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
   const ST = { MENU:'menu', PLAY:'play', OVER:'over' };
   let state = ST.MENU;
 
-  let dog       = null;
   let score     = 0;
   let lives     = 3;
   let combo     = 0;
