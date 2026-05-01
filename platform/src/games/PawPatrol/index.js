@@ -516,14 +516,65 @@ function runGame(canvas, { onSuccess, difficulty }) {
     }
   }
 
+  // ── Mario-style block helpers ─────────────────
+  const BLOCK = 42;
+
+  function drawBrickBlock(x, y) {
+    const B = BLOCK;
+    // Face
+    ctx.fillStyle = '#C8601A';
+    ctx.fillRect(x, y, B, B);
+    // Mortar: horizontal centre
+    ctx.fillStyle = '#7A3500';
+    ctx.fillRect(x, y + B / 2 - 1.5, B, 3);
+    // Mortar: vertical top-half (centred)
+    ctx.fillRect(x + B / 2 - 1.5, y, 3, B / 2 - 1.5);
+    // Mortar: vertical bottom-half (offset ¼ & ¾)
+    ctx.fillRect(x + B / 4 - 1.5, y + B / 2 + 1.5, 3, B / 2 - 1.5);
+    ctx.fillRect(x + B * 3 / 4 - 1.5, y + B / 2 + 1.5, 3, B / 2 - 1.5);
+    // Bevel — top/left bright
+    ctx.fillStyle = '#E87830';
+    ctx.fillRect(x, y, B, 4);
+    ctx.fillRect(x, y, 4, B);
+    // Bevel — bottom/right dark
+    ctx.fillStyle = '#8B3A00';
+    ctx.fillRect(x, y + B - 3, B, 3);
+    ctx.fillRect(x + B - 3, y, 3, B);
+  }
+
+  function drawQuestionBlock(x, y, active) {
+    const B = BLOCK;
+    ctx.fillStyle = active ? '#F8C800' : '#B09850';
+    ctx.fillRect(x, y, B, B);
+    // Bevel — top/left
+    ctx.fillStyle = active ? '#FFE840' : '#C8B060';
+    ctx.fillRect(x, y, B, 4);
+    ctx.fillRect(x, y, 4, B);
+    // Bevel — bottom/right
+    ctx.fillStyle = active ? '#B08000' : '#806040';
+    ctx.fillRect(x, y + B - 3, B, 3);
+    ctx.fillRect(x + B - 3, y, 3, B);
+    // Inner border ring
+    ctx.fillStyle = active ? '#8B6000' : '#5A4030';
+    ctx.fillRect(x + 4, y + 4, B - 8, 2);
+    ctx.fillRect(x + 4, y + B - 6, B - 8, 2);
+    ctx.fillRect(x + 4, y + 6, 2, B - 12);
+    ctx.fillRect(x + B - 6, y + 6, 2, B - 12);
+    // Glyph
+    ctx.font = `bold ${Math.round(B * 0.55)}px "Arial Black", Arial`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = active ? '#5A3A00' : '#8B7050';
+    ctx.fillText(active ? '?' : '·', x + B / 2, y + B / 2 + 1);
+  }
+
   // ── Platforms ────────────────────────────────
   class Platform {
     constructor() {
       const groundY = canvas.height * GROUND_RATIO;
-      this.w = 160 + Math.random() * 110;
-      this.blockH = 24;
-      this.surfaceY = groundY - (90 + Math.random() * 75);
-      this.speed = (1.8 + Math.random() * 0.9) * speedMult * 60; // px/s
+      const cols = 3 + Math.floor(Math.random() * 4); // 3–6 blocks wide
+      this.w = cols * BLOCK;
+      this.surfaceY = groundY - (100 + Math.random() * 85);
+      this.speed = (1.8 + Math.random() * 0.9) * speedMult * 60;
       this.x = cameraX + canvas.width + this.w / 2 + 60;
       this.alive = true;
     }
@@ -534,20 +585,40 @@ function runGame(canvas, { onSuccess, difficulty }) {
       if (this.right < cameraX - 80) this.alive = false;
     }
     draw() {
-      const top = this.surfaceY;
-      const l = this.left, w = this.w, bh = this.blockH;
-      // Dirt body
-      ctx.fillStyle = '#6D4C41';
-      ctx.fillRect(l, top + bh, w, 14);
-      // Grass top
-      ctx.fillStyle = '#43A047';
-      ctx.beginPath(); ctx.roundRect(l, top, w, bh, [8, 8, 0, 0]); ctx.fill();
-      // Grass highlight
-      ctx.fillStyle = 'rgba(255,255,255,0.22)';
-      ctx.fillRect(l + 8, top + 5, w - 16, 5);
-      // Dashed underline shadow
-      ctx.fillStyle = 'rgba(0,0,0,0.18)';
-      ctx.fillRect(l + 4, top + bh + 14, w - 8, 4);
+      const cols = Math.round(this.w / BLOCK);
+      for (let i = 0; i < cols; i++) drawBrickBlock(this.left + i * BLOCK, this.surfaceY);
+    }
+  }
+
+  // ── Question blocks ───────────────────────────
+  class QuestionBlock {
+    constructor() {
+      const groundY = canvas.height * GROUND_RATIO;
+      this.surfaceY = groundY - (130 + Math.random() * 90);
+      this.speed = (1.8 + Math.random() * 0.9) * speedMult * 60;
+      this.x = cameraX + canvas.width + BLOCK / 2 + 60;
+      this.alive = true;
+      this.active = true;
+      this.bumpY = 0; // vertical offset for hit animation
+    }
+    get left()  { return this.x - BLOCK / 2; }
+    get right() { return this.x + BLOCK / 2; }
+    get top()   { return this.surfaceY + this.bumpY; }
+    update(dt) {
+      this.x -= this.speed * dt;
+      // Spring the bump back
+      if (this.bumpY < 0) this.bumpY = Math.min(0, this.bumpY + 280 * dt);
+      if (this.right < cameraX - 80) this.alive = false;
+    }
+    hit() {
+      if (!this.active) return;
+      this.active = false;
+      this.bumpY = -14;
+      score += 5;
+      burst(this.x, this.surfaceY, '#FFD700', 10);
+    }
+    draw() {
+      drawQuestionBlock(this.left, this.top, this.active);
     }
   }
 
@@ -565,6 +636,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
   let obsTimer = 220;
   let platforms = [];
   let platformTimer = 380;
+  let questionBlocks = [];
+  let qbTimer = 500;
 
   function updatePlay(dt) {
     // Spawn items — keep 2-3 on screen
@@ -606,6 +679,30 @@ function runGame(canvas, { onSuccess, difficulty }) {
     }
     platforms.forEach(p => p.update(dt));
     platforms = platforms.filter(p => p.alive);
+
+    // Spawn question blocks
+    qbTimer -= dt * 60;
+    if (qbTimer <= 0) {
+      questionBlocks.push(new QuestionBlock());
+      qbTimer = 400 + Math.floor(Math.random() * 300);
+    }
+    questionBlocks.forEach(qb => qb.update(dt));
+    // Hit-from-below detection (dog jumps up into ? block)
+    if (dog.state !== 'ouch' && dog.vy < 0) {
+      const dogTop = dog.y - dog.h * 0.95;
+      for (const qb of questionBlocks) {
+        if (!qb.active) continue;
+        if (dog.x + dog.w * 0.3 > qb.left && dog.x - dog.w * 0.3 < qb.right) {
+          const blockBot = qb.top + BLOCK;
+          if (dogTop <= blockBot && dogTop >= blockBot - 22) {
+            qb.hit();
+            dog.vy = 300; // bounce back down
+            break;
+          }
+        }
+      }
+    }
+    questionBlocks = questionBlocks.filter(qb => qb.alive);
 
     // Spawn obstacles
     obsTimer -= dt * 60;
@@ -807,8 +904,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
     cameraX = 0;
     updateCamera(true); // snap camera to initial dog position
     score = 0; lives = 3; combo = 0; catchCount = 0;
-    particles = []; pawPrints = []; items = []; obstacles = []; platforms = [];
-    obsTimer = 220; itemSpawnTimer = 60; platformTimer = 380;
+    particles = []; pawPrints = []; items = []; obstacles = []; platforms = []; questionBlocks = [];
+    obsTimer = 220; itemSpawnTimer = 60; platformTimer = 380; qbTimer = 500;
     initBg();
     state = ST.PLAY;
     speak(dogData.tagline, 0.9, 1.7);
@@ -903,16 +1000,18 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
     // ── Update logic ──────────────────────────
     if (state === ST.PLAY) {
-      // Set dog's floor to the highest platform it's standing on, else real ground
+      // Set dog's floor to the highest platform/block it's on, else real ground
       if (dog) {
         const realGround = canvas.height * GROUND_RATIO;
         dog.gY = realGround;
         for (const p of platforms) {
           if (dog.x + dog.w * 0.35 > p.left && dog.x - dog.w * 0.35 < p.right) {
-            if (dog.y <= p.surfaceY + 8) {
-              dog.gY = p.surfaceY;
-              break;
-            }
+            if (dog.y <= p.surfaceY + 8) { dog.gY = p.surfaceY; break; }
+          }
+        }
+        for (const qb of questionBlocks) {
+          if (dog.x + dog.w * 0.35 > qb.left && dog.x - dog.w * 0.35 < qb.right) {
+            if (dog.y <= qb.top + 8) { dog.gY = qb.top; break; }
           }
         }
       }
@@ -933,6 +1032,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
     if (state === ST.PLAY) {
       platforms.forEach(p => p.draw());
+      questionBlocks.forEach(qb => qb.draw());
       obstacles.forEach(o => o.draw());
       items.forEach(it => it.draw());
       dog.draw();
