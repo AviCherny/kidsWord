@@ -76,8 +76,9 @@ function runGame(canvas, { onSuccess, difficulty }) {
   window.addEventListener('resize', resize);
 
   // ── Utils ────────────────────────────────────
-  const lerp  = (a, b, t) => a + (b - a) * t;
-  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const lerp     = (a, b, t) => a + (b - a) * t;
+  const clamp    = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const approach = (v, t, d) => v < t ? Math.min(t, v + d) : Math.max(t, v - d);
 
   // ── Speech ───────────────────────────────────
   function speak(text, rate = 1.0, pitch = 1.8) {
@@ -92,6 +93,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
   // ── Background ───────────────────────────────
   let bgTick = 0;
+  let cameraX = 0;
   let clouds = [];
   const GROUND_RATIO = 0.76;
 
@@ -130,19 +132,20 @@ function runGame(canvas, { onSuccess, difficulty }) {
     grd.addColorStop(0.12, '#7B5020'); grd.addColorStop(1,    '#5A3810');
     ctx.fillStyle = grd; ctx.fillRect(0, gY, canvas.width, canvas.height - gY);
 
-    const tW = 55, off = (bgTick * 1.8) % tW;
+    const tW = 55, off = cameraX % tW;
     ctx.fillStyle = '#6DC242';
     for (let x = -off; x < canvas.width + tW; x += tW) {
       ctx.beginPath(); ctx.ellipse(x, gY, 18, 7, 0, 0, Math.PI * 2); ctx.fill();
     }
 
-    const stripeOff = (bgTick * 1.8) % 60;
+    const stripeOff = cameraX % 60;
     ctx.fillStyle = 'rgba(255,255,255,0.22)';
     for (let x = -stripeOff; x < canvas.width + 60; x += 60)
       ctx.fillRect(x, gY + 4, 36, 6);
   }
 
   // ── Particles ────────────────────────────────
+  let lastDt = 1 / 60; // shared dt for frame-rate-independent subsystems
   let particles = [];
 
   function burst(x, y, color, count = 14) {
@@ -165,8 +168,9 @@ function runGame(canvas, { onSuccess, difficulty }) {
   }
 
   function tickParticles() {
+    const s = lastDt * 60;
     particles = particles.filter(p => {
-      p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.life -= p.decay; return p.life > 0;
+      p.x += p.vx * s; p.y += p.vy * s; p.vy += 0.25 * s; p.life -= p.decay * s; return p.life > 0;
     });
   }
 
@@ -186,9 +190,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
   // ── Paw prints ───────────────────────────────
   let pawPrints = [];
-  let pawTimer = 0;
   function addPaw(x, y) { pawPrints.push({ x, y, alpha: 0.55 }); }
-  function tickPaws() { pawPrints = pawPrints.filter(p => { p.alpha -= 0.005; return p.alpha > 0; }); }
+  function tickPaws() { pawPrints = pawPrints.filter(p => { p.alpha -= 0.005 * lastDt * 60; return p.alpha > 0; }); }
   function drawPaws() {
     ctx.save(); ctx.font = '14px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     pawPrints.forEach(p => { ctx.globalAlpha = p.alpha; ctx.fillText('🐾', p.x, p.y); });
@@ -196,9 +199,15 @@ function runGame(canvas, { onSuccess, difficulty }) {
   }
 
   // ── Dog class ────────────────────────────────
-  const GRAVITY    = 0.52;
-  const JUMP_VY    = -15;
-  const MOVE_SPEED = 5.5;
+  // Physics — identical constants to the Sonic engine (dt-based, px/s or px/s²)
+  const GRAVITY         = 1960;   // px/s²
+  const JUMP_VY         = -810;   // px/s
+  const MAX_SPEED       = 620;    // px/s
+  const MAX_FALL_SPEED  = 1080;   // px/s
+  const GROUND_ACCEL    = 1780;   // px/s²
+  const GROUND_FRICTION = 2450;   // px/s²
+  const AIR_DRAG        = 180;    // px/s²
+  const CAMERA_SMOOTHING = 0.14;
 
   class Dog {
     constructor(data) {
@@ -209,6 +218,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
       this.leftHeld = false; this.rightHeld = false;
       this.state = 'idle';
       this.stateT = 0; this.landSquash = 0;
+      this.pawAccum = 0;
       this.w = clamp(canvas.width * 0.15, 70, 110);
       this.h = this.w * 1.28;
       this.resetGround();
@@ -224,47 +234,63 @@ function runGame(canvas, { onSuccess, difficulty }) {
       }
     }
     celebrate() {
-      this.state = 'celebrate'; this.stateT = 80;
+      this.state = 'celebrate'; this.stateT = 80 / 60;
       starBurst(this.x, this.y - this.h * 0.9);
       burst(this.x, this.y - this.h * 0.5, '#FFD700', 14);
     }
     ouch() {
-      this.state = 'ouch'; this.stateT = 45;
-      this.vx = -this.facing * 7; this.vy = -7; this.onGround = false;
+      this.state = 'ouch'; this.stateT = 45 / 60;
+      this.vx = -this.facing * 420; this.vy = -420; this.onGround = false;
       burst(this.x, this.y - this.h * 0.5, '#FF4444', 10);
     }
-    update() {
+    update(dt) {
       if (this.stateT > 0) {
-        this.stateT--;
-        if (this.stateT === 0 && (this.state === 'celebrate' || this.state === 'ouch'))
+        this.stateT -= dt;
+        if (this.stateT <= 0 && (this.state === 'celebrate' || this.state === 'ouch'))
           this.state = this.onGround ? 'idle' : 'jump';
       }
       const locked = this.state === 'celebrate' || this.state === 'ouch';
       if (!locked) {
-        if (this.leftHeld)       { this.vx = -MOVE_SPEED; this.facing = -1; }
-        else if (this.rightHeld) { this.vx =  MOVE_SPEED; this.facing =  1; }
-        else { this.vx *= 0.68; if (Math.abs(this.vx) < 0.4) this.vx = 0; }
-      } else { this.vx *= 0.8; }
+        const moveIntent = (this.rightHeld ? 1 : 0) - (this.leftHeld ? 1 : 0);
+        if (moveIntent !== 0) {
+          const accel = this.onGround ? GROUND_ACCEL : AIR_DRAG;
+          this.vx += moveIntent * accel * dt;
+          this.vx = clamp(this.vx, -MAX_SPEED, MAX_SPEED);
+          this.facing = moveIntent;
+        } else if (this.onGround) {
+          this.vx = approach(this.vx, 0, GROUND_FRICTION * dt);
+        } else {
+          this.vx = approach(this.vx, 0, AIR_DRAG * dt);
+        }
+      } else {
+        this.vx = approach(this.vx, 0, GROUND_FRICTION * dt);
+      }
 
-      if (!this.onGround) this.vy += GRAVITY;
-      this.x += this.vx; this.y += this.vy;
+      if (!this.onGround) this.vy = Math.min(MAX_FALL_SPEED, this.vy + GRAVITY * dt);
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
 
       if (this.y >= this.gY) {
         const wasAir = !this.onGround;
         this.y = this.gY; this.vy = 0; this.onGround = true;
         if (wasAir && this.state === 'jump') {
-          this.landSquash = 9;
-          this.state = Math.abs(this.vx) > 0.5 ? 'run' : 'idle';
+          this.landSquash = 9 / 60;
+          this.state = Math.abs(this.vx) > 30 ? 'run' : 'idle';
         }
       }
-      this.x = clamp(this.x, this.w * 0.5, canvas.width - this.w * 0.5);
+      // Can't retreat behind the camera's left edge
+      this.x = Math.max(cameraX + this.w * 0.5, this.x);
       if (this.onGround && !locked)
-        this.state = Math.abs(this.vx) > 0.5 ? 'run' : 'idle';
+        this.state = Math.abs(this.vx) > 30 ? 'run' : 'idle';
       if (this.state === 'run') {
-        this.runT++;
-        if (++pawTimer % 20 === 0) addPaw(this.x - this.facing * this.w * 0.2, this.gY + 9);
+        this.runT += dt * 60;
+        this.pawAccum += dt;
+        if (this.pawAccum >= 20 / 60) {
+          this.pawAccum -= 20 / 60;
+          addPaw(this.x - this.facing * this.w * 0.2, this.gY + 9);
+        }
       }
-      if (this.landSquash > 0) this.landSquash--;
+      if (this.landSquash > 0) this.landSquash -= dt;
     }
     draw() {
       const w = this.w, h = this.h;
@@ -291,7 +317,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
         default: break;
       }
       if (this.landSquash > 0) {
-        const q = this.landSquash / 9; sx = 1 + q * 0.28; sy = 1 - q * 0.22; bY = q * 4;
+        const q = this.landSquash / (9 / 60); sx = 1 + q * 0.28; sy = 1 - q * 0.22; bY = q * 4;
       }
 
       // Shadow
@@ -356,9 +382,10 @@ function runGame(canvas, { onSuccess, difficulty }) {
       this.item = itemData;
       this.gY = canvas.height * GROUND_RATIO;
       this.r = 36;
-      this.x = canvas.width + this.r * 2 + Math.random() * 80;
+      // Spawn ahead of the camera in world space
+      this.x = cameraX + canvas.width + this.r * 2 + Math.random() * 80;
       this.y = this.gY - this.r;
-      this.speed = (2.2 + Math.random() * 1.0) * speedMult;
+      this.speed = (2.2 + Math.random() * 1.0) * speedMult * 60; // px/s
       this.bobT = Math.random() * Math.PI * 2;
       this.sparkT = 0;
       this.alive = true;
@@ -366,17 +393,19 @@ function runGame(canvas, { onSuccess, difficulty }) {
       this.rot = 0;
       this.bgColor = ITEM_COLORS[Math.floor(Math.random() * ITEM_COLORS.length)];
     }
-    update() {
+    update(dt) {
       if (this.collectT > 0) {
-        this.collectT--; this.y -= 5; this.rot += 0.2;
-        if (this.collectT === 0) this.alive = false;
+        this.collectT -= dt;
+        this.y -= 5 * dt * 60; this.rot += 0.2 * dt * 60;
+        if (this.collectT <= 0) this.alive = false;
         return;
       }
-      this.x -= this.speed;
-      this.bobT += 0.035;
+      this.x -= this.speed * dt;
+      this.bobT += 0.035 * dt * 60;
       this.y = this.gY - this.r - Math.abs(Math.sin(this.bobT)) * 10;
-      this.sparkT += 0.08;
-      if (this.x < -this.r * 2) this.alive = false;
+      this.sparkT += 0.08 * dt * 60;
+      // Gone past the left edge of the visible world
+      if (this.x < cameraX - this.r * 2) this.alive = false;
     }
     draw() {
       const r = this.r;
@@ -425,15 +454,16 @@ function runGame(canvas, { onSuccess, difficulty }) {
       this.emoji = obsEmojis[Math.floor(Math.random() * obsEmojis.length)];
       this.gY = canvas.height * GROUND_RATIO;
       this.w = 70; this.h = 72;
-      this.speed = (1.8 + Math.random() * 1.2) * speedMult;
-      this.x = canvas.width + this.w;
+      this.speed = (1.8 + Math.random() * 1.2) * speedMult * 60; // px/s
+      // Spawn ahead of the camera in world space
+      this.x = cameraX + canvas.width + this.w;
       this.alive = true;
       this.warnT = 0;
     }
-    update() {
-      this.x -= this.speed;
-      this.warnT += 0.15;
-      if (this.x < -this.w * 2) this.alive = false;
+    update(dt) {
+      this.x -= this.speed * dt;
+      this.warnT += 0.15 * dt * 60;
+      if (this.x < cameraX - this.w * 2) this.alive = false;
     }
     draw() {
       const gY = this.gY;
@@ -468,8 +498,9 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.font = `${this.h}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
       ctx.fillText(this.emoji, this.x, gY + 5);
 
-      // JUMP! label
-      if (this.x < canvas.width * 0.60 && this.x > 0) {
+      // JUMP! label — compare screen-space position (world x minus camera)
+      const screenX = this.x - cameraX;
+      if (screenX < canvas.width * 0.60 && screenX > 0) {
         ctx.font = `bold ${14 + pulse * 4}px "Arial Black", Arial`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
         ctx.fillStyle = labelColor; ctx.strokeStyle = 'white'; ctx.lineWidth = 3;
@@ -498,9 +529,9 @@ function runGame(canvas, { onSuccess, difficulty }) {
   let obstacles = [];
   let obsTimer = 220;
 
-  function updatePlay() {
+  function updatePlay(dt) {
     // Spawn items — keep 2-3 on screen
-    itemSpawnTimer--;
+    itemSpawnTimer -= dt * 60;
     if (itemSpawnTimer <= 0) {
       const dogItemList = DOG_ITEMS[dog.data.name];
       const item = dogItemList[Math.floor(Math.random() * dogItemList.length)];
@@ -508,7 +539,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
       itemSpawnTimer = 110 + Math.floor(Math.random() * 110);
     }
 
-    items.forEach(it => it.update());
+    items.forEach(it => it.update(dt));
 
     // Collect
     if (dog.state !== 'ouch') {
@@ -516,7 +547,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
       for (const it of items) {
         if (!it.alive || it.collectT > 0) continue;
         if (hits(db, it.bounds())) {
-          it.collectT = 25;
+          it.collectT = 25 / 60;
           dog.celebrate();
           score += 10 * Math.max(1, combo);
           combo++;
@@ -531,11 +562,12 @@ function runGame(canvas, { onSuccess, difficulty }) {
     items = items.filter(i => i.alive || i.collectT > 0);
 
     // Spawn obstacles
-    if (--obsTimer <= 0) {
+    obsTimer -= dt * 60;
+    if (obsTimer <= 0) {
       obstacles.push(new Obstacle());
       obsTimer = 280 + Math.floor(Math.random() * 180);
     }
-    obstacles.forEach(o => o.update());
+    obstacles.forEach(o => o.update(dt));
 
     if (dog.state !== 'ouch') {
       const db = dog.bounds();
@@ -549,6 +581,14 @@ function runGame(canvas, { onSuccess, difficulty }) {
       }
     }
     obstacles = obstacles.filter(o => o.alive);
+  }
+
+  // ── Camera ───────────────────────────────────
+  function updateCamera(force = false) {
+    if (!dog) return;
+    // Same formula as Sonic: offset to left-of-center + velocity look-ahead
+    const target = Math.max(0, dog.x - canvas.width * 0.36 + dog.vx * 0.16);
+    cameraX = force ? target : lerp(cameraX, target, CAMERA_SMOOTHING);
   }
 
   // ── HUD ──────────────────────────────────────
@@ -718,6 +758,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
   function resetGame(dogData) {
     dog = new Dog(dogData);
+    cameraX = 0;
+    updateCamera(true); // snap camera to initial dog position
     score = 0; lives = 3; combo = 0; catchCount = 0;
     particles = []; pawPrints = []; items = []; obstacles = [];
     obsTimer = 220; itemSpawnTimer = 60;
@@ -800,29 +842,52 @@ function runGame(canvas, { onSuccess, difficulty }) {
   // ── Main loop ─────────────────────────────────
   initBg();
   let rafId = null;
+  let lastTime = 0;
 
-  function loop() {
+  function loop(timestamp) {
+    const dt = lastTime ? Math.min((timestamp - lastTime) / 1000, 0.05) : 1 / 60;
+    lastTime = timestamp;
+    lastDt = dt;
     rafId = requestAnimationFrame(loop);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (state === ST.MENU) { drawMenu(); return; }
 
+    bgTick += dt * 60;
+
+    // ── Update logic ──────────────────────────
+    if (state === ST.PLAY) {
+      dog.update(dt);
+      updatePlay(dt);
+      updateCamera();
+    }
+
+    // ── Draw background (screen-space, uses cameraX for parallax) ──
     drawBg();
+
+    // ── Draw world objects (translated by camera) ──
+    ctx.save();
+    ctx.translate(-Math.round(cameraX), 0);
+
     tickPaws(); drawPaws();
     tickParticles(); drawParticles();
 
     if (state === ST.PLAY) {
       obstacles.forEach(o => o.draw());
       items.forEach(it => it.draw());
-      dog.update(); updatePlay(); dog.draw();
-      drawHUD(); drawTouchBtns();
+      dog.draw();
     }
     if (state === ST.OVER) {
       if (dog) dog.draw();
-      drawGameOver();
     }
+
+    ctx.restore();
+
+    // ── Draw HUD / overlays (screen-space) ──
+    if (state === ST.PLAY)  { drawHUD(); drawTouchBtns(); }
+    if (state === ST.OVER)  { drawGameOver(); }
   }
-  loop();
+  rafId = requestAnimationFrame(loop);
 
   // ── Cleanup ───────────────────────────────────
   return () => {
