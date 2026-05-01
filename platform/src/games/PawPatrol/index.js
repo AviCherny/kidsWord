@@ -2,41 +2,70 @@ import React, { useEffect, useRef } from 'react';
 import './PawPatrol.css';
 
 // ─────────────────────────────────────────────
-// WORD CURRICULUM
+// CHARACTER CONTENT
 // ─────────────────────────────────────────────
-const WORDS = [
-  { word:'CAT', emoji:'🐱', hint:'🐾'  }, { word:'DOG', emoji:'🐶', hint:'🦴'  },
-  { word:'SUN', emoji:'☀️', hint:'🌤️' }, { word:'BUS', emoji:'🚌', hint:'🛑'  },
-  { word:'RUN', emoji:'🏃', hint:'👟'  }, { word:'HAT', emoji:'🎩', hint:'👒'  },
-  { word:'BED', emoji:'🛏️', hint:'😴' }, { word:'CUP', emoji:'☕', hint:'🫖'  },
-  { word:'MAP', emoji:'🗺️', hint:'📍' }, { word:'PIG', emoji:'🐷', hint:'🐽'  },
-  { word:'HEN', emoji:'🐔', hint:'🥚'  }, { word:'FOX', emoji:'🦊', hint:'🌲'  },
-  { word:'FAN', emoji:'💨', hint:'🌬️' }, { word:'JAM', emoji:'🍓', hint:'🫙'  },
-  { word:'NET', emoji:'🕸️', hint:'🦋' }, { word:'PEN', emoji:'✏️', hint:'📝'  },
-  { word:'TEN', emoji:'🔟', hint:'🔢'  }, { word:'HOP', emoji:'🐸', hint:'🌿'  },
-  { word:'TOP', emoji:'🌀', hint:'🎯'  }, { word:'MOP', emoji:'🧹', hint:'🧽'  },
-  { word:'HUG', emoji:'🤗', hint:'💕'  }, { word:'BUG', emoji:'🐛', hint:'🌱'  },
-  { word:'MUG', emoji:'🍵', hint:'☕'  }, { word:'NUT', emoji:'🥜', hint:'🌰'  },
-  { word:'BAT', emoji:'🦇', hint:'🌙'  }, { word:'CAR', emoji:'🚗', hint:'🛣️' },
-  { word:'COW', emoji:'🐄', hint:'🥛'  }, { word:'EGG', emoji:'🥚', hint:'🍳'  },
-  { word:'FLY', emoji:'🦋', hint:'🌸'  }, { word:'BOX', emoji:'📦', hint:'🎁'  },
-];
+const DOG_ITEMS = {
+  Marshall: [
+    { emoji: '💧', sentence: "I have a water!" },
+    { emoji: '🪣', sentence: "Got the bucket!" },
+    { emoji: '🧊', sentence: "So icy and cool!" },
+    { emoji: '🏊', sentence: "Splash splash splash!" },
+    { emoji: '🍎', sentence: "An apple a day!" },
+    { emoji: '🦺', sentence: "Safety first!" },
+  ],
+  Chase: [
+    { emoji: '🍌', sentence: "I just ate a banana!" },
+    { emoji: '🦴', sentence: "Found a yummy bone!" },
+    { emoji: '🍕', sentence: "Pizza time yeah!" },
+    { emoji: '🍩', sentence: "Mmm donuts!" },
+    { emoji: '🎾', sentence: "I love to fetch!" },
+    { emoji: '⭐', sentence: "Chase is on the case!" },
+  ],
+  Rubble: [
+    { emoji: '🔧', sentence: "Got the wrench!" },
+    { emoji: '⚙️', sentence: "Gears go click click!" },
+    { emoji: '🍪', sentence: "Cookies for Rubble!" },
+    { emoji: '🥪', sentence: "Lunchtime already?" },
+    { emoji: '🍦', sentence: "Yummy ice cream!" },
+    { emoji: '🧱', sentence: "One more brick!" },
+  ],
+};
+
+const DOG_OBSTACLES = {
+  Marshall: ['🔥', '🔥', '🔥', '🌋'],
+  Chase:    ['⚡', '⚡', '🌩️', '⚡'],
+  Rubble:   ['🪨', '🪨', '🌊', '🪵'],
+};
 
 const DOG_DEFS = [
-  { name:'Chase',    color:'#1565C0', tagline:"Chase is on the case!" },
-  { name:'Marshall', color:'#C62828', tagline:"I'm all fired up!"     },
-  { name:'Rubble',   color:'#F9A825', tagline:"Rubble on the double!" },
+  { name: 'Chase',    color: '#1565C0', tagline: "Chase is on the case!" },
+  { name: 'Marshall', color: '#C62828', tagline: "I'm all fired up!"     },
+  { name: 'Rubble',   color: '#F9A825', tagline: "Rubble on the double!" },
 ];
 
+const POSTER_PATHS = {
+  Chase:    '/paw-patrol/chase-poster.jpg',
+  Marshall: '/paw-patrol/marshall-poster.jpg',
+  Rubble:   '/paw-patrol/rubble-poster.jpg',
+};
+
 // ─────────────────────────────────────────────
-// GAME ENGINE  (runs inside useEffect, returns cleanup fn)
+// GAME ENGINE
 // ─────────────────────────────────────────────
 function runGame(canvas, { onSuccess, difficulty }) {
   const ctx = canvas.getContext('2d');
-  const speedMult = 1 + (difficulty - 1) * 0.18; // difficulty 1-4
+  const speedMult = 1 + (difficulty - 1) * 0.18;
 
-  // ── sizing ──────────────────────────────────
-  let dog = null; // declared here so resize() can safely reference it
+  // ── Image loading ────────────────────────────
+  const dogImages = {};
+  DOG_DEFS.forEach(d => {
+    const img = new Image();
+    img.onload = () => { dogImages[d.name] = img; };
+    img.src = POSTER_PATHS[d.name];
+  });
+
+  // ── Sizing ──────────────────────────────────
+  let dog = null;
 
   function resize() {
     canvas.width  = window.innerWidth;
@@ -44,320 +73,26 @@ function runGame(canvas, { onSuccess, difficulty }) {
     if (dog) dog.resetGround();
   }
   resize();
-  const onResize = () => resize();
-  window.addEventListener('resize', onResize);
+  window.addEventListener('resize', resize);
 
-  // ── utils ────────────────────────────────────
+  // ── Utils ────────────────────────────────────
   const lerp  = (a, b, t) => a + (b - a) * t;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-  function shuffle(a) {
-    const r = [...a];
-    for (let i = r.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [r[i], r[j]] = [r[j], r[i]];
-    }
-    return r;
-  }
 
-  // ── speech ───────────────────────────────────
-  function speak(text, rate = 0.85) {
+  // ── Speech ───────────────────────────────────
+  function speak(text, rate = 1.0, pitch = 1.8) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-US'; u.rate = rate; u.pitch = 1.2;
+    u.lang = 'en-US';
+    u.rate = rate;
+    u.pitch = pitch;
     window.speechSynthesis.speak(u);
   }
 
-  // ── dog drawing helpers ──────────────────────
-  function getDogsColors(name) {
-    if (name === 'Chase') return {
-      body:'#D4A030', dark:'#7A4800', belly:'#ECD498',
-      ear:'#7A4800', earInner:'#FFCCAA', earStyle:'pointy',
-      uniform:'#1565C0', badge:'#FFD700',
-      leg:'#D4A030', paw:'#C49030',
-      nose:'#2A1200', eye:'#1E88E5',
-      spots:null, hat:'police',
-    };
-    if (name === 'Marshall') return {
-      body:'#F8F4EE', dark:'#1A1A1A', belly:'#F8F4EE',
-      ear:'#EDE5D8', earInner:'#FFBBBB', earStyle:'floppy',
-      uniform:'#D32F2F', badge:'#FFFFFF',
-      leg:'#F8F4EE', paw:'#F8F4EE',
-      nose:'#111', eye:'#3B2A1A',
-      spots:'#1A1A1A', hat:'fire',
-    };
-    return { // Rubble
-      body:'#A0652A', dark:'#6B4018', belly:'#D4A060',
-      ear:'#6B4018', earInner:'#E8A890', earStyle:'folded',
-      uniform:'#F57C00', badge:'#FFD700',
-      leg:'#A0652A', paw:'#C48040',
-      nose:'#111', eye:'#3A2A10',
-      spots:null, hat:'hardhat',
-    };
-  }
-
-  function drawLegSeg(attX, attY, uLen, lLen, legW, pawR, uAng, kAng, legCol, pawCol) {
-    ctx.save();
-    ctx.translate(attX, attY); ctx.rotate(uAng);
-    ctx.fillStyle = legCol;
-    ctx.beginPath(); ctx.roundRect(-legW/2, 0, legW, uLen, legW*0.45); ctx.fill();
-    ctx.translate(0, uLen); ctx.rotate(kAng);
-    ctx.beginPath(); ctx.roundRect(-legW/2, 0, legW, lLen, legW*0.45); ctx.fill();
-    ctx.translate(0, lLen);
-    ctx.fillStyle = pawCol;
-    ctx.beginPath(); ctx.ellipse(0, 0, pawR, pawR*0.55, 0, 0, Math.PI*2); ctx.fill();
-    ctx.restore();
-  }
-
-  function drawDogFull(w, h, name, state, runT, vy, onGround) {
-    const c = getDogsColors(name);
-    const ph = runT * 0.38;
-    const running = state === 'run';
-    const jumping = !onGround;
-    const celebrate = state === 'celebrate';
-
-    // Layout (local coords: ground = y:0, dog faces right = +x)
-    const bCY  = -h * 0.52;
-    const bRx  = w * 0.40;
-    const bRy  = h * 0.175;
-    const legY  = bCY + bRy * 0.95;
-    const fLX  =  w * 0.22;
-    const bLX  = -w * 0.18;
-    const uLen = h * 0.23;
-    const lLen = h * 0.20;
-    const legW = w * 0.09;
-    const pawR = w * 0.075;
-    const hR   = w * 0.26;          // bigger cartoon head
-    const hX   =  w * 0.27;
-    const hY   = bCY - bRy * 0.82 - hR * 0.72;
-    const tX   = -bRx * 0.85;
-    const tY   = bCY - bRy * 0.15;
-
-    // Leg angles — diagonal trot
-    const sw = 0.52;
-    let fA=0, fB=0, bA=0, bB=0, fKA=0, fKB=0, bKA=0, bKB=0;
-    if (running) {
-      fA =  Math.sin(ph) * sw;   fB = -Math.sin(ph) * sw;
-      bA = -Math.sin(ph) * sw * 0.85; bB =  Math.sin(ph) * sw * 0.85;
-      const kn = 0.38;
-      fKA = Math.max(0, Math.sin(ph + 0.8)) * kn;
-      fKB = Math.max(0, Math.sin(ph + 0.8 + Math.PI)) * kn;
-      bKA = Math.max(0, Math.sin(ph + 0.8 + Math.PI)) * kn * 0.7;
-      bKB = Math.max(0, Math.sin(ph + 0.8)) * kn * 0.7;
-    } else if (jumping) {
-      const ext = vy < 0 ? 0.40 : -0.28;
-      fA = fB = ext * 0.9; bA = bB = -ext * 0.6;
-    }
-
-    const wag = Math.sin(bgTick * (running||celebrate ? 0.28 : 0.1)) * (running||celebrate ? 0.5 : 0.2);
-
-    // ── Tail
-    ctx.save();
-    ctx.strokeStyle = c.body; ctx.lineWidth = legW * 1.1; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(tX, tY);
-    const tLen = w * 0.4;
-    ctx.bezierCurveTo(
-      tX - tLen*0.3, tY - tLen*0.5,
-      tX - tLen*0.55 + Math.cos(-0.8+wag)*tLen*0.25, tY - tLen*0.75 + Math.sin(-0.8+wag)*tLen*0.25,
-      tX - tLen*0.6  + Math.cos(-0.8+wag)*tLen*0.45, tY - tLen     + Math.sin(-0.8+wag)*tLen*0.45
-    );
-    ctx.stroke(); ctx.restore();
-
-    // ── Far legs (behind body — slightly dimmed)
-    ctx.save(); ctx.globalAlpha = 0.72;
-    drawLegSeg(fLX, legY, uLen, lLen, legW, pawR, fB, fKB, c.leg, c.paw);
-    drawLegSeg(bLX, legY, uLen, lLen, legW, pawR, bB, bKB, c.leg, c.paw);
-    ctx.restore();
-
-    // ── Body (fur base)
-    ctx.fillStyle = c.body;
-    ctx.beginPath(); ctx.ellipse(0, bCY, bRx, bRy, 0, 0, Math.PI*2); ctx.fill();
-    if (c.dark !== c.body) { // saddle marking (Chase / Rubble)
-      ctx.fillStyle = c.dark;
-      ctx.beginPath(); ctx.ellipse(-bRx*0.1, bCY - bRy*0.3, bRx*0.55, bRy*0.5, 0, 0, Math.PI*2); ctx.fill();
-    }
-    ctx.fillStyle = c.belly;
-    ctx.beginPath(); ctx.ellipse(bRx*0.1, bCY + bRy*0.3, bRx*0.45, bRy*0.42, 0, 0, Math.PI*2); ctx.fill();
-    if (c.spots) { // Marshall body spots
-      ctx.fillStyle = c.spots;
-      [[-bRx*0.28, bCY-bRy*0.32, 5.5],[bRx*0.14, bCY-bRy*0.05, 7],
-       [-bRx*0.52, bCY+bRy*0.12, 4.5],[bRx*0.38, bCY+bRy*0.28, 4]].forEach(([sx,sy,sr]) => {
-         ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
-       });
-    }
-
-    // ── Uniform vest (front half of body, character color)
-    ctx.save();
-    ctx.fillStyle = c.uniform;
-    ctx.beginPath(); ctx.ellipse(bRx*0.12, bCY, bRx*0.62, bRy*0.88, 0, 0, Math.PI*2); ctx.clip();
-    ctx.beginPath(); ctx.rect(0, bCY - bRy*1.2, bRx*1.3, bRy*2.4); ctx.fill();
-    ctx.restore();
-    // Vest detail
-    if (name === 'Chase') { // gold badge star on vest
-      ctx.fillStyle = c.badge;
-      ctx.beginPath(); ctx.arc(bRx*0.42, bCY, bRy*0.42, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#1565C0'; ctx.font = `bold ${Math.round(bRy*0.44)}px sans-serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('★', bRx*0.42, bCY + 1);
-    } else if (name === 'Marshall') { // white cross on vest
-      ctx.fillStyle = 'white';
-      const cxB = bRx*0.4, vw = bRy*0.28, vl = bRy*0.75;
-      ctx.fillRect(cxB - vw/2, bCY - vl/2, vw, vl);
-      ctx.fillRect(cxB - vl/2, bCY - vw/2, vl, vw);
-    }
-
-    // ── Neck + collar (uniform color)
-    ctx.fillStyle = c.body;
-    ctx.beginPath(); ctx.ellipse(fLX + w*0.08, bCY - bRy*0.72, w*0.13, bRy*0.58, -0.25, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = c.uniform;
-    ctx.beginPath(); ctx.ellipse(fLX + w*0.06, bCY - bRy*0.66, w*0.14, w*0.05, -0.2, 0, Math.PI*2); ctx.fill();
-
-    // ── Ears  (Chase: after hat; Marshall/Rubble: before hat, drawn here)
-    const drawEars = () => {
-      if (c.earStyle === 'pointy') { // Chase — upright German Shepherd ears
-        [[-hR*0.3, -0.12],[hR*0.25, 0.12]].forEach(([ex, rot]) => {
-          ctx.save(); ctx.translate(hX + ex, hY - hR*0.5); ctx.rotate(rot);
-          ctx.fillStyle = c.ear;
-          ctx.beginPath(); ctx.moveTo(-hR*0.22, hR*0.32); ctx.lineTo(0, -hR*0.6); ctx.lineTo(hR*0.22, hR*0.32); ctx.closePath(); ctx.fill();
-          ctx.fillStyle = c.earInner;
-          ctx.beginPath(); ctx.moveTo(-hR*0.11, hR*0.22); ctx.lineTo(0, -hR*0.38); ctx.lineTo(hR*0.11, hR*0.22); ctx.closePath(); ctx.fill();
-          ctx.restore();
-        });
-      } else if (c.earStyle === 'floppy') { // Marshall — Dalmatian floppy ears
-        [[-hR*0.42, hR*0.58],[hR*0.12, hR*0.52]].forEach(([ex, ey], i) => {
-          ctx.fillStyle = c.ear;
-          ctx.beginPath(); ctx.ellipse(hX+ex, hY - hR*0.38 + ey, hR*0.22, hR*0.5, i===0 ? -0.22 : 0.22, 0, Math.PI*2); ctx.fill();
-          if (c.spots) { ctx.fillStyle = c.spots; ctx.beginPath(); ctx.arc(hX+ex, hY-hR*0.1+ey*0.55, 3.5, 0, Math.PI*2); ctx.fill(); }
-        });
-      } else { // Rubble — bulldog side ears, small and folded
-        [[-hR*0.58, -hR*0.42],[hR*0.52, -hR*0.38]].forEach(([ex, ey]) => {
-          ctx.fillStyle = c.ear;
-          ctx.beginPath(); ctx.ellipse(hX+ex, hY+ey, hR*0.26, hR*0.2, ex>0 ? 0.6 : -0.6, 0, Math.PI*2); ctx.fill();
-          ctx.fillStyle = c.earInner;
-          ctx.beginPath(); ctx.ellipse(hX+ex, hY+ey, hR*0.14, hR*0.11, ex>0 ? 0.6 : -0.6, 0, Math.PI*2); ctx.fill();
-        });
-      }
-    };
-
-    // Marshall/Rubble: ears behind helmet
-    if (c.hat !== 'police') drawEars();
-
-    // ── Head
-    ctx.fillStyle = c.body;
-    ctx.beginPath(); ctx.arc(hX, hY, hR, 0, Math.PI*2); ctx.fill();
-
-    // Chase — darker mask/saddle pattern wraps around top of head
-    if (name === 'Chase') {
-      ctx.save(); ctx.globalAlpha = 0.55; ctx.fillStyle = c.dark;
-      ctx.beginPath(); ctx.ellipse(hX - hR*0.05, hY - hR*0.35, hR*0.88, hR*0.52, 0, 0, Math.PI*2); ctx.fill();
-      ctx.restore();
-    }
-    // Marshall head spots
-    if (c.spots) {
-      ctx.fillStyle = c.spots;
-      [[hR*0.32, -hR*0.26, 4],[-hR*0.08, hR*0.22, 3.5]].forEach(([sx,sy,sr]) => {
-        ctx.beginPath(); ctx.arc(hX+sx, hY+sy, sr, 0, Math.PI*2); ctx.fill();
-      });
-    }
-
-    // Snout
-    const snRx = name==='Rubble' ? hR*0.46 : hR*0.37;
-    const snRy = name==='Rubble' ? hR*0.34 : hR*0.26;
-    const snX  = hX + hR*0.60;
-    const snY  = hY + hR*0.18;
-    ctx.fillStyle = c.belly;
-    ctx.beginPath(); ctx.ellipse(snX, snY, snRx, snRy, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = c.nose;
-    ctx.beginPath(); ctx.ellipse(snX + snRx*0.5, snY - snRy*0.28, snRx*0.38, snRy*0.52, 0, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.5)';
-    ctx.beginPath(); ctx.arc(snX + snRx*0.35, snY - snRy*0.48, snRx*0.12, 0, Math.PI*2); ctx.fill();
-    // Rubble underbite
-    if (name === 'Rubble') {
-      ctx.strokeStyle = c.dark; ctx.lineWidth = 2; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(snX - snRx*0.22, snY + snRy*0.55);
-      ctx.quadraticCurveTo(snX, snY + snRy*0.95, snX + snRx*0.22, snY + snRy*0.55); ctx.stroke();
-    }
-
-    // Eye — bigger, cartoon style, colored iris
-    const eR = hR * 0.25;
-    const eX = hX + hR * 0.16;
-    const eY = hY - hR * 0.18;
-    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(eX, eY, eR*1.1, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = name === 'Chase' ? '#1E88E5' : '#3A2A1A';
-    ctx.beginPath(); ctx.arc(eX, eY, eR*0.72, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(eX + eR*0.08, eY, eR*0.44, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = 'white'; ctx.beginPath(); ctx.arc(eX + eR*0.3, eY - eR*0.3, eR*0.28, 0, Math.PI*2); ctx.fill();
-    ctx.strokeStyle = c.dark; ctx.lineWidth = 2.8; ctx.lineCap = 'round';
-    ctx.beginPath(); ctx.moveTo(eX-eR, eY-eR*1.28); ctx.lineTo(eX+eR*0.9, eY-eR*1.55); ctx.stroke();
-
-    // ── Hat — drawn last so it sits on top
-    if (c.hat === 'police') {
-      // Chase: blue police cap with flat top, brim, and forward visor
-      const hbY = hY - hR * 0.48; // brim Y
-      ctx.fillStyle = '#1565C0';
-      // Crown (flat-top cylinder shape)
-      ctx.beginPath(); ctx.roundRect(hX - hR*0.85, hbY - hR*0.55, hR*1.7, hR*0.58, [hR*0.18, hR*0.18, 0, 0]); ctx.fill();
-      // Hat band (darker stripe at base of crown)
-      ctx.fillStyle = '#0A3080';
-      ctx.beginPath(); ctx.roundRect(hX - hR*0.85, hbY - hR*0.18, hR*1.7, hR*0.18, 2); ctx.fill();
-      // Brim (wide flat ellipse)
-      ctx.fillStyle = '#0D47A1';
-      ctx.beginPath(); ctx.ellipse(hX, hbY, hR*1.12, hR*0.17, 0, 0, Math.PI*2); ctx.fill();
-      // Visor (forward peak, pointing right)
-      ctx.beginPath();
-      ctx.moveTo(hX + hR*0.82, hbY - hR*0.05);
-      ctx.lineTo(hX + hR*1.62, hbY + hR*0.08);
-      ctx.lineTo(hX + hR*0.82, hbY + hR*0.17);
-      ctx.closePath(); ctx.fill();
-      // Gold badge on crown
-      ctx.fillStyle = '#FFD700';
-      ctx.beginPath(); ctx.arc(hX, hbY - hR*0.36, hR*0.23, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#1565C0'; ctx.font = `bold ${Math.round(hR*0.22)}px sans-serif`;
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('★', hX, hbY - hR*0.35);
-      // Chase's ears on TOP of hat (stick up from sides)
-      drawEars();
-
-    } else if (c.hat === 'fire') {
-      // Marshall: red fire helmet — dome + wide brim + white stripe
-      ctx.fillStyle = '#D32F2F';
-      ctx.save();
-      ctx.beginPath(); ctx.arc(hX, hY - hR*0.48, hR*1.12, -Math.PI, 0); ctx.closePath(); ctx.fill();
-      // Brim
-      ctx.beginPath(); ctx.ellipse(hX, hY - hR*0.48, hR*1.38, hR*0.2, 0, 0, Math.PI*2); ctx.fill();
-      ctx.restore();
-      // White reflective stripe across dome
-      ctx.save(); ctx.globalAlpha = 0.75; ctx.fillStyle = 'white';
-      ctx.save();
-      ctx.beginPath(); ctx.arc(hX, hY - hR*0.48, hR*1.12, -Math.PI, 0); ctx.closePath(); ctx.clip();
-      ctx.beginPath(); ctx.rect(hX - hR*1.4, hY - hR*0.72, hR*2.8, hR*0.23); ctx.fill();
-      ctx.restore(); ctx.restore();
-      // Front plate on helmet
-      ctx.fillStyle = '#B71C1C';
-      ctx.beginPath(); ctx.roundRect(hX + hR*0.12, hY - hR*0.68, hR*0.52, hR*0.32, 4); ctx.fill();
-
-    } else { // hardhat — Rubble's yellow construction hat
-      ctx.fillStyle = '#F9A825';
-      ctx.save();
-      ctx.beginPath(); ctx.arc(hX, hY - hR*0.38, hR*1.08, -Math.PI, 0); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(hX, hY - hR*0.38, hR*1.32, hR*0.19, 0, 0, Math.PI*2); ctx.fill();
-      ctx.restore();
-      // Darker accent band near brim
-      ctx.save(); ctx.globalAlpha = 0.45; ctx.fillStyle = '#E65100';
-      ctx.save();
-      ctx.beginPath(); ctx.arc(hX, hY - hR*0.38, hR*1.08, -Math.PI, 0); ctx.closePath(); ctx.clip();
-      ctx.beginPath(); ctx.rect(hX - hR*1.4, hY - hR*0.52, hR*2.8, hR*0.15); ctx.fill();
-      ctx.restore(); ctx.restore();
-    }
-
-    // ── Near legs (front plane)
-    drawLegSeg(fLX, legY, uLen, lLen, legW, pawR, fA, fKA, c.leg, c.paw);
-    drawLegSeg(bLX, legY, uLen, lLen, legW, pawR, bA, bKA, c.leg, c.paw);
-  }
-
-  // ── scrolling bg ─────────────────────────────
-  let clouds = [];
+  // ── Background ───────────────────────────────
   let bgTick = 0;
+  let clouds = [];
   const GROUND_RATIO = 0.76;
 
   function initBg() {
@@ -384,7 +119,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
       if (c.x < -c.rx * 2.5) c.x = canvas.width + c.rx;
       ctx.save(); ctx.globalAlpha = c.alpha; ctx.fillStyle = 'white';
       ctx.beginPath();
-      ctx.ellipse(c.x,                c.y,     c.rx,       c.ry,       0, 0, Math.PI * 2);
+      ctx.ellipse(c.x,                c.y,     c.rx,        c.ry,        0, 0, Math.PI * 2);
       ctx.ellipse(c.x - c.rx * 0.45, c.y + 6, c.rx * 0.65, c.ry * 0.7, 0, 0, Math.PI * 2);
       ctx.ellipse(c.x + c.rx * 0.45, c.y + 6, c.rx * 0.65, c.ry * 0.7, 0, 0, Math.PI * 2);
       ctx.fill(); ctx.restore();
@@ -407,7 +142,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.fillRect(x, gY + 4, 36, 6);
   }
 
-  // ── particles ────────────────────────────────
+  // ── Particles ────────────────────────────────
   let particles = [];
 
   function burst(x, y, color, count = 14) {
@@ -419,6 +154,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
         color, type: 'dot' });
     }
   }
+
   function starBurst(x, y) {
     ['⭐','🌟','✨','🎉'].forEach((em, i) => {
       const a = (Math.PI * 2 * i / 4) - Math.PI / 2;
@@ -427,11 +163,13 @@ function runGame(canvas, { onSuccess, difficulty }) {
         life: 1, decay: 0.013, size: 22, color: em, type: 'emoji' });
     });
   }
+
   function tickParticles() {
     particles = particles.filter(p => {
       p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.life -= p.decay; return p.life > 0;
     });
   }
+
   function drawParticles() {
     particles.forEach(p => {
       ctx.save(); ctx.globalAlpha = p.life;
@@ -446,7 +184,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
     });
   }
 
-  // ── paw prints ───────────────────────────────
+  // ── Paw prints ───────────────────────────────
   let pawPrints = [];
   let pawTimer = 0;
   function addPaw(x, y) { pawPrints.push({ x, y, alpha: 0.55 }); }
@@ -486,9 +224,9 @@ function runGame(canvas, { onSuccess, difficulty }) {
       }
     }
     celebrate() {
-      this.state = 'celebrate'; this.stateT = 100;
+      this.state = 'celebrate'; this.stateT = 80;
       starBurst(this.x, this.y - this.h * 0.9);
-      burst(this.x, this.y - this.h * 0.5, '#FFD700', 18);
+      burst(this.x, this.y - this.h * 0.5, '#FFD700', 14);
     }
     ouch() {
       this.state = 'ouch'; this.stateT = 45;
@@ -529,34 +267,43 @@ function runGame(canvas, { onSuccess, difficulty }) {
       if (this.landSquash > 0) this.landSquash--;
     }
     draw() {
-      // Shadow
-      const airH = Math.max(0, this.gY - this.y);
-      const shSc = lerp(1, 0.35, airH / 220);
-      ctx.save(); ctx.translate(this.x, this.gY + 12); ctx.scale(shSc, 0.28);
-      ctx.beginPath(); ctx.ellipse(0, 0, this.w * 0.52, this.w * 0.52, 0, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(0,0,0,${0.22 * shSc})`; ctx.fill(); ctx.restore();
+      const w = this.w, h = this.h;
 
-      // Body transform
-      const t = this.runT;
+      // Animation transforms
       let tilt = 0, sx = 1, sy = 1, bY = 0;
       switch (this.state) {
         case 'run':
-          bY = Math.sin(t * 0.38) * 4;
-          tilt = Math.sin(t * 0.22) * 0.07 + 0.10; break;
+          bY   = Math.sin(this.runT * 0.38) * 4;
+          tilt = Math.sin(this.runT * 0.22) * 0.07 + 0.10;
+          break;
         case 'jump':
           tilt = 0.12 * this.facing;
-          if (this.vy < 0) { sx = 0.84; sy = 1.16; } else { sx = 1.12; sy = 0.90; } break;
+          if (this.vy < 0) { sx = 0.84; sy = 1.16; } else { sx = 1.12; sy = 0.90; }
+          break;
         case 'celebrate':
           bY   = Math.sin(bgTick * 0.3) * 10;
           tilt = Math.sin(bgTick * 0.25) * 0.25;
-          sx   = 1 + Math.abs(Math.sin(bgTick * 0.3)) * 0.12; sy = sx; break;
-        case 'ouch': tilt = -0.5 * this.facing; sx = 1.2; sy = 0.8; break;
+          sx   = 1 + Math.abs(Math.sin(bgTick * 0.3)) * 0.12; sy = sx;
+          break;
+        case 'ouch':
+          tilt = -0.5 * this.facing; sx = 1.2; sy = 0.8;
+          break;
         default: break;
       }
       if (this.landSquash > 0) {
         const q = this.landSquash / 9; sx = 1 + q * 0.28; sy = 1 - q * 0.22; bY = q * 4;
       }
 
+      // Shadow
+      const airH = Math.max(0, this.gY - this.y);
+      const shSc = lerp(1, 0.35, airH / 220);
+      ctx.save();
+      ctx.translate(this.x, this.gY + 12); ctx.scale(shSc, 0.28);
+      ctx.beginPath(); ctx.ellipse(0, 0, w * 0.52, w * 0.52, 0, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(0,0,0,${0.22 * shSc})`; ctx.fill();
+      ctx.restore();
+
+      // Body with poster image
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.scale(this.facing, 1);
@@ -564,18 +311,35 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.scale(sx, sy);
       ctx.translate(0, bY);
 
-      const w = this.w, h = this.h;
-      drawDogFull(w, h, this.data.name, this.state, this.runT, this.vy, this.onGround);
+      const img = dogImages[this.data.name];
+      if (img) {
+        ctx.save();
+        ctx.beginPath(); ctx.roundRect(-w / 2, -h, w, h, 12); ctx.clip();
+        ctx.drawImage(img, -w / 2, -h, w, h);
+        ctx.restore();
+        // White border ring
+        ctx.beginPath(); ctx.roundRect(-w / 2, -h, w, h, 12);
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2.5; ctx.stroke();
+      } else {
+        // Fallback: colored card
+        const def = DOG_DEFS.find(d => d.name === this.data.name);
+        ctx.fillStyle = def ? def.color : '#888';
+        ctx.beginPath(); ctx.roundRect(-w / 2, -h, w, h, 12); ctx.fill();
+        ctx.fillStyle = 'white'; ctx.font = `bold ${w * 0.35}px Arial`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(this.data.name.charAt(0), 0, -h / 2);
+      }
 
-      // Speed lines
+      // Speed lines behind character
       if (Math.abs(this.vx) > 3.5 && this.onGround) {
         ctx.save(); ctx.globalAlpha = 0.35; ctx.strokeStyle = 'white'; ctx.lineWidth = 2.5;
         for (let i = 0; i < 3; i++) {
-          const ly = -h * (0.45 + i * 0.13), lx = w * 0.35;
-          ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + w * (0.35 + i * 0.1), ly); ctx.stroke();
+          const ly = -h * (0.45 + i * 0.13);
+          ctx.beginPath(); ctx.moveTo(-w * 0.2, ly); ctx.lineTo(-w * (0.6 + i * 0.12), ly); ctx.stroke();
         }
         ctx.restore();
       }
+
       ctx.restore();
     }
     bounds() {
@@ -584,75 +348,69 @@ function runGame(canvas, { onSuccess, difficulty }) {
     }
   }
 
-  // ── Falling word item ─────────────────────────
-  class WordItem {
-    constructor(wordObj, isTarget, x, startY) {
-      this.w      = wordObj;
-      this.target = isTarget;
-      this.x = x; this.y = startY;
-      this.vy = (1.4 + Math.random() * 0.8) * speedMult;
-      this.vx = (Math.random() - 0.5) * 0.6;
+  // ── Collectible ground items ──────────────────
+  const ITEM_COLORS = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#DDA0DD','#F4A261','#FFD93D'];
+
+  class CollectItem {
+    constructor(itemData) {
+      this.item = itemData;
+      this.gY = canvas.height * GROUND_RATIO;
+      this.r = 36;
+      this.x = canvas.width + this.r * 2 + Math.random() * 80;
+      this.y = this.gY - this.r;
+      this.speed = (2.2 + Math.random() * 1.0) * speedMult;
       this.bobT = Math.random() * Math.PI * 2;
-      this.alive  = true; this.catchT = 0; this.rot = 0; this.sparkT = 0;
-      this.r = 38; // collision radius
-      const ITEM_COLORS = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#DDA0DD','#F4A261'];
-      this.bgColor = isTarget ? '#FFD700' : ITEM_COLORS[Math.floor(Math.random() * ITEM_COLORS.length)];
+      this.sparkT = 0;
+      this.alive = true;
+      this.collectT = 0;
+      this.rot = 0;
+      this.bgColor = ITEM_COLORS[Math.floor(Math.random() * ITEM_COLORS.length)];
     }
     update() {
-      if (this.catchT > 0) {
-        this.catchT--; this.rot += 0.15; this.y -= 5;
-        if (this.catchT === 0) this.alive = false;
+      if (this.collectT > 0) {
+        this.collectT--; this.y -= 5; this.rot += 0.2;
+        if (this.collectT === 0) this.alive = false;
         return;
       }
-      this.y += this.vy; this.x += this.vx + Math.sin(this.bobT) * 0.5;
-      this.bobT += 0.028;
-      if (this.target) this.sparkT += 0.10;
-      if (this.x < this.r + 5 || this.x > canvas.width - this.r - 5) this.vx *= -1;
-      if (this.y > canvas.height + 80) this.alive = false;
+      this.x -= this.speed;
+      this.bobT += 0.035;
+      this.y = this.gY - this.r - Math.abs(Math.sin(this.bobT)) * 10;
+      this.sparkT += 0.08;
+      if (this.x < -this.r * 2) this.alive = false;
     }
     draw() {
       const r = this.r;
-      ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rot);
+      ctx.save();
+      ctx.translate(this.x, this.y); ctx.rotate(this.rot);
 
-      if (this.target) {
-        // pulsing gold ring for the correct item
-        const pulse = 0.5 + Math.sin(this.sparkT * 1.8) * 0.5;
-        ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 20 + pulse * 16;
-        ctx.strokeStyle = `rgba(255,210,0,${0.7 + pulse * 0.3})`;
-        ctx.lineWidth = 4 + pulse * 3;
-        ctx.beginPath(); ctx.arc(0, 0, r + 4 + pulse * 5, 0, Math.PI * 2); ctx.stroke();
-        ctx.shadowBlur = 0;
-      }
-
-      // solid filled circle — fully opaque background
+      // Glow
+      const pulse = 0.5 + Math.sin(this.sparkT * 1.5) * 0.5;
+      ctx.shadowColor = this.bgColor; ctx.shadowBlur = 8 + pulse * 10;
       ctx.fillStyle = this.bgColor;
       ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-      // dark border ring to separate from sky
-      ctx.strokeStyle = this.target ? '#B8860B' : 'rgba(0,0,0,0.25)';
-      ctx.lineWidth = this.target ? 3 : 2;
+      ctx.shadowBlur = 0;
+
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 3;
       ctx.stroke();
 
-      // the real item emoji — large and clear
-      ctx.font = `${r * 1.35}px serif`;
+      ctx.font = `${r * 1.3}px serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(this.w.emoji, 0, 2);
+      ctx.fillText(this.item.emoji, 0, 2);
 
       ctx.restore();
 
-      // orbiting gold sparkle dots on the target
-      if (this.target) {
-        for (let i = 0; i < 4; i++) {
-          const a = this.sparkT + i * (Math.PI / 2);
-          const sx = this.x + Math.cos(a) * (r + 12);
-          const sy = this.y + Math.sin(a) * (r + 12);
-          ctx.save(); ctx.fillStyle = '#FFD700'; ctx.globalAlpha = 0.85;
-          ctx.beginPath(); ctx.arc(sx, sy, 4, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-        }
+      // Orbiting sparkle dots
+      for (let i = 0; i < 3; i++) {
+        const a = this.sparkT + i * (Math.PI * 2 / 3);
+        const sx = this.x + Math.cos(a) * (r + 10);
+        const sy = this.y + Math.sin(a) * (r + 10);
+        ctx.save(); ctx.globalAlpha = 0.65; ctx.fillStyle = 'white';
+        ctx.beginPath(); ctx.arc(sx, sy, 3, 0, Math.PI * 2); ctx.fill(); ctx.restore();
       }
     }
     bounds() {
-      return { left: this.x - this.r, right: this.x + this.r,
-               top:  this.y - this.r, bottom: this.y + this.r };
+      return { left: this.x - this.r * 0.85, right: this.x + this.r * 0.85,
+               top:  this.y - this.r * 0.85, bottom: this.y + this.r * 0.85 };
     }
   }
 
@@ -660,26 +418,16 @@ function runGame(canvas, { onSuccess, difficulty }) {
     return a.right > b.left && a.left < b.right && a.bottom > b.top && a.top < b.bottom;
   }
 
-  // ── Obstacles ────────────────────────────────
-  // Road hazards drawn ON the ground surface, plus running enemies
-  const ROAD_OBS = ['🚧','🪨','🛢️','🌵','🪵'];
-
+  // ── Obstacles (character-specific) ──────────────
   class Obstacle {
     constructor() {
-      this.gY    = canvas.height * GROUND_RATIO;
-      this.isEnemy = Math.random() < 0.28; // running enemy
-      if (this.isEnemy) {
-        this.emoji = ['🐱','🐔','🐇'][Math.floor(Math.random() * 3)];
-        this.w = 72; this.h = 72;
-        this.speed = (3.2 + Math.random() * 2) * speedMult;
-      } else {
-        this.emoji = ROAD_OBS[Math.floor(Math.random() * ROAD_OBS.length)];
-        this.w = 70; this.h = 72;
-        this.speed = (1.8 + Math.random() * 1.2) * speedMult;
-      }
+      const obsEmojis = dog ? DOG_OBSTACLES[dog.data.name] : ['🚧'];
+      this.emoji = obsEmojis[Math.floor(Math.random() * obsEmojis.length)];
+      this.gY = canvas.height * GROUND_RATIO;
+      this.w = 70; this.h = 72;
+      this.speed = (1.8 + Math.random() * 1.2) * speedMult;
       this.x = canvas.width + this.w;
       this.alive = true;
-      // warning pulse
       this.warnT = 0;
     }
     update() {
@@ -689,50 +437,42 @@ function runGame(canvas, { onSuccess, difficulty }) {
     }
     draw() {
       const gY = this.gY;
-      const pulse = 0.5 + Math.sin(this.warnT) * 0.5; // 0–1
+      const pulse = 0.5 + Math.sin(this.warnT) * 0.5;
+      const isFireType  = this.emoji === '🔥' || this.emoji === '🌋';
+      const isThunder   = this.emoji === '⚡' || this.emoji === '🌩️';
+      const haloColor   = isFireType ? `rgba(255,100,0,${0.55 + pulse * 0.45})`
+                        : isThunder  ? `rgba(180,200,255,${0.55 + pulse * 0.45})`
+                        :              `rgba(150,120,80,${0.55 + pulse * 0.45})`;
+      const bgFill      = isFireType ? '#FF5500'
+                        : isThunder  ? '#5C6BC0'
+                        :              '#8D6E63';
+      const labelColor  = isFireType ? '#FF3300'
+                        : isThunder  ? '#7986CB'
+                        :              '#8D6E63';
 
       ctx.save();
 
-      // thick dark ground shadow
+      // Ground shadow
       ctx.fillStyle = 'rgba(0,0,0,0.35)';
-      ctx.beginPath();
-      ctx.ellipse(this.x, gY + 5, this.w * 0.58, 10, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.beginPath(); ctx.ellipse(this.x, gY + 5, this.w * 0.58, 10, 0, 0, Math.PI * 2); ctx.fill();
 
-      // bright pulsing halo ring — always visible, even from far away
-      const haloColor = this.isEnemy ? `rgba(255,50,50,${0.55 + pulse * 0.45})` : `rgba(255,165,0,${0.55 + pulse * 0.45})`;
-      ctx.strokeStyle = haloColor;
-      ctx.lineWidth = 5 + pulse * 4;
-      ctx.beginPath();
-      ctx.arc(this.x, gY - this.h * 0.5, this.w * 0.58 + pulse * 6, 0, Math.PI * 2);
-      ctx.stroke();
+      // Halo ring
+      ctx.strokeStyle = haloColor; ctx.lineWidth = 5 + pulse * 4;
+      ctx.beginPath(); ctx.arc(this.x, gY - this.h * 0.5, this.w * 0.58 + pulse * 6, 0, Math.PI * 2); ctx.stroke();
 
-      // solid filled circle background — fully opaque so emoji is never see-through
-      ctx.fillStyle = this.isEnemy ? '#FF5555' : '#FFA500';
-      ctx.beginPath();
-      ctx.arc(this.x, gY - this.h * 0.5, this.w * 0.52, 0, Math.PI * 2);
-      ctx.fill();
+      // Solid background circle
+      ctx.fillStyle = bgFill;
+      ctx.beginPath(); ctx.arc(this.x, gY - this.h * 0.5, this.w * 0.52, 0, Math.PI * 2); ctx.fill();
 
-      // the emoji — big, sitting on the ground
-      ctx.font = `${this.h}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      if (this.isEnemy) {
-        ctx.translate(this.x, gY + 5);
-        ctx.scale(-1, 1);
-        ctx.fillText(this.emoji, 0, 0);
-      } else {
-        ctx.fillText(this.emoji, this.x, gY + 5);
-      }
+      // Emoji
+      ctx.font = `${this.h}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(this.emoji, this.x, gY + 5);
 
-      // "JUMP!" label when obstacle is in the danger zone
+      // JUMP! label
       if (this.x < canvas.width * 0.60 && this.x > 0) {
         ctx.font = `bold ${14 + pulse * 4}px "Arial Black", Arial`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.fillStyle = this.isEnemy ? '#FF3333' : '#FF8800';
-        ctx.strokeStyle = 'white';
-        ctx.lineWidth = 3;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+        ctx.fillStyle = labelColor; ctx.strokeStyle = 'white'; ctx.lineWidth = 3;
         ctx.strokeText('JUMP!', this.x, gY - this.h - 4);
         ctx.fillText('JUMP!', this.x, gY - this.h - 4);
       }
@@ -740,113 +480,70 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.restore();
     }
     bounds() {
-      return {
-        left:   this.x - this.w * 0.30,
-        right:  this.x + this.w * 0.30,
-        top:    this.gY - this.h * 0.90,
-        bottom: this.gY + 4,
-      };
+      return { left: this.x - this.w * 0.30, right: this.x + this.w * 0.30,
+               top:  this.gY - this.h * 0.90, bottom: this.gY + 4 };
     }
   }
 
   // ── Game state ───────────────────────────────
-  const ST = { MENU:'menu', PLAY:'play', OVER:'over' };
+  const ST = { MENU: 'menu', PLAY: 'play', OVER: 'over' };
   let state = ST.MENU;
 
-  let score     = 0;
-  let lives     = 3;
-  let combo     = 0;
-  // eslint-disable-next-line no-unused-vars
-  let roundNum  = 0;
-  let catchCount = 0; // how many words caught correctly this session
+  let score = 0;
+  let lives = 3;
+  let combo = 0;
+  let catchCount = 0;
+  let items = [];
+  let itemSpawnTimer = 60;
+  let obstacles = [];
+  let obsTimer = 220;
 
-  let wordPool  = shuffle(WORDS);
-  let wordIdx   = 0;
-  let curWord   = null;
-  let items     = [];
-  let roundPhase = 'idle';
-  let roundTimer = 0;
-  let obstacles  = [];
-  let obsTimer   = 0; // frames until next obstacle
-
-  function nextWord() {
-    if (wordIdx >= wordPool.length) { wordPool = shuffle(WORDS); wordIdx = 0; }
-    return wordPool[wordIdx++];
-  }
-
-  function startRound() {
-    roundNum++;
-    curWord = nextWord();
-    const distractors = shuffle(WORDS.filter(w => w.word !== curWord.word)).slice(0, 3);
-    const all = shuffle([curWord, ...distractors]);
-    items = all.map((w, i) => {
-      const spacing = canvas.width / 5;
-      const it = new WordItem(w, w === curWord, spacing * (i + 1), -70 - i * 90);
-      return it;
-    });
-    roundPhase = 'announce'; roundTimer = 55;
-    speak(curWord.word);
-  }
-
-  function endGame() { roundPhase = 'idle'; state = ST.OVER; }
-
-  function updateRound() {
-    if (roundTimer > 0) {
-      roundTimer--;
-      if (roundTimer === 0) {
-        if      (roundPhase === 'announce') roundPhase = 'active';
-        else if (roundPhase === 'won')      startRound();
-        else if (roundPhase === 'missed')   { lives > 0 ? startRound() : endGame(); }
-      }
+  function updatePlay() {
+    // Spawn items — keep 2-3 on screen
+    itemSpawnTimer--;
+    if (itemSpawnTimer <= 0) {
+      const dogItemList = DOG_ITEMS[dog.data.name];
+      const item = dogItemList[Math.floor(Math.random() * dogItemList.length)];
+      items.push(new CollectItem(item));
+      itemSpawnTimer = 110 + Math.floor(Math.random() * 110);
     }
 
     items.forEach(it => it.update());
 
-    if (roundPhase === 'active') {
+    // Collect
+    if (dog.state !== 'ouch') {
       const db = dog.bounds();
       for (const it of items) {
-        if (!it.alive || it.catchT > 0) continue;
+        if (!it.alive || it.collectT > 0) continue;
         if (hits(db, it.bounds())) {
-          if (it.target) {
-            it.catchT = 22; dog.celebrate();
-            score += 10 * Math.max(1, combo); combo++;
-            catchCount++;
-            roundPhase = 'won'; roundTimer = 90;
-            speak('Great job!');
-            // onSuccess after 5 correct catches
-            if (catchCount === 5) { setTimeout(() => onSuccess(), 1200); }
-          } else {
-            if (dog.state !== 'ouch') {
-              it.catchT = 10; dog.ouch();
-              lives--; combo = 0; speak('Try again!');
-              if (lives <= 0) { endGame(); return; }
-            }
-          }
+          it.collectT = 25;
+          dog.celebrate();
+          score += 10 * Math.max(1, combo);
+          combo++;
+          catchCount++;
+          burst(it.x, it.y, it.bgColor, 14);
+          speak(it.item.sentence, 1.0, 1.8);
+          if (catchCount === 5) setTimeout(() => onSuccess(), 1500);
           break;
         }
       }
-      const tgt = items.find(i => i.target);
-      if (!tgt || (!tgt.alive && tgt.catchT === 0)) {
-        lives--; combo = 0; speak('Missed!');
-        if (lives <= 0) { endGame(); return; }
-        roundPhase = 'missed'; roundTimer = 55;
-      }
     }
-    items = items.filter(i => i.alive || i.catchT > 0);
+    items = items.filter(i => i.alive || i.collectT > 0);
 
-    // ── Obstacles
+    // Spawn obstacles
     if (--obsTimer <= 0) {
       obstacles.push(new Obstacle());
-      obsTimer = 280 + Math.floor(Math.random() * 180); // spawn every 4-8 seconds
+      obsTimer = 280 + Math.floor(Math.random() * 180);
     }
     obstacles.forEach(o => o.update());
-    if (roundPhase === 'active' && dog.state !== 'ouch') {
+
+    if (dog.state !== 'ouch') {
       const db = dog.bounds();
       for (const o of obstacles) {
         if (hits(db, o.bounds())) {
           dog.ouch(); lives--; combo = 0;
-          speak(o.isEnemy ? 'Watch out!' : 'Jump over it!');
-          if (lives <= 0) { endGame(); return; }
+          speak('Ouch! Jump over it!', 1.0, 1.7);
+          if (lives <= 0) { state = ST.OVER; }
           break;
         }
       }
@@ -876,23 +573,9 @@ function runGame(canvas, { onSuccess, difficulty }) {
     ctx.font = '20px serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
     ctx.fillText(hearts, canvas.width - px - 10, py + 21);
 
-    if (curWord) {
-      const pw = Math.min(290, canvas.width * 0.68);
-      const ph = 68, px2 = canvas.width / 2 - pw / 2, py2 = py;
-      ctx.fillStyle = 'rgba(10,25,80,0.78)';
-      ctx.beginPath(); ctx.roundRect(px2, py2, pw, ph, 16); ctx.fill();
-      ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 2.5; ctx.stroke();
-      ctx.fillStyle = 'rgba(255,255,255,0.6)';
-      ctx.font = '13px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      ctx.fillText('CATCH:', canvas.width / 2, py2 + 9);
-      ctx.fillStyle = '#FFD700';
-      ctx.font = `bold 28px "Arial Black", Arial`; ctx.textBaseline = 'middle';
-      ctx.fillText(`${curWord.emoji}  ${curWord.word}`, canvas.width / 2, py2 + ph * 0.67);
-    }
-
     ctx.fillStyle = 'rgba(255,255,255,0.22)';
     ctx.font = '13px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText('← → run  |  Space / ↑ jump  |  Jump over obstacles!', canvas.width / 2, canvas.height - 10);
+    ctx.fillText('← → run  |  Space / ↑ jump  |  Collect items, jump over obstacles!', canvas.width / 2, canvas.height - 10);
   }
 
   // ── Touch buttons ────────────────────────────
@@ -961,39 +644,49 @@ function runGame(canvas, { onSuccess, difficulty }) {
       const sc = hov ? 1.07 : 1;
       const midX = cx + cW / 2, midY = cardY + cH / 2;
 
-      ctx.save(); ctx.translate(midX, midY); ctx.scale(sc, sc); ctx.translate(-cW/2, -cH/2);
+      ctx.save();
+      ctx.translate(midX, midY); ctx.scale(sc, sc); ctx.translate(-cW / 2, -cH / 2);
+
+      // Card shadow + background
       ctx.fillStyle = 'rgba(0,0,0,0.28)';
       ctx.beginPath(); ctx.roundRect(4, 6, cW, cH, 18); ctx.fill();
       ctx.fillStyle = d.color;
       ctx.beginPath(); ctx.roundRect(0, 0, cW, cH, 18); ctx.fill();
       if (hov) { ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 4; ctx.stroke(); }
 
-      {
-        const baseW = 90, baseH = baseW * 1.28;
-        const scale = (cW * 0.60) / baseW;
-        ctx.save();
-        ctx.beginPath(); ctx.roundRect(5, 5, cW-10, cH*0.74-2, 14); ctx.clip();
-        ctx.translate(cW/2, cH*0.74 - 10);
-        ctx.scale(scale, scale);
-        drawDogFull(baseW, baseH, d.name, 'run', bgTick * 0.7, 0, true);
-        ctx.restore();
+      // Poster image in upper portion of card
+      const imgArea = { x: 5, y: 5, w: cW - 10, h: cH * 0.74 - 2 };
+      ctx.save();
+      ctx.beginPath(); ctx.roundRect(imgArea.x, imgArea.y, imgArea.w, imgArea.h, 14); ctx.clip();
+      const img = dogImages[d.name];
+      if (img) {
+        ctx.drawImage(img, imgArea.x, imgArea.y, imgArea.w, imgArea.h);
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.fillRect(imgArea.x, imgArea.y, imgArea.w, imgArea.h);
+        ctx.font = `${cW * 0.3}px serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = 'white';
+        ctx.fillText('🐾', cW / 2, imgArea.y + imgArea.h / 2);
       }
+      ctx.restore();
 
+      // Dog name label
       ctx.fillStyle = 'white';
       ctx.font = `bold ${Math.floor(cW * 0.155)}px "Arial Black", Arial`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.strokeStyle = 'rgba(0,0,0,0.45)'; ctx.lineWidth = 3;
-      ctx.strokeText(d.name.toUpperCase(), cW/2, cH * 0.88);
-      ctx.fillText(d.name.toUpperCase(), cW/2, cH * 0.88);
-      ctx.restore();
+      ctx.strokeText(d.name.toUpperCase(), cW / 2, cH * 0.88);
+      ctx.fillText(d.name.toUpperCase(), cW / 2, cH * 0.88);
 
+      ctx.restore();
       menuCards[i] = { x: midX - cW/2*sc, y: midY - cH/2*sc, w: cW*sc, h: cH*sc };
     });
 
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
     ctx.font = `${Math.min(14, canvas.width * 0.036)}px Arial`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText('Run  ←→  |  Jump  Space/↑  |  Catch the right word!', canvas.width/2, canvas.height - 18);
+    ctx.fillText('Run  ←→  |  Jump  Space/↑  |  Collect items!', canvas.width / 2, canvas.height - 18);
   }
 
   // ── Game Over ────────────────────────────────
@@ -1025,14 +718,12 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
   function resetGame(dogData) {
     dog = new Dog(dogData);
-    score = 0; lives = 3; combo = 0; roundNum = 0; catchCount = 0;
-    particles = []; pawPrints = []; items = []; obstacles = []; obsTimer = 220;
-    wordPool = shuffle(WORDS); wordIdx = 0;
+    score = 0; lives = 3; combo = 0; catchCount = 0;
+    particles = []; pawPrints = []; items = []; obstacles = [];
+    obsTimer = 220; itemSpawnTimer = 60;
     initBg();
     state = ST.PLAY;
-    speak(dogData.tagline, 0.9);
-    roundTimer = 70; roundPhase = 'announce'; // slight delay before first round
-    setTimeout(() => startRound(), 1300);
+    speak(dogData.tagline, 0.9, 1.7);
   }
 
   // ── Input ────────────────────────────────────
@@ -1042,9 +733,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
     });
   }
   function handleOverClick(x, y) {
-    if (goBtn.x && x >= goBtn.x && x <= goBtn.x+goBtn.w && y >= goBtn.y && y <= goBtn.y+goBtn.h) {
+    if (goBtn.x && x >= goBtn.x && x <= goBtn.x+goBtn.w && y >= goBtn.y && y <= goBtn.y+goBtn.h)
       state = ST.MENU;
-    }
   }
 
   let touchAnchorX = 0;
@@ -1113,7 +803,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
   function loop() {
     rafId = requestAnimationFrame(loop);
-    bgTick++;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (state === ST.MENU) { drawMenu(); return; }
@@ -1125,7 +814,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
     if (state === ST.PLAY) {
       obstacles.forEach(o => o.draw());
       items.forEach(it => it.draw());
-      dog.update(); updateRound(); dog.draw();
+      dog.update(); updatePlay(); dog.draw();
       drawHUD(); drawTouchBtns();
     }
     if (state === ST.OVER) {
@@ -1138,7 +827,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
   // ── Cleanup ───────────────────────────────────
   return () => {
     cancelAnimationFrame(rafId);
-    window.removeEventListener('resize', onResize);
+    window.removeEventListener('resize', resize);
     document.removeEventListener('keydown', onKeyDown);
     document.removeEventListener('keyup', onKeyUp);
     canvas.removeEventListener('touchstart', onTouchStart);
