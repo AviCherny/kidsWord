@@ -516,6 +516,41 @@ function runGame(canvas, { onSuccess, difficulty }) {
     }
   }
 
+  // ── Platforms ────────────────────────────────
+  class Platform {
+    constructor() {
+      const groundY = canvas.height * GROUND_RATIO;
+      this.w = 160 + Math.random() * 110;
+      this.blockH = 24;
+      this.surfaceY = groundY - (90 + Math.random() * 75);
+      this.speed = (1.8 + Math.random() * 0.9) * speedMult * 60; // px/s
+      this.x = cameraX + canvas.width + this.w / 2 + 60;
+      this.alive = true;
+    }
+    get left()  { return this.x - this.w / 2; }
+    get right() { return this.x + this.w / 2; }
+    update(dt) {
+      this.x -= this.speed * dt;
+      if (this.right < cameraX - 80) this.alive = false;
+    }
+    draw() {
+      const top = this.surfaceY;
+      const l = this.left, w = this.w, bh = this.blockH;
+      // Dirt body
+      ctx.fillStyle = '#6D4C41';
+      ctx.fillRect(l, top + bh, w, 14);
+      // Grass top
+      ctx.fillStyle = '#43A047';
+      ctx.beginPath(); ctx.roundRect(l, top, w, bh, [8, 8, 0, 0]); ctx.fill();
+      // Grass highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.22)';
+      ctx.fillRect(l + 8, top + 5, w - 16, 5);
+      // Dashed underline shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx.fillRect(l + 4, top + bh + 14, w - 8, 4);
+    }
+  }
+
   // ── Game state ───────────────────────────────
   const ST = { MENU: 'menu', PLAY: 'play', OVER: 'over' };
   let state = ST.MENU;
@@ -528,6 +563,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
   let itemSpawnTimer = 60;
   let obstacles = [];
   let obsTimer = 220;
+  let platforms = [];
+  let platformTimer = 380;
 
   function updatePlay(dt) {
     // Spawn items — keep 2-3 on screen
@@ -560,6 +597,15 @@ function runGame(canvas, { onSuccess, difficulty }) {
       }
     }
     items = items.filter(i => i.alive || i.collectT > 0);
+
+    // Spawn platforms
+    platformTimer -= dt * 60;
+    if (platformTimer <= 0) {
+      platforms.push(new Platform());
+      platformTimer = 320 + Math.floor(Math.random() * 260);
+    }
+    platforms.forEach(p => p.update(dt));
+    platforms = platforms.filter(p => p.alive);
 
     // Spawn obstacles
     obsTimer -= dt * 60;
@@ -761,8 +807,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
     cameraX = 0;
     updateCamera(true); // snap camera to initial dog position
     score = 0; lives = 3; combo = 0; catchCount = 0;
-    particles = []; pawPrints = []; items = []; obstacles = [];
-    obsTimer = 220; itemSpawnTimer = 60;
+    particles = []; pawPrints = []; items = []; obstacles = []; platforms = [];
+    obsTimer = 220; itemSpawnTimer = 60; platformTimer = 380;
     initBg();
     state = ST.PLAY;
     speak(dogData.tagline, 0.9, 1.7);
@@ -857,6 +903,19 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
     // ── Update logic ──────────────────────────
     if (state === ST.PLAY) {
+      // Set dog's floor to the highest platform it's standing on, else real ground
+      if (dog) {
+        const realGround = canvas.height * GROUND_RATIO;
+        dog.gY = realGround;
+        for (const p of platforms) {
+          if (dog.x + dog.w * 0.35 > p.left && dog.x - dog.w * 0.35 < p.right) {
+            if (dog.y <= p.surfaceY + 8) {
+              dog.gY = p.surfaceY;
+              break;
+            }
+          }
+        }
+      }
       dog.update(dt);
       updatePlay(dt);
       updateCamera();
@@ -873,6 +932,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
     tickParticles(); drawParticles();
 
     if (state === ST.PLAY) {
+      platforms.forEach(p => p.draw());
       obstacles.forEach(o => o.draw());
       items.forEach(it => it.draw());
       dog.draw();
