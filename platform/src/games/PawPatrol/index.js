@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import './PawPatrol.css';
+import speak from '../../speak';
 
 // ─────────────────────────────────────────────
 // CHARACTER CONTENT
@@ -374,7 +375,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
       // Spawn ahead of the camera in world space
       this.x = cameraX + canvas.width + this.r * 2 + Math.random() * 80;
       this.y = this.gY - this.r;
-      this.speed = (2.2 + Math.random() * 1.0) * speedMult * 60; // px/s
+      this.speed = (2.2 + Math.random() * 1.0) * speedMult * gameSpeedRamp * 60; // px/s
       this.bobT = Math.random() * Math.PI * 2;
       this.sparkT = 0;
       this.alive = true;
@@ -436,6 +437,13 @@ function runGame(canvas, { onSuccess, difficulty }) {
     return a.right > b.left && a.left < b.right && a.bottom > b.top && a.top < b.bottom;
   }
 
+  function getObstacleWarning(emoji) {
+    if (emoji === '🔥' || emoji === '🌋') return 'I see fire! Jump!';
+    if (emoji === '⚡' || emoji === '🌩️') return 'Lightning! Jump!';
+    if (emoji === '🌊') return 'Big wave! Jump!';
+    return 'Watch out! Jump!';
+  }
+
   // ── Obstacles (character-specific) ──────────────
   class Obstacle {
     constructor() {
@@ -443,16 +451,25 @@ function runGame(canvas, { onSuccess, difficulty }) {
       this.emoji = obsEmojis[Math.floor(Math.random() * obsEmojis.length)];
       this.gY = canvas.height * GROUND_RATIO;
       this.w = 70; this.h = 72;
-      this.speed = (1.8 + Math.random() * 1.2) * speedMult * 60; // px/s
+      this.speed = (1.8 + Math.random() * 1.2) * speedMult * gameSpeedRamp * 60; // px/s
       // Spawn ahead of the camera in world space
       this.x = cameraX + canvas.width + this.w;
       this.alive = true;
       this.warnT = 0;
+      this.warned = false;
     }
     update(dt) {
       this.x -= this.speed * dt;
       this.warnT += 0.15 * dt * 60;
       if (this.x < cameraX - this.w * 2) this.alive = false;
+      // Voice warning once when obstacle enters the right 65% of screen
+      if (!this.warned) {
+        const screenX = this.x - cameraX;
+        if (screenX < canvas.width * 0.65) {
+          this.warned = true;
+          speak(getObstacleWarning(this.emoji), 'en');
+        }
+      }
     }
     draw() {
       const gY = this.gY;
@@ -628,14 +645,48 @@ function runGame(canvas, { onSuccess, difficulty }) {
   let questionBlocks = [];
   let qbTimer = 500;
 
+  // ── Difficulty & feedback state ──────────────
+  let gameTick = 0;       // seconds since game start
+  let gameSpeedRamp = 1;  // speed multiplier — grows over time
+  let comboPopup = null;  // { text, t } — on-screen callout
+
+  function setComboPopup(text) { comboPopup = { text, t: 1.6 }; }
+
+  function updateComboPopup(dt) {
+    if (comboPopup) { comboPopup.t -= dt; if (comboPopup.t <= 0) comboPopup = null; }
+  }
+
+  function drawComboPopup() {
+    if (!comboPopup || !dog) return;
+    const alpha = Math.min(1, comboPopup.t * 2.5);
+    const rise  = (1.6 - comboPopup.t) * 28;
+    const screenX = dog.x - cameraX;
+    const screenY = dog.y - dog.h - 20 - rise;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = 'bold 26px "Arial Black", Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.strokeStyle = 'white'; ctx.lineWidth = 4;
+    ctx.strokeText(comboPopup.text, screenX, screenY);
+    ctx.fillStyle = '#FF6B35';
+    ctx.fillText(comboPopup.text, screenX, screenY);
+    ctx.restore();
+  }
+
   function updatePlay(dt) {
-    // Spawn items — keep 2-3 on screen
+    // ── Speed ramp: +10% every 15 s, capped at ×2.2 ──
+    gameTick += dt;
+    gameSpeedRamp = Math.min(2.2, 1 + Math.floor(gameTick / 15) * 0.10);
+    updateComboPopup(dt);
+
+    // Spawn items — interval shrinks with ramp
     itemSpawnTimer -= dt * 60;
     if (itemSpawnTimer <= 0) {
       const dogItemList = DOG_ITEMS[dog.data.name];
       const item = dogItemList[Math.floor(Math.random() * dogItemList.length)];
       items.push(new CollectItem(item));
-      itemSpawnTimer = 110 + Math.floor(Math.random() * 110);
+      const base = Math.max(60, 110 - Math.floor(gameTick / 15) * 8);
+      itemSpawnTimer = base + Math.floor(Math.random() * base * 0.8);
     }
 
     items.forEach(it => it.update(dt));
@@ -652,7 +703,13 @@ function runGame(canvas, { onSuccess, difficulty }) {
           combo++;
           catchCount++;
           burst(it.x, it.y, it.bgColor, 14);
-          if (catchCount === 5) setTimeout(() => onSuccess(), 1500);
+          // Voice: speak the item's sentence
+          speak(it.item.sentence, 'en');
+          // Combo callouts
+          if (combo === 3) { setComboPopup('🐾 Paw-some!'); }
+          else if (combo === 5) { setComboPopup('🔥 On fire! ×5'); speak('Amazing!', 'en'); }
+          else if (combo === 8) { setComboPopup('⭐ Unstoppable! ×8'); speak('Incredible!', 'en'); }
+          else if (combo > 8 && combo % 5 === 0) { setComboPopup(`🌟 ×${combo} streak!`); }
           break;
         }
       }
@@ -692,11 +749,12 @@ function runGame(canvas, { onSuccess, difficulty }) {
     }
     questionBlocks = questionBlocks.filter(qb => qb.alive);
 
-    // Spawn obstacles
+    // Spawn obstacles — interval shrinks with ramp
     obsTimer -= dt * 60;
     if (obsTimer <= 0) {
       obstacles.push(new Obstacle());
-      obsTimer = 280 + Math.floor(Math.random() * 180);
+      const base = Math.max(140, 280 - Math.floor(gameTick / 15) * 15);
+      obsTimer = base + Math.floor(Math.random() * base * 0.6);
     }
     obstacles.forEach(o => o.update(dt));
 
@@ -704,7 +762,9 @@ function runGame(canvas, { onSuccess, difficulty }) {
       const db = dog.bounds();
       for (const o of obstacles) {
         if (hits(db, o.bounds())) {
-          dog.ouch(); lives--; combo = 0;
+          dog.ouch(); combo = 0; lives--;
+          speak('Ouch! Watch out!', 'en');
+          setComboPopup('💥 Ouch!');
           if (lives <= 0) { state = ST.OVER; }
           break;
         }
@@ -723,6 +783,16 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
   // ── HUD ──────────────────────────────────────
   function drawHUD() {
+    // Danger vignette when 1 life left
+    if (lives === 1) {
+      const pulse = 0.5 + Math.sin(bgTick * 0.12) * 0.5;
+      ctx.save();
+      ctx.globalAlpha = 0.10 + pulse * 0.08;
+      ctx.fillStyle = '#FF0000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+    }
+
     const px = 18, py = 70;
     ctx.fillStyle = 'rgba(0,0,0,0.42)';
     ctx.beginPath(); ctx.roundRect(px, py, 124, 42, 12); ctx.fill();
@@ -742,6 +812,28 @@ function runGame(canvas, { onSuccess, difficulty }) {
     const hearts = '❤️'.repeat(clamp(lives, 0, 3)) + '🖤'.repeat(clamp(3 - lives, 0, 3));
     ctx.font = '20px serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
     ctx.fillText(hearts, canvas.width - px - 10, py + 21);
+
+    // Danger label when 1 life
+    if (lives === 1) {
+      const pulse = 0.5 + Math.sin(bgTick * 0.12) * 0.5;
+      ctx.save();
+      ctx.font = 'bold 14px "Arial Black", Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = `rgba(255,80,80,${0.75 + pulse * 0.25})`;
+      ctx.fillText('⚠️  Humdinger is catching up!  ⚠️', canvas.width / 2, py + 21);
+      ctx.restore();
+    }
+
+    // Speed phase indicator (shows after first ramp)
+    if (gameSpeedRamp > 1) {
+      const phase = Math.floor(gameTick / 15);
+      ctx.save();
+      ctx.font = 'bold 12px Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillStyle = `rgba(255,220,100,0.7)`;
+      ctx.fillText(`Speed ×${gameSpeedRamp.toFixed(1)}  📈`, canvas.width / 2, py - 4);
+      ctx.restore();
+    }
 
     ctx.fillStyle = 'rgba(255,255,255,0.22)';
     ctx.font = '13px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
@@ -891,6 +983,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
     cameraX = 0;
     updateCamera(true); // snap camera to initial dog position
     score = 0; lives = 3; combo = 0; catchCount = 0;
+    gameTick = 0; gameSpeedRamp = 1; comboPopup = null;
     particles = []; pawPrints = []; items = []; obstacles = []; platforms = []; questionBlocks = [];
     obsTimer = 220; itemSpawnTimer = 60; platformTimer = 380; qbTimer = 500;
     initBg();
@@ -1030,7 +1123,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
     ctx.restore();
 
     // ── Draw HUD / overlays (screen-space) ──
-    if (state === ST.PLAY)  { drawHUD(); drawTouchBtns(); }
+    if (state === ST.PLAY)  { drawHUD(); drawTouchBtns(); drawComboPopup(); }
     if (state === ST.OVER)  { drawGameOver(); }
   }
   rafId = requestAnimationFrame(loop);
