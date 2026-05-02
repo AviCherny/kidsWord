@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import './PawPatrol.css';
-import speak from '../../speak';
+import { speak } from '../../speak';
 
 // ─────────────────────────────────────────────
 // CHARACTER CONTENT
