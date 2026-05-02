@@ -80,17 +80,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
   const clamp    = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   const approach = (v, t, d) => v < t ? Math.min(t, v + d) : Math.max(t, v - d);
 
-  // ── Speech ───────────────────────────────────
-  function speak(text, rate = 1.0, pitch = 1.8) {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'en-US';
-    u.rate = rate;
-    u.pitch = pitch;
-    window.speechSynthesis.speak(u);
-  }
-
   // ── Background ───────────────────────────────
   let bgTick = 0;
   let cameraX = 0;
@@ -663,7 +652,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
           combo++;
           catchCount++;
           burst(it.x, it.y, it.bgColor, 14);
-          speak(it.item.sentence, 1.0, 1.8);
           if (catchCount === 5) setTimeout(() => onSuccess(), 1500);
           break;
         }
@@ -717,7 +705,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
       for (const o of obstacles) {
         if (hits(db, o.bounds())) {
           dog.ouch(); lives--; combo = 0;
-          speak('Ouch! Jump over it!', 1.0, 1.7);
           if (lives <= 0) { state = ST.OVER; }
           break;
         }
@@ -736,7 +723,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
   // ── HUD ──────────────────────────────────────
   function drawHUD() {
-    const px = 18, py = 14;
+    const px = 18, py = 70;
     ctx.fillStyle = 'rgba(0,0,0,0.42)';
     ctx.beginPath(); ctx.roundRect(px, py, 124, 42, 12); ctx.fill();
     ctx.fillStyle = '#FFD700'; ctx.font = 'bold 21px "Arial Black", Arial';
@@ -908,7 +895,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
     obsTimer = 220; itemSpawnTimer = 60; platformTimer = 380; qbTimer = 500;
     initBg();
     state = ST.PLAY;
-    speak(dogData.tagline, 0.9, 1.7);
   }
 
   // ── Input ────────────────────────────────────
@@ -1060,7 +1046,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
     canvas.removeEventListener('touchend',   onTouchEnd);
     canvas.removeEventListener('click',      onClick);
     canvas.removeEventListener('mousemove',  onMouseMove);
-    if (window.speechSynthesis) window.speechSynthesis.cancel();
   };
 }
 
