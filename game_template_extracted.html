@@ -122,13 +122,6 @@ const CHARACTERS = {
 };
 
 // ── Helpers ───────────────────────────────────────────────────
-function speak(text) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'en-US'; u.rate = 0.88; u.pitch = 1.25;
-  window.speechSynthesis.speak(u);
-}
 
 function shuffle(arr) {
   const a = [...arr];
@@ -405,7 +398,6 @@ function PawPatrolWordRun() {
 
     const ws = () => WORD_SETS[gs.wordIdx % WORD_SETS.length];
 
-    speak(`find the ${ws().target.toLowerCase()}`);
     setHud({ score:0, lives:cfg.lives, target:ws().target, confetti:false });
 
     // ── Spawn helpers ──────────────────────────────────────
@@ -560,8 +552,6 @@ function PawPatrolWordRun() {
             obj.inner.style.animation = 'itemCollect 0.38s ease-out forwards';
             setTimeout(() => removeObj(obj), 420);
 
-            speak(`you found ${obj.data.w}`);
-
             if (obj.data.ok) {
               gs.score += 10;
               gs.phase  = 'celebrating';
@@ -569,7 +559,6 @@ function PawPatrolWordRun() {
               const nextIdx = gs.wordIdx + 1;
               const nextTarget = WORD_SETS[nextIdx % WORD_SETS.length].target.toLowerCase();
               setTimeout(() => {
-                speak(`great job! now find the ${nextTarget}`);
                 gs.wordIdx = nextIdx;
                 setHud({ score:gs.score, lives:gs.lives, target:WORD_SETS[nextIdx % WORD_SETS.length].target, confetti:false });
               }, 950);
@@ -595,7 +584,6 @@ function PawPatrolWordRun() {
         if (obj.type === 'obstacle') {
           if (!obj.warned && obj.x > DOG_SCREEN_X + DOG_W && obj.x - DOG_SCREEN_X < WARN_DIST) {
             obj.warned = true;
-            speak(`jump over the ${obj.data.name}`);
           }
           if (gs.phase === 'playing') {
             const px = DOG_SCREEN_X + 16, py = dog.y + 18;
