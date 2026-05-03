@@ -660,7 +660,10 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
           else if (combo === 8) { setComboPopup('⭐ Incredible! ×8'); speak('Incredible!', 'en'); }
           else if (combo > 8 && combo % 5 === 0) { setComboPopup(`🌟 ×${combo} streak!`); }
           // Win when enough items collected
-          if (catchCount >= WIN_TARGET) { state = ST.WIN; dog.celebrate(); }
+          if (catchCount >= WIN_TARGET) {
+            state = ST.WIN; dog.celebrate();
+            speak('You win! Amazing job!', 'en');
+          }
           break;
         }
       }
