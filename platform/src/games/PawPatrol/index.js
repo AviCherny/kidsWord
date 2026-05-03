@@ -7,28 +7,28 @@ import { speak } from '../../speak';
 // ─────────────────────────────────────────────
 const DOG_ITEMS = {
   Marshall: [
-    { emoji: '💧', sentence: "I have a water!" },
-    { emoji: '🪣', sentence: "Got the bucket!" },
-    { emoji: '🧊', sentence: "So icy and cool!" },
-    { emoji: '🏊', sentence: "Splash splash splash!" },
-    { emoji: '🍎', sentence: "An apple a day!" },
-    { emoji: '🦺', sentence: "Safety first!" },
+    { emoji: '💧', word: 'WATER',    sentence: "Water!"      },
+    { emoji: '🪣', word: 'BUCKET',   sentence: "Bucket!"     },
+    { emoji: '🧊', word: 'ICE',      sentence: "Ice!"        },
+    { emoji: '🏊', word: 'SWIM',     sentence: "Swim!"       },
+    { emoji: '🍎', word: 'APPLE',    sentence: "Apple!"      },
+    { emoji: '🦺', word: 'VEST',     sentence: "Vest!"       },
   ],
   Chase: [
-    { emoji: '🍌', sentence: "I just ate a banana!" },
-    { emoji: '🦴', sentence: "Found a yummy bone!" },
-    { emoji: '🍕', sentence: "Pizza time yeah!" },
-    { emoji: '🍩', sentence: "Mmm donuts!" },
-    { emoji: '🎾', sentence: "I love to fetch!" },
-    { emoji: '⭐', sentence: "Chase is on the case!" },
+    { emoji: '🍌', word: 'BANANA',   sentence: "Banana!"     },
+    { emoji: '🦴', word: 'BONE',     sentence: "Bone!"       },
+    { emoji: '🍕', word: 'PIZZA',    sentence: "Pizza!"      },
+    { emoji: '🍩', word: 'DONUT',    sentence: "Donut!"      },
+    { emoji: '🎾', word: 'BALL',     sentence: "Ball!"       },
+    { emoji: '⭐', word: 'STAR',     sentence: "Star!"       },
   ],
   Rubble: [
-    { emoji: '🔧', sentence: "Got the wrench!" },
-    { emoji: '⚙️', sentence: "Gears go click click!" },
-    { emoji: '🍪', sentence: "Cookies for Rubble!" },
-    { emoji: '🥪', sentence: "Lunchtime already?" },
-    { emoji: '🍦', sentence: "Yummy ice cream!" },
-    { emoji: '🧱', sentence: "One more brick!" },
+    { emoji: '🔧', word: 'WRENCH',   sentence: "Wrench!"     },
+    { emoji: '⚙️', word: 'GEAR',     sentence: "Gear!"       },
+    { emoji: '🍪', word: 'COOKIE',   sentence: "Cookie!"     },
+    { emoji: '🥪', word: 'SANDWICH', sentence: "Sandwich!"   },
+    { emoji: '🍦', word: 'ICE CREAM',sentence: "Ice cream!"  },
+    { emoji: '🧱', word: 'BRICK',    sentence: "Brick!"      },
   ],
 };
 
@@ -53,7 +53,7 @@ const POSTER_PATHS = {
 // ─────────────────────────────────────────────
 // GAME ENGINE
 // ─────────────────────────────────────────────
-function runGame(canvas, { onSuccess, difficulty }) {
+function runGame(canvas, { onSuccess, onExit, difficulty }) {
   const ctx = canvas.getContext('2d');
   const speedMult = 1 + (difficulty - 1) * 0.18;
 
@@ -191,8 +191,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
   // ── Dog class ────────────────────────────────
   // Physics — identical constants to the Sonic engine (dt-based, px/s or px/s²)
   const GRAVITY         = 1960;   // px/s²
-  const JUMP_VY         = -1000;  // px/s
-  const MAX_SPEED       = 620;    // px/s
+  const JUMP_VY         = -860;   // px/s  (softer arc — easier to time)
+  const MAX_SPEED       = 340;    // px/s  (comfortable auto-run pace)
   const MAX_FALL_SPEED  = 1080;   // px/s
   const GROUND_ACCEL    = 1780;   // px/s²
   const GROUND_FRICTION = 2450;   // px/s²
@@ -526,138 +526,34 @@ function runGame(canvas, { onSuccess, difficulty }) {
     }
   }
 
-  // ── Mario-style block helpers ─────────────────
-  const BLOCK = 42;
-
-  function drawBrickBlock(x, y) {
-    const B = BLOCK;
-    // Face
-    ctx.fillStyle = '#C8601A';
-    ctx.fillRect(x, y, B, B);
-    // Mortar: horizontal centre
-    ctx.fillStyle = '#7A3500';
-    ctx.fillRect(x, y + B / 2 - 1.5, B, 3);
-    // Mortar: vertical top-half (centred)
-    ctx.fillRect(x + B / 2 - 1.5, y, 3, B / 2 - 1.5);
-    // Mortar: vertical bottom-half (offset ¼ & ¾)
-    ctx.fillRect(x + B / 4 - 1.5, y + B / 2 + 1.5, 3, B / 2 - 1.5);
-    ctx.fillRect(x + B * 3 / 4 - 1.5, y + B / 2 + 1.5, 3, B / 2 - 1.5);
-    // Bevel — top/left bright
-    ctx.fillStyle = '#E87830';
-    ctx.fillRect(x, y, B, 4);
-    ctx.fillRect(x, y, 4, B);
-    // Bevel — bottom/right dark
-    ctx.fillStyle = '#8B3A00';
-    ctx.fillRect(x, y + B - 3, B, 3);
-    ctx.fillRect(x + B - 3, y, 3, B);
-  }
-
-  function drawQuestionBlock(x, y, active) {
-    const B = BLOCK;
-    ctx.fillStyle = active ? '#F8C800' : '#B09850';
-    ctx.fillRect(x, y, B, B);
-    // Bevel — top/left
-    ctx.fillStyle = active ? '#FFE840' : '#C8B060';
-    ctx.fillRect(x, y, B, 4);
-    ctx.fillRect(x, y, 4, B);
-    // Bevel — bottom/right
-    ctx.fillStyle = active ? '#B08000' : '#806040';
-    ctx.fillRect(x, y + B - 3, B, 3);
-    ctx.fillRect(x + B - 3, y, 3, B);
-    // Inner border ring
-    ctx.fillStyle = active ? '#8B6000' : '#5A4030';
-    ctx.fillRect(x + 4, y + 4, B - 8, 2);
-    ctx.fillRect(x + 4, y + B - 6, B - 8, 2);
-    ctx.fillRect(x + 4, y + 6, 2, B - 12);
-    ctx.fillRect(x + B - 6, y + 6, 2, B - 12);
-    // Glyph
-    ctx.font = `bold ${Math.round(B * 0.55)}px "Arial Black", Arial`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = active ? '#5A3A00' : '#8B7050';
-    ctx.fillText(active ? '?' : '·', x + B / 2, y + B / 2 + 1);
-  }
-
-  // ── Platforms ────────────────────────────────
-  class Platform {
-    constructor() {
-      const groundY = canvas.height * GROUND_RATIO;
-      const cols = 3 + Math.floor(Math.random() * 4); // 3–6 blocks wide
-      this.w = cols * BLOCK;
-      this.surfaceY = groundY - (100 + Math.random() * 85);
-      this.speed = (1.8 + Math.random() * 0.9) * speedMult * 60;
-      this.x = cameraX + canvas.width + this.w / 2 + 60;
-      this.alive = true;
-    }
-    get left()  { return this.x - this.w / 2; }
-    get right() { return this.x + this.w / 2; }
-    update(dt) {
-      this.x -= this.speed * dt;
-      if (this.right < cameraX - 80) this.alive = false;
-    }
-    draw() {
-      const cols = Math.round(this.w / BLOCK);
-      for (let i = 0; i < cols; i++) drawBrickBlock(this.left + i * BLOCK, this.surfaceY);
-    }
-  }
-
-  // ── Question blocks ───────────────────────────
-  class QuestionBlock {
-    constructor() {
-      const groundY = canvas.height * GROUND_RATIO;
-      this.surfaceY = groundY - (130 + Math.random() * 90);
-      this.speed = (1.8 + Math.random() * 0.9) * speedMult * 60;
-      this.x = cameraX + canvas.width + BLOCK / 2 + 60;
-      this.alive = true;
-      this.active = true;
-      this.bumpY = 0; // vertical offset for hit animation
-    }
-    get left()  { return this.x - BLOCK / 2; }
-    get right() { return this.x + BLOCK / 2; }
-    get top()   { return this.surfaceY + this.bumpY; }
-    update(dt) {
-      this.x -= this.speed * dt;
-      // Spring the bump back
-      if (this.bumpY < 0) this.bumpY = Math.min(0, this.bumpY + 280 * dt);
-      if (this.right < cameraX - 80) this.alive = false;
-    }
-    hit() {
-      if (!this.active) return;
-      this.active = false;
-      this.bumpY = -14;
-      score += 5;
-      burst(this.x, this.surfaceY, '#FFD700', 10);
-    }
-    draw() {
-      drawQuestionBlock(this.left, this.top, this.active);
-    }
-  }
-
   // ── Game state ───────────────────────────────
-  const ST = { MENU: 'menu', PLAY: 'play', OVER: 'over' };
+  const ST = { MENU: 'menu', PLAY: 'play', OVER: 'over', WIN: 'win' };
+  const WIN_TARGET = 10; // items to collect for a win
   let state = ST.MENU;
 
   let score = 0;
-  let lives = 3;
+  let lives = 5;
   let combo = 0;
   let catchCount = 0;
   let items = [];
   let itemSpawnTimer = 60;
   let obstacles = [];
   let obsTimer = 220;
-  let platforms = [];
-  let platformTimer = 380;
-  let questionBlocks = [];
-  let qbTimer = 500;
 
   // ── Difficulty & feedback state ──────────────
   let gameTick = 0;       // seconds since game start
-  let gameSpeedRamp = 1;  // speed multiplier — grows over time
+  let gameSpeedRamp = 1;  // speed multiplier — grows over time (capped at ×1.4)
   let comboPopup = null;  // { text, t } — on-screen callout
+  let wordPopup  = null;  // { emoji, word, x, y, t } — word learning callout
 
   function setComboPopup(text) { comboPopup = { text, t: 1.6 }; }
+  function setWordPopup(emoji, word, x, y) { wordPopup = { emoji, word, x, y, t: 1.8 }; }
 
   function updateComboPopup(dt) {
     if (comboPopup) { comboPopup.t -= dt; if (comboPopup.t <= 0) comboPopup = null; }
+  }
+  function updateWordPopup(dt) {
+    if (wordPopup) { wordPopup.t -= dt; if (wordPopup.t <= 0) wordPopup = null; }
   }
 
   function drawComboPopup() {
@@ -677,11 +573,34 @@ function runGame(canvas, { onSuccess, difficulty }) {
     ctx.restore();
   }
 
+  function drawWordPopup() {
+    if (!wordPopup) return;
+    const alpha = Math.min(1, wordPopup.t * 2);
+    const rise  = (1.8 - wordPopup.t) * 40;
+    const sx = wordPopup.x - cameraX;
+    const sy = wordPopup.y - rise;
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    // Big emoji
+    ctx.font = '56px serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(wordPopup.emoji, sx, sy - 8);
+    // Word text
+    ctx.font = 'bold 34px "Arial Black", Arial';
+    ctx.textBaseline = 'top';
+    ctx.strokeStyle = '#1A237E'; ctx.lineWidth = 6;
+    ctx.strokeText(wordPopup.word, sx, sy - 6);
+    ctx.fillStyle = 'white';
+    ctx.fillText(wordPopup.word, sx, sy - 6);
+    ctx.restore();
+  }
+
   function updatePlay(dt) {
-    // ── Speed ramp: +10% every 15 s, capped at ×2.2 ──
+    // ── Speed ramp: +10% every 30 s, capped at ×1.4 (gentler for young audience) ──
     gameTick += dt;
-    gameSpeedRamp = Math.min(2.2, 1 + Math.floor(gameTick / 15) * 0.10);
+    gameSpeedRamp = Math.min(1.4, 1 + Math.floor(gameTick / 30) * 0.10);
     updateComboPopup(dt);
+    updateWordPopup(dt);
 
     // Spawn items — interval shrinks with ramp
     itemSpawnTimer -= dt * 60;
@@ -707,51 +626,22 @@ function runGame(canvas, { onSuccess, difficulty }) {
           combo++;
           catchCount++;
           burst(it.x, it.y, it.bgColor, 14);
-          // Voice: speak the item's sentence
+          // Word learning popup — show emoji + word prominently
+          setWordPopup(it.item.emoji, it.item.word, it.x, it.y - it.r - 20);
+          // Voice: speak the word (short, clear, for word learning)
           speak(it.item.sentence, 'en');
           // Combo callouts
           if (combo === 3) { setComboPopup('🐾 Paw-some!'); }
-          else if (combo === 5) { setComboPopup('🔥 On fire! ×5'); speak('Amazing!', 'en'); }
-          else if (combo === 8) { setComboPopup('⭐ Unstoppable! ×8'); speak('Incredible!', 'en'); }
+          else if (combo === 5) { setComboPopup('🔥 Amazing! ×5'); speak('Amazing!', 'en'); }
+          else if (combo === 8) { setComboPopup('⭐ Incredible! ×8'); speak('Incredible!', 'en'); }
           else if (combo > 8 && combo % 5 === 0) { setComboPopup(`🌟 ×${combo} streak!`); }
+          // Win when enough items collected
+          if (catchCount >= WIN_TARGET) { state = ST.WIN; dog.celebrate(); }
           break;
         }
       }
     }
     items = items.filter(i => i.alive || i.collectT > 0);
-
-    // Spawn platforms
-    platformTimer -= dt * 60;
-    if (platformTimer <= 0) {
-      platforms.push(new Platform());
-      platformTimer = 320 + Math.floor(Math.random() * 260);
-    }
-    platforms.forEach(p => p.update(dt));
-    platforms = platforms.filter(p => p.alive);
-
-    // Spawn question blocks
-    qbTimer -= dt * 60;
-    if (qbTimer <= 0) {
-      questionBlocks.push(new QuestionBlock());
-      qbTimer = 400 + Math.floor(Math.random() * 300);
-    }
-    questionBlocks.forEach(qb => qb.update(dt));
-    // Hit-from-below detection (dog jumps up into ? block)
-    if (dog.state !== 'ouch' && dog.vy < 0) {
-      const dogTop = dog.y - dog.h * 0.95;
-      for (const qb of questionBlocks) {
-        if (!qb.active) continue;
-        if (dog.x + dog.w * 0.3 > qb.left && dog.x - dog.w * 0.3 < qb.right) {
-          const blockBot = qb.top + BLOCK;
-          if (dogTop <= blockBot && dogTop >= blockBot - 22) {
-            qb.hit();
-            dog.vy = 300; // bounce back down
-            break;
-          }
-        }
-      }
-    }
-    questionBlocks = questionBlocks.filter(qb => qb.alive);
 
     // Spawn obstacles — interval shrinks with ramp
     obsTimer -= dt * 60;
@@ -786,6 +676,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
   }
 
   // ── HUD ──────────────────────────────────────
+  let exitBtn = {};
   function drawHUD() {
     // Danger vignette when 1 life left
     if (lives === 1) {
@@ -798,12 +689,15 @@ function runGame(canvas, { onSuccess, difficulty }) {
     }
 
     const px = 18, py = 70;
+
+    // Score box
     ctx.fillStyle = 'rgba(0,0,0,0.42)';
     ctx.beginPath(); ctx.roundRect(px, py, 124, 42, 12); ctx.fill();
     ctx.fillStyle = '#FFD700'; ctx.font = 'bold 21px "Arial Black", Arial';
     ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.fillText(`⭐ ${score}`, px + 12, py + 21);
 
+    // Combo
     if (combo >= 2) {
       ctx.save();
       ctx.font = `bold ${Math.min(26, 17 + combo * 1.5)}px "Arial Black", Arial`;
@@ -811,11 +705,21 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.fillText(`🔥 ×${combo}`, px + 133, py + 21); ctx.restore();
     }
 
+    // Lives box (5 max)
     ctx.fillStyle = 'rgba(0,0,0,0.42)';
-    ctx.beginPath(); ctx.roundRect(canvas.width - px - 124, py, 124, 42, 12); ctx.fill();
-    const hearts = '❤️'.repeat(clamp(lives, 0, 3)) + '🖤'.repeat(clamp(3 - lives, 0, 3));
-    ctx.font = '20px serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    ctx.beginPath(); ctx.roundRect(canvas.width - px - 148, py, 148, 42, 12); ctx.fill();
+    const hearts = '❤️'.repeat(clamp(lives, 0, 5)) + '🖤'.repeat(clamp(5 - lives, 0, 5));
+    ctx.font = '17px serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
     ctx.fillText(hearts, canvas.width - px - 10, py + 21);
+
+    // Progress indicator: items caught / goal
+    ctx.fillStyle = 'rgba(0,0,0,0.38)';
+    const progW = 130, progH = 38;
+    const progX = canvas.width / 2 - progW / 2;
+    ctx.beginPath(); ctx.roundRect(progX, py, progW, progH, 12); ctx.fill();
+    ctx.fillStyle = '#FFD700'; ctx.font = 'bold 16px "Arial Black", Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`🐾 ${catchCount} / ${WIN_TARGET}`, canvas.width / 2, py + 19);
 
     // Danger label when 1 life
     if (lives === 1) {
@@ -824,50 +728,42 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.font = 'bold 14px "Arial Black", Arial';
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillStyle = `rgba(255,80,80,${0.75 + pulse * 0.25})`;
-      ctx.fillText('⚠️  Humdinger is catching up!  ⚠️', canvas.width / 2, py + 21);
+      ctx.fillText('Be careful!', canvas.width / 2, py + 55);
       ctx.restore();
     }
 
-    // Speed phase indicator (shows after first ramp)
-    if (gameSpeedRamp > 1) {
-      const phase = Math.floor(gameTick / 15);
-      ctx.save();
-      ctx.font = 'bold 12px Arial';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-      ctx.fillStyle = `rgba(255,220,100,0.7)`;
-      ctx.fillText(`Speed ×${gameSpeedRamp.toFixed(1)}  📈`, canvas.width / 2, py - 4);
-      ctx.restore();
-    }
-
+    // Bottom hint — simplified for touch audience
     ctx.fillStyle = 'rgba(255,255,255,0.50)';
     ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    const hint = isTouch ? 'TAP to jump!  Collect items!  Jump over dangers!'
-                         : 'Move: ← →   Jump: SPACE   Collect items!  Jump over dangers!';
-    ctx.fillText(hint, canvas.width / 2, canvas.height - 10);
+    ctx.fillText('TAP to jump!  Collect items!  Jump over dangers!', canvas.width / 2, canvas.height - 10);
+
+    // Exit button (top-left, above score)
+    const ebSize = 40;
+    const ebX = px, ebY = py - ebSize - 8;
+    ctx.fillStyle = 'rgba(0,0,0,0.38)';
+    ctx.beginPath(); ctx.roundRect(ebX, ebY, ebSize, ebSize, 10); ctx.fill();
+    ctx.font = '22px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🏠', ebX + ebSize / 2, ebY + ebSize / 2);
+    exitBtn = { x: ebX, y: ebY, w: ebSize, h: ebSize };
   }
 
   // ── Touch buttons ────────────────────────────
-  let btnLeft = {}, btnRight = {}, btnJump = {};
+  // Auto-run: only a jump button needed
+  let btnJump = {};
   const isTouch = 'ontouchstart' in window;
 
   function drawTouchBtns() {
     if (!isTouch) return;
-    const bh = 70, bw = 80, by = canvas.height - bh - 20;
-    const drawBtn = (b, label, x) => {
-      b.x = x; b.y = by; b.w = bw; b.h = bh;
-      ctx.fillStyle = 'rgba(255,255,255,0.18)';
-      ctx.beginPath(); ctx.roundRect(x, by, bw, bh, 16); ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = 'white'; ctx.font = 'bold 28px Arial';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(label, x + bw / 2, by + bh / 2);
-    };
-    drawBtn(btnLeft,  '◀', 22);
-    drawBtn(btnRight, '▶', 22 + bw + 14);
-    drawBtn(btnJump,  '🦘', canvas.width - bw - 22);
+    const bh = 80, bw = 100, by = canvas.height - bh - 20;
+    btnJump.x = canvas.width / 2 - bw / 2;
+    btnJump.y = by; btnJump.w = bw; btnJump.h = bh;
+    ctx.fillStyle = 'rgba(255,255,255,0.22)';
+    ctx.beginPath(); ctx.roundRect(btnJump.x, by, bw, bh, 20); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.font = '40px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('🦘', btnJump.x + bw / 2, by + bh / 2);
   }
 
-  function inBtn(b, x, y) { return b.x != null && x >= b.x && x <= b.x+b.w && y >= b.y && y <= b.y+b.h; }
 
   // ── Menu ─────────────────────────────────────
   let hoverDog = -1;
@@ -954,44 +850,79 @@ function runGame(canvas, { onSuccess, difficulty }) {
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
     ctx.font = `${Math.min(14, canvas.width * 0.036)}px Arial`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText('Run  ←→  |  Jump  Space/↑  |  Collect items!', canvas.width / 2, canvas.height - 18);
+    ctx.fillText('TAP or SPACE to jump!  Collect items!', canvas.width / 2, canvas.height - 18);
   }
 
   // ── Game Over ────────────────────────────────
   let goBtn = {};
   function drawGameOver() {
-    ctx.fillStyle = 'rgba(0,0,0,0.62)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    const bw = clamp(canvas.width * 0.78, 260, 360), bh = 290;
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const bw = clamp(canvas.width * 0.78, 260, 360), bh = 300;
     const bx = canvas.width/2 - bw/2, by = canvas.height/2 - bh/2;
-    ctx.fillStyle = '#1A237E';
+    ctx.fillStyle = '#1565C0';
     ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 24); ctx.fill();
     ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 4; ctx.stroke();
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#FF6B6B';
-    ctx.font = `bold ${clamp(canvas.width * 0.1, 30, 42)}px "Arial Black", Arial`;
-    ctx.fillText('GAME OVER', canvas.width/2, by + bh*0.22);
-    ctx.fillStyle = '#FFD700'; ctx.font = 'bold 30px "Arial Black", Arial';
-    ctx.fillText(`Score: ${score}`, canvas.width/2, by + bh*0.42);
-    const stars = score >= 150 ? 3 : score >= 70 ? 2 : score >= 20 ? 1 : 0;
-    ctx.font = '38px serif';
-    ctx.fillText('⭐'.repeat(stars) + '☆'.repeat(3 - stars), canvas.width/2, by + bh*0.60);
-    const btnW = 200, btnH = 52;
-    const btnX = canvas.width/2 - btnW/2, btnY = by + bh*0.77 - btnH/2;
+    // Friendly tone — no harsh "GAME OVER" red
+    ctx.font = '42px serif'; ctx.fillText('🐾', canvas.width/2, by + bh*0.15);
+    ctx.fillStyle = 'white';
+    ctx.font = `bold ${clamp(canvas.width * 0.09, 26, 36)}px "Arial Black", Arial`;
+    ctx.fillText('Oops! Keep trying!', canvas.width/2, by + bh*0.33);
+    ctx.fillStyle = '#FFD700'; ctx.font = 'bold 28px "Arial Black", Arial';
+    ctx.fillText(`Score: ${score}`, canvas.width/2, by + bh*0.52);
+    const stars = score >= 100 ? 3 : score >= 50 ? 2 : score >= 10 ? 1 : 0;
+    ctx.font = '36px serif';
+    ctx.fillText('⭐'.repeat(stars) + '☆'.repeat(3 - stars), canvas.width/2, by + bh*0.68);
+    const btnW = 210, btnH = 54;
+    const btnX = canvas.width/2 - btnW/2, btnY = by + bh*0.85 - btnH/2;
     ctx.fillStyle = '#43A047';
     ctx.beginPath(); ctx.roundRect(btnX, btnY, btnW, btnH, 14); ctx.fill();
     ctx.fillStyle = 'white'; ctx.font = 'bold 21px "Arial Black", Arial';
-    ctx.fillText('PLAY AGAIN! 🐾', canvas.width/2, btnY + btnH/2);
+    ctx.fillText('Try Again! 🐾', canvas.width/2, btnY + btnH/2);
     goBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
+  }
+
+  // ── Win screen ───────────────────────────────
+  let winBtn = {};
+  function drawWin() {
+    ctx.fillStyle = 'rgba(0,0,0,0.45)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const bw = clamp(canvas.width * 0.82, 270, 380), bh = 320;
+    const bx = canvas.width/2 - bw/2, by = canvas.height/2 - bh/2;
+    // Gold background for victory
+    ctx.fillStyle = '#E65100';
+    ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 24); ctx.fill();
+    ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 5; ctx.stroke();
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    // Celebratory top
+    const pulse = 0.5 + Math.sin(bgTick * 0.15) * 0.5;
+    ctx.font = `${38 + pulse * 8}px serif`;
+    ctx.fillText('🎉 🐾 🎉', canvas.width/2, by + bh*0.15);
+    ctx.fillStyle = '#FFD700';
+    ctx.font = `bold ${clamp(canvas.width * 0.1, 30, 40)}px "Arial Black", Arial`;
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)'; ctx.lineWidth = 4;
+    ctx.strokeText('YOU WIN!', canvas.width/2, by + bh*0.33);
+    ctx.fillText('YOU WIN!', canvas.width/2, by + bh*0.33);
+    ctx.fillStyle = 'white'; ctx.font = 'bold 24px "Arial Black", Arial';
+    ctx.fillText(`Score: ${score}`, canvas.width/2, by + bh*0.50);
+    ctx.font = '38px serif';
+    ctx.fillText('⭐⭐⭐', canvas.width/2, by + bh*0.65);
+    const btnW = 210, btnH = 54;
+    const btnX = canvas.width/2 - btnW/2, btnY = by + bh*0.83 - btnH/2;
+    ctx.fillStyle = '#1565C0';
+    ctx.beginPath(); ctx.roundRect(btnX, btnY, btnW, btnH, 14); ctx.fill();
+    ctx.fillStyle = 'white'; ctx.font = 'bold 21px "Arial Black", Arial';
+    ctx.fillText('Play Again! 🐾', canvas.width/2, btnY + btnH/2);
+    winBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
   }
 
   function resetGame(dogData) {
     dog = new Dog(dogData);
     cameraX = 0;
     updateCamera(true); // snap camera to initial dog position
-    score = 0; lives = 3; combo = 0; catchCount = 0;
-    gameTick = 0; gameSpeedRamp = 1; comboPopup = null;
-    particles = []; pawPrints = []; items = []; obstacles = []; platforms = []; questionBlocks = [];
-    obsTimer = 220; itemSpawnTimer = 60; platformTimer = 380; qbTimer = 500;
+    score = 0; lives = 5; combo = 0; catchCount = 0;
+    gameTick = 0; gameSpeedRamp = 1; comboPopup = null; wordPopup = null;
+    particles = []; pawPrints = []; items = []; obstacles = [];
+    obsTimer = 220; itemSpawnTimer = 60;
     initBg();
     state = ST.PLAY;
   }
@@ -1006,49 +937,44 @@ function runGame(canvas, { onSuccess, difficulty }) {
     if (goBtn.x && x >= goBtn.x && x <= goBtn.x+goBtn.w && y >= goBtn.y && y <= goBtn.y+goBtn.h)
       state = ST.MENU;
   }
+  function handleWinClick(x, y) {
+    if (winBtn.x && x >= winBtn.x && x <= winBtn.x+winBtn.w && y >= winBtn.y && y <= winBtn.y+winBtn.h)
+      state = ST.MENU;
+  }
+  function handleExitBtn(x, y) {
+    if (exitBtn.x != null && x >= exitBtn.x && x <= exitBtn.x+exitBtn.w && y >= exitBtn.y && y <= exitBtn.y+exitBtn.h) {
+      if (onExit) onExit();
+      else state = ST.MENU;
+      return true;
+    }
+    return false;
+  }
 
-  let touchAnchorX = 0;
   function onKeyDown(e) {
     if (state === ST.PLAY && dog) {
-      if (e.key === 'ArrowLeft')  { e.preventDefault(); dog.leftHeld  = true; }
-      if (e.key === 'ArrowRight') { e.preventDefault(); dog.rightHeld = true; }
+      // Auto-run: only jump is needed
       if (e.key === ' ' || e.key === 'ArrowUp') { e.preventDefault(); dog.jump(); }
-    }
-  }
-  function onKeyUp(e) {
-    if (dog) {
-      if (e.key === 'ArrowLeft')  dog.leftHeld  = false;
-      if (e.key === 'ArrowRight') dog.rightHeld = false;
     }
   }
   function onTouchStart(e) {
     e.preventDefault();
     const t = e.changedTouches[0];
-    touchAnchorX = t.clientX;
     if (state === ST.PLAY && dog) {
-      if (inBtn(btnJump, t.clientX, t.clientY)) { dog.jump(); return; }
-      if (inBtn(btnLeft, t.clientX, t.clientY)) { dog.leftHeld = true; return; }
-      if (inBtn(btnRight, t.clientX, t.clientY)) { dog.rightHeld = true; return; }
-      dog.jump();
+      if (handleExitBtn(t.clientX, t.clientY)) return;
+      dog.jump(); // tap anywhere = jump
+      return;
     }
     if (state === ST.MENU) handleMenuClick(t.clientX, t.clientY);
     if (state === ST.OVER) handleOverClick(t.clientX, t.clientY);
+    if (state === ST.WIN)  handleWinClick(t.clientX, t.clientY);
   }
-  function onTouchMove(e) {
-    e.preventDefault();
-    if (state !== ST.PLAY || !dog) return;
-    const dx = e.changedTouches[0].clientX - touchAnchorX;
-    if (dx > 25)       { dog.rightHeld = true;  dog.leftHeld  = false; }
-    else if (dx < -25) { dog.leftHeld  = true;  dog.rightHeld = false; }
-    else               { dog.leftHeld  = false; dog.rightHeld = false; }
-  }
-  function onTouchEnd(e) {
-    e.preventDefault();
-    if (dog) { dog.leftHeld = false; dog.rightHeld = false; }
-  }
+  function onTouchMove(e) { e.preventDefault(); }
+  function onTouchEnd(e)  { e.preventDefault(); }
   function onClick(e) {
+    if (state === ST.PLAY && dog) { handleExitBtn(e.clientX, e.clientY); return; }
     if (state === ST.MENU) handleMenuClick(e.clientX, e.clientY);
     if (state === ST.OVER) handleOverClick(e.clientX, e.clientY);
+    if (state === ST.WIN)  handleWinClick(e.clientX, e.clientY);
   }
   function onMouseMove(e) {
     if (state !== ST.MENU) return;
@@ -1060,7 +986,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
   }
 
   document.addEventListener('keydown', onKeyDown);
-  document.addEventListener('keyup', onKeyUp);
   canvas.addEventListener('touchstart', onTouchStart, { passive: false });
   canvas.addEventListener('touchmove',  onTouchMove,  { passive: false });
   canvas.addEventListener('touchend',   onTouchEnd,   { passive: false });
@@ -1085,21 +1010,10 @@ function runGame(canvas, { onSuccess, difficulty }) {
 
     // ── Update logic ──────────────────────────
     if (state === ST.PLAY) {
-      // Set dog's floor to the highest platform/block it's on, else real ground
       if (dog) {
-        const realGround = canvas.height * GROUND_RATIO;
-        dog.gY = realGround;
-        for (const p of platforms) {
-          if (dog.x + dog.w * 0.35 > p.left && dog.x - dog.w * 0.35 < p.right) {
-            if (dog.y <= p.surfaceY + 8) { dog.gY = p.surfaceY; break; }
-          }
-        }
-        for (const qb of questionBlocks) {
-          if (dog.x + dog.w * 0.35 > qb.left && dog.x - dog.w * 0.35 < qb.right) {
-            if (dog.y <= qb.top + 8) { dog.gY = qb.top; break; }
-          }
-        }
-        // If the surface beneath the dog scrolled away, release it into free fall
+        // Auto-run: always move forward — only jump is needed
+        if (dog.state !== 'ouch') { dog.rightHeld = true; dog.leftHeld = false; }
+        dog.gY = canvas.height * GROUND_RATIO;
         if (dog.onGround && dog.y < dog.gY) dog.onGround = false;
       }
       dog.update(dt);
@@ -1117,12 +1031,10 @@ function runGame(canvas, { onSuccess, difficulty }) {
     tickPaws(); drawPaws();
     tickParticles(); drawParticles();
 
-    if (state === ST.PLAY) {
-      platforms.forEach(p => p.draw());
-      questionBlocks.forEach(qb => qb.draw());
+    if (state === ST.PLAY || state === ST.WIN) {
       obstacles.forEach(o => o.draw());
       items.forEach(it => it.draw());
-      dog.draw();
+      if (dog) dog.draw();
     }
     if (state === ST.OVER) {
       if (dog) dog.draw();
@@ -1131,8 +1043,9 @@ function runGame(canvas, { onSuccess, difficulty }) {
     ctx.restore();
 
     // ── Draw HUD / overlays (screen-space) ──
-    if (state === ST.PLAY)  { drawHUD(); drawTouchBtns(); drawComboPopup(); }
+    if (state === ST.PLAY)  { drawHUD(); drawTouchBtns(); drawComboPopup(); drawWordPopup(); }
     if (state === ST.OVER)  { drawGameOver(); }
+    if (state === ST.WIN)   { drawWin(); }
   }
   rafId = requestAnimationFrame(loop);
 
@@ -1141,7 +1054,6 @@ function runGame(canvas, { onSuccess, difficulty }) {
     cancelAnimationFrame(rafId);
     window.removeEventListener('resize', resize);
     document.removeEventListener('keydown', onKeyDown);
-    document.removeEventListener('keyup', onKeyUp);
     canvas.removeEventListener('touchstart', onTouchStart);
     canvas.removeEventListener('touchmove',  onTouchMove);
     canvas.removeEventListener('touchend',   onTouchEnd);
@@ -1159,7 +1071,7 @@ export default function PawPatrol({ onSuccess, onExit, sharedDifficulty = 1 }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    return runGame(canvas, { onSuccess, difficulty: sharedDifficulty });
+    return runGame(canvas, { onSuccess, onExit, difficulty: sharedDifficulty });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <canvas ref={canvasRef} className="pawpatrol-canvas" />;
