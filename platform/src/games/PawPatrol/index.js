@@ -377,7 +377,12 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
       this.r = 36;
       // Spawn ahead of the camera in world space
       this.x = cameraX + canvas.width + this.r * 2 + Math.random() * 80;
-      this.y = this.gY - this.r;
+      // 40% chance of being elevated — requires a jump to collect
+      this.elevated = Math.random() < 0.4;
+      this.baseY = this.elevated
+        ? this.gY - this.r - 105 - Math.random() * 40
+        : this.gY - this.r;
+      this.y = this.baseY;
       this.speed = (2.2 + Math.random() * 1.0) * speedMult * gameSpeedRamp * 60; // px/s
       this.bobT = Math.random() * Math.PI * 2;
       this.sparkT = 0;
@@ -395,7 +400,7 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
       }
       this.x -= this.speed * dt;
       this.bobT += 0.035 * dt * 60;
-      this.y = this.gY - this.r - Math.abs(Math.sin(this.bobT)) * 10;
+      this.y = this.baseY - Math.abs(Math.sin(this.bobT)) * 10;
       this.sparkT += 0.08 * dt * 60;
       // Gone past the left edge of the visible world
       if (this.x < cameraX - this.r * 2) this.alive = false;
@@ -428,6 +433,25 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
         const sy = this.y + Math.sin(a) * (r + 10);
         ctx.save(); ctx.globalAlpha = 0.65; ctx.fillStyle = 'white';
         ctx.beginPath(); ctx.arc(sx, sy, 3, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+      }
+
+      // Elevated item: dashed guide line + bouncing arrow pointing up
+      if (this.elevated && this.collectT <= 0) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+        ctx.setLineDash([5, 7]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(this.x, this.y + r);
+        ctx.lineTo(this.x, this.gY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        const bounce = Math.sin(this.sparkT * 1.8) * 5;
+        ctx.font = '20px serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.globalAlpha = 0.85;
+        ctx.fillText('⬆️', this.x, this.y + r + 6 + bounce);
+        ctx.restore();
       }
     }
     bounds() {
