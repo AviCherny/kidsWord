@@ -188,33 +188,6 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
     ctx.restore();
   }
 
-  // ── Dog visual styles ────────────────────────
-  const DOG_VISUALS = {
-    Chase: {
-      coat: '#C8A070', coatDark: '#A07840', ear: '#A07840', belly: '#EDD9B0',
-      vest: '#1565C0', collar: '#FFD700', nose: '#1A1A1A',
-      hatStyle: 'police', hatColor: '#1565C0', spots: null,
-    },
-    Marshall: {
-      coat: '#F5F5F5', coatDark: '#CCCCCC', ear: '#E8E8E8', belly: '#FFFFFF',
-      vest: '#C62828', collar: '#FFD700', nose: '#1A1A1A',
-      hatStyle: 'fire', hatColor: '#C62828', spots: '#2C2C2C',
-    },
-    Rubble: {
-      coat: '#C39474', coatDark: '#9A6840', ear: '#9A6434', belly: '#E8C8A0',
-      vest: '#FF8F00', collar: '#FF8F00', nose: '#2C2C2C',
-      hatStyle: 'hardhat', hatColor: '#F9A825', spots: null,
-    },
-  };
-  // Fixed Dalmatian spot positions [bodyFracX, bodyFracY, rxFrac, ryFrac, angle]
-  const MARSHALL_SPOTS = [
-    [ 0.38,  0.05, 0.28, 0.55, 0.3],
-    [-0.42,  0.20, 0.22, 0.45, 0.5],
-    [ 0.70, -0.25, 0.18, 0.40, 0.1],
-    [-0.15, -0.45, 0.16, 0.38, 0.7],
-    [ 0.10,  0.55, 0.14, 0.32, 0.2],
-  ];
-
   // ── Dog class ────────────────────────────────
   // Physics — identical constants to the Sonic engine (dt-based, px/s or px/s²)
   const GRAVITY         = 1960;   // px/s²
@@ -349,7 +322,7 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
       ctx.fillStyle = `rgba(0,0,0,${0.22 * shSc})`; ctx.fill();
       ctx.restore();
 
-      // Animated dog character
+      // Body with poster image
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.scale(this.facing, 1);
@@ -357,7 +330,24 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
       ctx.scale(sx, sy);
       ctx.translate(0, bY);
 
-      this.drawCharacter(ctx, w, h);
+      const img = dogImages[this.data.name];
+      if (img) {
+        ctx.save();
+        ctx.beginPath(); ctx.roundRect(-w / 2, -h, w, h, 12); ctx.clip();
+        ctx.drawImage(img, -w / 2, -h, w, h);
+        ctx.restore();
+        // White border ring
+        ctx.beginPath(); ctx.roundRect(-w / 2, -h, w, h, 12);
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2.5; ctx.stroke();
+      } else {
+        // Fallback: colored card
+        const def = DOG_DEFS.find(d => d.name === this.data.name);
+        ctx.fillStyle = def ? def.color : '#888';
+        ctx.beginPath(); ctx.roundRect(-w / 2, -h, w, h, 12); ctx.fill();
+        ctx.fillStyle = 'white'; ctx.font = `bold ${w * 0.35}px Arial`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(this.data.name.charAt(0), 0, -h / 2);
+      }
 
       // Speed lines behind character
       if (Math.abs(this.vx) > 3.5 && this.onGround) {
@@ -371,233 +361,6 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
 
       ctx.restore();
     }
-    drawCharacter(ctx, w, h) {
-      const vis = DOG_VISUALS[this.data.name] || DOG_VISUALS.Chase;
-      const phase   = this.runT * 0.30;
-      const isRun   = this.state === 'run';
-      const isJump  = this.state === 'jump';
-      const isOuch  = this.state === 'ouch';
-      const isCel   = this.state === 'celebrate';
-
-      // Diagonal-pair gait: pA = front-right/back-left, pB = front-left/back-right
-      const maxSwing = isRun ? 0.48 : isJump ? (this.vy < 0 ? 0.32 : -0.12) : 0.04;
-      const pA = isRun ? Math.sin(phase) * maxSwing : maxSwing;
-      const pB = -pA;
-
-      // ── Body geometry (y=0 is ground) ──
-      const bCX = w * 0.02, bCY = -h * 0.45;
-      const bRX = w * 0.38,  bRY = h * 0.165;
-
-      // ── Head geometry ──
-      const hCX = w * 0.20, hCY = -h * 0.80, hR = w * 0.205;
-
-      // ── Leg geometry ──
-      const legTopY  = bCY + bRY * 0.72;
-      const frontLX  = bCX + bRX * 0.52;
-      const backLX   = bCX - bRX * 0.48;
-      const legW     = w * 0.105;
-      const upperLen = h * 0.18;
-      const lowerLen = h * 0.16;
-
-      // ── Far (back) legs, slightly faded ──
-      ctx.save(); ctx.globalAlpha = 0.68;
-      this._drawLeg(ctx, frontLX + legW * 0.4, legTopY, pB, upperLen, lowerLen, legW * 0.88, vis.coat, vis.nose);
-      this._drawLeg(ctx, backLX  + legW * 0.4, legTopY, pA, upperLen, lowerLen, legW * 0.88, vis.coat, vis.nose);
-      ctx.restore();
-
-      // ── Tail ──
-      const tailX = bCX - bRX * 0.90, tailY = bCY - bRY * 0.5;
-      const wag   = isRun ? Math.sin(phase * 1.4 + 1.2) * 0.55 + 0.4
-                  : isCel ? Math.sin(this.runT * 0.3) * 0.8 + 0.5 : 0.35;
-      ctx.strokeStyle = vis.coatDark || vis.coat;
-      ctx.lineWidth = legW * 0.95; ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(tailX, tailY);
-      ctx.quadraticCurveTo(
-        tailX - w * 0.22, tailY - h * 0.18 + Math.sin(wag) * h * 0.06,
-        tailX - w * 0.14 + Math.cos(wag) * w * 0.14,
-        tailY - h * 0.28 + Math.sin(wag) * h * 0.10
-      );
-      ctx.stroke();
-
-      // ── Body (coat base) ──
-      ctx.fillStyle = vis.coat;
-      ctx.beginPath(); ctx.ellipse(bCX, bCY, bRX, bRY, 0, 0, Math.PI * 2); ctx.fill();
-
-      // Dalmatian spots for Marshall
-      if (vis.spots) {
-        ctx.fillStyle = vis.spots;
-        MARSHALL_SPOTS.forEach(([fx, fy, rx, ry, ang]) => {
-          ctx.save();
-          ctx.translate(bCX + fx * bRX, bCY + fy * bRY);
-          ctx.rotate(ang);
-          ctx.beginPath(); ctx.ellipse(0, 0, bRX * rx, bRY * ry, 0, 0, Math.PI * 2); ctx.fill();
-          ctx.restore();
-        });
-      }
-
-      // Vest overlay (front portion of body)
-      ctx.save();
-      ctx.beginPath(); ctx.ellipse(bCX, bCY, bRX, bRY, 0, 0, Math.PI * 2); ctx.clip();
-      ctx.fillStyle = vis.vest;
-      ctx.beginPath(); ctx.ellipse(bCX + bRX * 0.18, bCY + bRY * 0.10, bRX * 0.68, bRY * 0.95, 0, 0, Math.PI * 2); ctx.fill();
-      // Re-paint coat on back half
-      ctx.fillStyle = vis.coat;
-      ctx.beginPath(); ctx.ellipse(bCX - bRX * 0.40, bCY - bRY * 0.05, bRX * 0.48, bRY * 0.92, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-
-      // Body outline
-      ctx.strokeStyle = 'rgba(0,0,0,0.14)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.ellipse(bCX, bCY, bRX, bRY, 0, 0, Math.PI * 2); ctx.stroke();
-
-      // Belly patch
-      ctx.fillStyle = vis.belly;
-      ctx.beginPath(); ctx.ellipse(bCX - bRX * 0.10, bCY + bRY * 0.55, bRX * 0.40, bRY * 0.50, 0, 0, Math.PI * 2); ctx.fill();
-
-      // ── Neck ──
-      const nBaseX = bCX + bRX * 0.72, nBaseY = bCY - bRY * 0.52;
-      ctx.fillStyle = vis.coat;
-      ctx.beginPath();
-      ctx.moveTo(nBaseX - legW * 0.5, nBaseY + legW * 0.3);
-      ctx.bezierCurveTo(nBaseX + legW, nBaseY - h * 0.08, hCX + legW, hCY + hR * 0.75, hCX, hCY + hR * 0.72);
-      ctx.bezierCurveTo(hCX - legW * 0.8, hCY + hR * 0.82, nBaseX - legW * 1.2, nBaseY + h * 0.05, nBaseX - legW * 0.5, nBaseY + legW * 0.3);
-      ctx.fill();
-
-      // ── Ear (floppy, behind head) ──
-      const eBaseX = hCX - hR * 0.28, eBaseY = hCY - hR * 0.55;
-      const earWag = isRun ? Math.sin(phase * 0.9 + 0.5) * 0.12 : 0;
-      ctx.fillStyle = vis.ear;
-      ctx.beginPath();
-      ctx.moveTo(eBaseX + hR * 0.15, eBaseY);
-      ctx.bezierCurveTo(eBaseX + hR * 0.05, eBaseY + hR * 0.60 + earWag * hR, eBaseX - hR * 0.55, eBaseY + hR * 1.10 + earWag * hR, eBaseX - hR * 0.42, eBaseY + hR * 1.25 + earWag * hR);
-      ctx.bezierCurveTo(eBaseX - hR * 0.08, eBaseY + hR * 0.70 + earWag * hR, eBaseX + hR * 0.28, eBaseY + hR * 0.40, eBaseX + hR * 0.15, eBaseY);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.08)'; ctx.lineWidth = 1; ctx.stroke();
-
-      // ── Head ──
-      ctx.fillStyle = vis.coat;
-      ctx.beginPath(); ctx.arc(hCX, hCY, hR, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.10)'; ctx.lineWidth = 1.5; ctx.stroke();
-
-      // Head spots for Marshall
-      if (vis.spots) {
-        ctx.fillStyle = vis.spots;
-        ctx.beginPath(); ctx.ellipse(hCX - hR * 0.25, hCY - hR * 0.28, hR * 0.22, hR * 0.18, 0.4, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(hCX + hR * 0.25, hCY + hR * 0.05, hR * 0.15, hR * 0.12, -0.3, 0, Math.PI * 2); ctx.fill();
-      }
-
-      // ── Snout ──
-      ctx.fillStyle = vis.belly;
-      ctx.beginPath(); ctx.ellipse(hCX + hR * 0.52, hCY + hR * 0.15, hR * 0.44, hR * 0.30, 0.08, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 1; ctx.stroke();
-
-      // ── Nose ──
-      ctx.fillStyle = vis.nose;
-      ctx.beginPath(); ctx.ellipse(hCX + hR * 0.88, hCY + hR * 0.10, hR * 0.14, hR * 0.10, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.38)';
-      ctx.beginPath(); ctx.ellipse(hCX + hR * 0.84, hCY + hR * 0.06, hR * 0.05, hR * 0.04, 0, 0, Math.PI * 2); ctx.fill();
-
-      // ── Eye ──
-      const eyeX = hCX + hR * 0.28, eyeY = hCY - hR * 0.16;
-      ctx.fillStyle = 'white';
-      ctx.beginPath(); ctx.arc(eyeX, eyeY, hR * 0.175, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#3E2000';
-      ctx.beginPath(); ctx.arc(eyeX + hR * 0.03, eyeY, hR * 0.12, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.beginPath(); ctx.arc(eyeX + hR * 0.04, eyeY, hR * 0.07, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = 'white';
-      ctx.beginPath(); ctx.arc(eyeX + hR * 0.07, eyeY - hR * 0.06, hR * 0.04, 0, Math.PI * 2); ctx.fill();
-
-      // Eyebrow
-      ctx.strokeStyle = vis.coatDark || vis.ear; ctx.lineWidth = 2; ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(eyeX - hR * 0.18, eyeY - hR * 0.22 + (isOuch ? hR * 0.12 : 0));
-      ctx.lineTo(eyeX + hR * 0.18, eyeY - hR * 0.22 - (isOuch ? hR * 0.06 : 0));
-      ctx.stroke();
-
-      // ── Mouth ──
-      ctx.strokeStyle = 'rgba(0,0,0,0.42)'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
-      if (isOuch) {
-        ctx.beginPath();
-        ctx.moveTo(hCX + hR * 0.58, hCY + hR * 0.32);
-        ctx.lineTo(hCX + hR * 0.68, hCY + hR * 0.40);
-        ctx.lineTo(hCX + hR * 0.78, hCY + hR * 0.32);
-        ctx.lineTo(hCX + hR * 0.88, hCY + hR * 0.40);
-        ctx.stroke();
-      } else {
-        ctx.beginPath();
-        ctx.arc(hCX + hR * 0.75, hCY + hR * 0.22, hR * 0.20, 0, Math.PI * 0.85);
-        ctx.stroke();
-        // Tongue when running hard or celebrating
-        if (isCel || (isRun && Math.sin(phase * 0.5) > 0.5)) {
-          ctx.fillStyle = '#FF6B8A';
-          ctx.beginPath(); ctx.ellipse(hCX + hR * 0.82, hCY + hR * 0.44, hR * 0.12, hR * 0.16, 0, 0, Math.PI * 2); ctx.fill();
-        }
-      }
-
-      // ── Hat ──
-      const hatCX = hCX - hR * 0.05, hatCY = hCY - hR * 0.68;
-      if (vis.hatStyle === 'police') {
-        ctx.fillStyle = '#0D2D6E';
-        ctx.beginPath(); ctx.ellipse(hatCX, hatCY + hR * 0.02, hR * 1.10, hR * 0.22, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = vis.hatColor;
-        ctx.beginPath(); ctx.roundRect(hatCX - hR * 0.78, hatCY - hR * 0.48, hR * 1.56, hR * 0.50, hR * 0.16); ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1; ctx.stroke();
-        ctx.font = `${hR * 0.40}px serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('⭐', hatCX, hatCY - hR * 0.22);
-      } else if (vis.hatStyle === 'fire') {
-        ctx.fillStyle = vis.hatColor;
-        ctx.beginPath(); ctx.arc(hatCX, hatCY, hR * 0.84, Math.PI, 0); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(hatCX, hatCY + hR * 0.12, hR * 1.08, hR * 0.20, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1.5; ctx.stroke();
-        ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 2.5;
-        ctx.beginPath(); ctx.moveTo(hatCX, hatCY - hR * 0.52); ctx.lineTo(hatCX, hatCY - hR * 0.05); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(hatCX - hR * 0.28, hatCY - hR * 0.28); ctx.lineTo(hatCX + hR * 0.28, hatCY - hR * 0.28); ctx.stroke();
-      } else if (vis.hatStyle === 'hardhat') {
-        ctx.fillStyle = vis.hatColor;
-        ctx.beginPath(); ctx.arc(hatCX, hatCY, hR * 0.82, Math.PI, 0); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(hatCX, hatCY + hR * 0.15, hR * 1.10, hR * 0.20, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = 'rgba(0,0,0,0.12)'; ctx.lineWidth = 1.5; ctx.stroke();
-        ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(hatCX, hatCY, hR * 0.72, Math.PI * 0.2, Math.PI * 0.8); ctx.stroke();
-      }
-
-      // ── Collar ──
-      ctx.strokeStyle = vis.collar; ctx.lineWidth = legW * 0.65; ctx.lineCap = 'butt';
-      ctx.beginPath(); ctx.arc(hCX - hR * 0.05, hCY + hR * 0.60, hR * 0.50, Math.PI * 0.15, Math.PI * 0.88); ctx.stroke();
-
-      // ── Near (foreground) legs ──
-      this._drawLeg(ctx, frontLX, legTopY, pA, upperLen, lowerLen, legW, vis.coat, vis.nose);
-      this._drawLeg(ctx, backLX,  legTopY, pB, upperLen, lowerLen, legW, vis.coat, vis.nose);
-
-      // ── Invincibility flash ──
-      if (this.invincibleT > 0 && Math.sin(this.invincibleT * 25) > 0) {
-        ctx.save(); ctx.globalAlpha = 0.32; ctx.fillStyle = 'white';
-        ctx.beginPath(); ctx.ellipse(bCX, bCY - h * 0.18, bRX * 1.08, h * 0.52, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.restore();
-      }
-    }
-
-    _drawLeg(ctx, px, py, swing, upperLen, lowerLen, lw, coatColor, pawColor) {
-      ctx.save();
-      ctx.translate(px, py);
-      ctx.rotate(swing);
-      // Upper leg
-      ctx.fillStyle = coatColor;
-      ctx.beginPath(); ctx.roundRect(-lw / 2, 0, lw, upperLen, lw / 2); ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.10)'; ctx.lineWidth = 1; ctx.stroke();
-      // Lower leg — knee bends back relative to swing direction
-      ctx.translate(0, upperLen);
-      ctx.rotate(swing > 0 ? -swing * 0.55 : swing * 0.20);
-      ctx.fillStyle = coatColor;
-      ctx.beginPath(); ctx.roundRect(-lw / 2, 0, lw, lowerLen, lw / 2); ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.10)'; ctx.lineWidth = 1; ctx.stroke();
-      // Paw
-      ctx.fillStyle = pawColor || '#333';
-      ctx.beginPath(); ctx.ellipse(0, lowerLen + lw * 0.18, lw * 0.72, lw * 0.40, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.restore();
-    }
-
     bounds() {
       return { left: this.x - this.w * 0.38, right: this.x + this.w * 0.38,
                top:  this.y - this.h * 0.95, bottom: this.y + 15 };
