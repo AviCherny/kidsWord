@@ -200,7 +200,7 @@ export function speak(text, lang, onEnd) {
     (async () => {
       try { await nativeTTS.stop(); } catch (e) {}
       try {
-        await nativeTTS.speak({ text, lang: ttsLang, rate: 0.85, pitch: 1.0, volume: 1.0 });
+        await nativeTTS.speak({ text, lang: ttsLang, rate: 0.82, pitch: 1.9, volume: 1.0 });
       } catch (e) {}
       if (onEnd) onEnd();
     })();
@@ -224,8 +224,12 @@ export function speak(text, lang, onEnd) {
   try { window.speechSynthesis.cancel(); } catch (e) {}
   try {
     const u = new SpeechSynthesisUtterance(text);
-    u.rate = 0.85;
+    u.rate = 0.82;
+    u.pitch = 1.9;
     u.lang = ttsLang;
+    const voices = window.speechSynthesis.getVoices();
+    const pick = voices.find(v => v.lang.startsWith(lang === 'he' ? 'he' : 'en') && /samantha|zira|karen|moira|victoria|female/i.test(v.name));
+    if (pick) u.voice = pick;
     if (onEnd) u.onend = onEnd;
     window.speechSynthesis.speak(u);
   } catch (e) {
