@@ -191,7 +191,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
   // ── Dog class ────────────────────────────────
   // Physics — identical constants to the Sonic engine (dt-based, px/s or px/s²)
   const GRAVITY         = 1960;   // px/s²
-  const JUMP_VY         = -810;   // px/s
+  const JUMP_VY         = -1000;  // px/s
   const MAX_SPEED       = 620;    // px/s
   const MAX_FALL_SPEED  = 1080;   // px/s
   const GROUND_ACCEL    = 1780;   // px/s²
@@ -209,6 +209,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
       this.state = 'idle';
       this.stateT = 0; this.landSquash = 0;
       this.pawAccum = 0;
+      this.invincibleT = 0;
       this.w = clamp(canvas.width * 0.15, 70, 110);
       this.h = this.w * 1.28;
       this.resetGround();
@@ -230,10 +231,12 @@ function runGame(canvas, { onSuccess, difficulty }) {
     }
     ouch() {
       this.state = 'ouch'; this.stateT = 45 / 60;
+      this.invincibleT = 1.8; // 1.8 s of invincibility — prevents double-hit from same obstacle
       this.vx = -this.facing * 420; this.vy = -420; this.onGround = false;
       burst(this.x, this.y - this.h * 0.5, '#FF4444', 10);
     }
     update(dt) {
+      if (this.invincibleT > 0) this.invincibleT -= dt;
       if (this.stateT > 0) {
         this.stateT -= dt;
         if (this.stateT <= 0 && (this.state === 'celebrate' || this.state === 'ouch'))
@@ -507,10 +510,11 @@ function runGame(canvas, { onSuccess, difficulty }) {
       // JUMP! label — compare screen-space position (world x minus camera)
       const screenX = this.x - cameraX;
       if (screenX < canvas.width * 0.60 && screenX > 0) {
-        ctx.font = `bold ${14 + pulse * 4}px "Arial Black", Arial`;
+        ctx.font = `bold ${18 + pulse * 5}px "Arial Black", Arial`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-        ctx.fillStyle = labelColor; ctx.strokeStyle = 'white'; ctx.lineWidth = 3;
+        ctx.strokeStyle = labelColor; ctx.lineWidth = 5;
         ctx.strokeText('JUMP!', this.x, gY - this.h - 4);
+        ctx.fillStyle = 'white'; ctx.lineWidth = 0;
         ctx.fillText('JUMP!', this.x, gY - this.h - 4);
       }
 
@@ -758,7 +762,7 @@ function runGame(canvas, { onSuccess, difficulty }) {
     }
     obstacles.forEach(o => o.update(dt));
 
-    if (dog.state !== 'ouch') {
+    if (dog.invincibleT <= 0) {
       const db = dog.bounds();
       for (const o of obstacles) {
         if (hits(db, o.bounds())) {
@@ -835,9 +839,11 @@ function runGame(canvas, { onSuccess, difficulty }) {
       ctx.restore();
     }
 
-    ctx.fillStyle = 'rgba(255,255,255,0.22)';
-    ctx.font = '13px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.fillText('← → run  |  Space / ↑ jump  |  Collect items, jump over obstacles!', canvas.width / 2, canvas.height - 10);
+    ctx.fillStyle = 'rgba(255,255,255,0.50)';
+    ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    const hint = isTouch ? 'TAP to jump!  Collect items!  Jump over dangers!'
+                         : 'Move: ← →   Jump: SPACE   Collect items!  Jump over dangers!';
+    ctx.fillText(hint, canvas.width / 2, canvas.height - 10);
   }
 
   // ── Touch buttons ────────────────────────────
@@ -1093,6 +1099,8 @@ function runGame(canvas, { onSuccess, difficulty }) {
             if (dog.y <= qb.top + 8) { dog.gY = qb.top; break; }
           }
         }
+        // If the surface beneath the dog scrolled away, release it into free fall
+        if (dog.onGround && dog.y < dog.gY) dog.onGround = false;
       }
       dog.update(dt);
       updatePlay(dt);
