@@ -180,6 +180,9 @@ function speak(text, rate = 0.85) {
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'en-US'; u.rate = rate; u.pitch = 1.2;
+  const voices = speechSynthesis.getVoices();
+  const female = voices.find(v => v.lang.startsWith('en') && /samantha|zira|karen|moira|victoria|female/i.test(v.name));
+  if (female) u.voice = female;
   speechSynthesis.speak(u);
 }
 
@@ -392,7 +395,7 @@ class Dog {
       const wasAir = !this.onGround;
       this.y = this.gY; this.vy = 0; this.onGround = true;
       if (wasAir && this.state === 'jump') {
-        this.landSquash = 9;
+        this.landSquash = 0;
         this.state = Math.abs(this.vx) > 0.5 ? 'run' : 'idle';
       }
     }
@@ -431,7 +434,7 @@ class Dog {
 
     switch (this.state) {
       case 'run':
-        bY   = Math.sin(t * 0.38) * 4;
+        bY   = 0;
         tilt = Math.sin(t * 0.22) * 0.07 + 0.10;
         break;
       case 'jump':
@@ -693,13 +696,17 @@ class Obstacle {
 // =============================================
 // GAME STATE
 // =============================================
-const S = { MENU:'menu', PLAY:'play', OVER:'over' };
+const S = { MENU:'menu', PLAY:'play', OVER:'over', WIN:'win' };
 let state = S.MENU;
 
 let dog         = null;
 let selectedDog = null;
 let score       = 0;
 let lives       = 3;
+let wordsFound  = 0;
+let difficulty  = 'normal'; // 'easy' | 'normal' | 'hard'
+let diffBtns    = [];
+let winBtn      = {};
 let combo       = 0;
 let round       = 0;
 
@@ -726,7 +733,8 @@ function startRound() {
   round++;
   fallSpeed = 1 + Math.floor(round / 5) * 0.15;
   curWord = nextWord();
-  const distractors = shuffle(WORDS.filter(w => w.word !== curWord.word)).slice(0, 3);
+  const distCount   = difficulty === 'hard' ? 5 : difficulty === 'normal' ? 3 : 2;
+  const distractors = shuffle(WORDS.filter(w => w.word !== curWord.word)).slice(0, distCount);
   const all = shuffle([curWord, ...distractors]);
 
   items = [];
@@ -767,7 +775,14 @@ function updateRound() {
           combo++;
           roundPhase = 'won';
           roundTimer = 90;
-          speak('Great job!');
+          wordsFound++;
+          if (wordsFound >= 8) {
+            dog.celebrate();
+            setTimeout(() => { speak('Hooray! You win! You get a sticker!'); }, 400);
+            setTimeout(() => { state = S.WIN; }, 2000);
+          } else {
+            speak('Great job!');
+          }
         } else {
           if (dog.state !== 'ouch') {
             it.catchT = 10;
@@ -1012,10 +1027,90 @@ function drawMenu() {
     menuCards[i] = { x: midX - cW/2 * sc, y: midY - cH/2 * sc, w: cW * sc, h: cH * sc };
   });
 
+  // Difficulty buttons
+  diffBtns = [];
+  const diffLabels = [
+    { id:'easy',   label:'EASY',   hearts:'❤️❤️❤️❤️❤️' },
+    { id:'normal', label:'NORMAL', hearts:'❤️❤️❤️' },
+    { id:'hard',   label:'HARD',   hearts:'❤️' },
+  ];
+  const dbW = clamp(canvas.width * 0.26, 90, 130);
+  const dbH = 52;
+  const dbGap = 12;
+  const dbTotalW = dbW * 3 + dbGap * 2;
+  const dbX0 = canvas.width / 2 - dbTotalW / 2;
+  const dbY  = canvas.height * 0.78;
+  ctx.font = `bold ${Math.min(13, canvas.width * 0.034)}px "Arial Black", Arial`;
+  diffLabels.forEach((dl, i) => {
+    const bx = dbX0 + i * (dbW + dbGap);
+    const sel = difficulty === dl.id;
+    ctx.fillStyle = sel ? '#FFD700' : 'rgba(255,255,255,0.13)';
+    ctx.beginPath(); ctx.roundRect(bx, dbY, dbW, dbH, 12); ctx.fill();
+    if (sel) {
+      ctx.strokeStyle = '#FF8F00'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.roundRect(bx, dbY, dbW, dbH, 12); ctx.stroke();
+    }
+    ctx.fillStyle = sel ? '#1A1A1A' : 'rgba(255,255,255,0.7)';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(dl.label, bx + dbW / 2, dbY + dbH * 0.36);
+    ctx.font = `${Math.min(15, canvas.width * 0.04)}px serif`;
+    ctx.fillText(dl.hearts, bx + dbW / 2, dbY + dbH * 0.72);
+    ctx.font = `bold ${Math.min(13, canvas.width * 0.034)}px "Arial Black", Arial`;
+    diffBtns[i] = { x: bx, y: dbY, w: dbW, h: dbH, id: dl.id };
+  });
+
   ctx.fillStyle = 'rgba(255,255,255,0.5)';
   ctx.font = `${Math.min(15, canvas.width * 0.038)}px Arial`;
   ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-  ctx.fillText('Run with arrow keys · Space to jump · Catch the right word!', canvas.width / 2, canvas.height - 18);
+  ctx.fillText('Tap a pup to start!', canvas.width / 2, canvas.height - 18);
+}
+
+// =============================================
+// WIN SCREEN
+// =============================================
+function drawWin() {
+  ctx.fillStyle = 'rgba(0,0,0,0.70)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const bw = clamp(canvas.width * 0.82, 270, 370);
+  const bh = 340;
+  const bx = canvas.width/2 - bw/2, by = canvas.height/2 - bh/2;
+
+  const grad = ctx.createLinearGradient(bx, by, bx + bw, by + bh);
+  grad.addColorStop(0, '#0D47A1'); grad.addColorStop(1, '#7B1FA2');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.roundRect(bx, by, bw, bh, 24); ctx.fill();
+  ctx.strokeStyle = '#FFD700'; ctx.lineWidth = 4; ctx.stroke();
+
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  ctx.font = `${clamp(canvas.width * 0.16, 52, 72)}px serif`;
+  ctx.fillText('🏅', canvas.width/2, by + bh * 0.16);
+
+  ctx.font = `bold ${clamp(canvas.width * 0.1, 34, 44)}px "Arial Black", Arial`;
+  ctx.strokeStyle = '#C62828'; ctx.lineWidth = 6;
+  ctx.strokeText('YOU WIN!', canvas.width/2, by + bh * 0.33);
+  ctx.fillStyle = '#FFD700';
+  ctx.fillText('YOU WIN!', canvas.width/2, by + bh * 0.33);
+
+  // Hebrew sticker text
+  ctx.fillStyle = 'white';
+  ctx.font = `bold ${clamp(canvas.width * 0.075, 24, 30)}px Arial`;
+  ctx.fillText('🌟 \u05d0\u05ea\u05d4 \u05de\u05e7\u05d1\u05dc \u05de\u05d3\u05d1\u05e7\u05d4! 🌟', canvas.width/2, by + bh * 0.50);
+
+  ctx.fillStyle = '#FFD700';
+  ctx.font = `bold 28px "Arial Black", Arial`;
+  ctx.fillText(`Score: ${score}`, canvas.width/2, by + bh * 0.64);
+
+  const btnW = 210, btnH = 52;
+  const btnX = canvas.width/2 - btnW/2, btnY = by + bh * 0.80 - btnH/2;
+  ctx.fillStyle = '#43A047';
+  ctx.beginPath(); ctx.roundRect(btnX, btnY, btnW, btnH, 14); ctx.fill();
+  ctx.strokeStyle = '#1B5E20'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.fillStyle = 'white';
+  ctx.font = `bold 22px "Arial Black", Arial`;
+  ctx.fillText('PLAY AGAIN 🐾', canvas.width/2, btnY + btnH/2);
+  winBtn = { x: btnX, y: btnY, w: btnW, h: btnH };
 }
 
 // =============================================
@@ -1090,6 +1185,7 @@ canvas.addEventListener('touchstart', e => {
   }
   if (state === S.MENU) handleMenuTap(t.clientX, t.clientY);
   if (state === S.OVER) handleOverTap(t.clientX, t.clientY);
+  if (state === S.WIN)  handleWinTap(t.clientX, t.clientY);
 }, { passive: false });
 
 canvas.addEventListener('touchmove', e => {
@@ -1122,10 +1218,21 @@ canvas.addEventListener('mousemove', e => {
 });
 
 function handleMenuTap(x, y) {
+  diffBtns.forEach((b) => {
+    if (b && x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) { difficulty = b.id; return; }
+  });
   menuCards.forEach((c, i) => {
     if (c && x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h) startGame(DOGS[i]);
   });
 }
+function handleWinTap(x, y) {
+  if (winBtn.x && x >= winBtn.x && x <= winBtn.x + winBtn.w &&
+                  y >= winBtn.y && y <= winBtn.y + winBtn.h) {
+    state = S.MENU; score = 0; combo = 0; round = 0;
+    wordPool = shuffle(WORDS); wordIdx = 0; wordsFound = 0;
+  }
+}
+
 function handleOverTap(x, y) {
   if (goBtn.x && x >= goBtn.x && x <= goBtn.x + goBtn.w &&
                  y >= goBtn.y && y <= goBtn.y + goBtn.h) {
@@ -1140,7 +1247,8 @@ function handleOverTap(x, y) {
 function startGame(dogData) {
   selectedDog   = dogData;
   dog           = new Dog(dogData);
-  score         = 0; lives = 3; combo = 0; round = 0;
+  score         = 0; lives = difficulty === 'easy' ? 5 : difficulty === 'hard' ? 1 : 3; combo = 0; round = 0;
+  wordsFound    = 0;
   particles     = []; pawPrints = []; items = [];
   obstacles     = []; obstacleTimer = 0;
   fallSpeed     = 1;
@@ -1185,6 +1293,11 @@ function loop() {
   if (state === S.OVER) {
     if (dog) dog.draw();
     drawGameOver();
+  }
+
+  if (state === S.WIN) {
+    if (dog) dog.draw();
+    drawWin();
   }
 }
 
