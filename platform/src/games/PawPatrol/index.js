@@ -178,14 +178,37 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
     });
   }
 
-  // ── Paw prints ───────────────────────────────
-  let pawPrints = [];
-  function addPaw(x, y) { pawPrints.push({ x, y, alpha: 0.55 }); }
-  function tickPaws() { pawPrints = pawPrints.filter(p => { p.alpha -= 0.005 * lastDt * 60; return p.alpha > 0; }); }
-  function drawPaws() {
-    ctx.save(); ctx.font = '14px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    pawPrints.forEach(p => { ctx.globalAlpha = p.alpha; ctx.fillText('🐾', p.x, p.y); });
-    ctx.restore();
+  // ── Paw prints (unused — car leaves no prints) ──
+  function tickPaws() {}
+  function drawPaws() {}
+
+  // ── Car helpers ──────────────────────────────
+  function lightenColor(hex, amount) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.max(0, Math.min(255, (num >> 16) + amount));
+    const g = Math.max(0, Math.min(255, ((num >> 8) & 0xFF) + amount));
+    const b = Math.max(0, Math.min(255, (num & 0xFF) + amount));
+    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+  }
+
+  function drawCarWheel(cx, r, runT, carColor) {
+    const angle = runT * 0.22;
+    cx.fillStyle = '#222';
+    cx.beginPath(); cx.arc(0, 0, r, 0, Math.PI * 2); cx.fill();
+    cx.strokeStyle = '#555'; cx.lineWidth = 2;
+    cx.beginPath(); cx.arc(0, 0, r, 0, Math.PI * 2); cx.stroke();
+    cx.fillStyle = '#ccc';
+    cx.beginPath(); cx.arc(0, 0, r * 0.50, 0, Math.PI * 2); cx.fill();
+    cx.strokeStyle = '#aaa'; cx.lineWidth = 1.5;
+    for (let i = 0; i < 5; i++) {
+      const a = angle + i * (Math.PI * 2 / 5);
+      cx.beginPath();
+      cx.moveTo(Math.cos(a) * r * 0.12, Math.sin(a) * r * 0.12);
+      cx.lineTo(Math.cos(a) * r * 0.46, Math.sin(a) * r * 0.46);
+      cx.stroke();
+    }
+    cx.fillStyle = carColor;
+    cx.beginPath(); cx.arc(0, 0, r * 0.20, 0, Math.PI * 2); cx.fill();
   }
 
   // ── Dog class ────────────────────────────────
@@ -208,10 +231,9 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
       this.leftHeld = false; this.rightHeld = false;
       this.state = 'idle';
       this.stateT = 0; this.landSquash = 0;
-      this.pawAccum = 0;
       this.invincibleT = 0;
-      this.w = clamp(canvas.width * 0.15, 70, 110);
-      this.h = this.w * 1.28;
+      this.w = clamp(canvas.width * 0.22, 120, 165);
+      this.h = this.w * 0.60;
       this.resetGround();
     }
     resetGround() {
@@ -277,52 +299,59 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
         this.state = Math.abs(this.vx) > 30 ? 'run' : 'idle';
       if (this.state === 'run') {
         this.runT += dt * 60;
-        this.pawAccum += dt;
-        if (this.pawAccum >= 20 / 60) {
-          this.pawAccum -= 20 / 60;
-          addPaw(this.x - this.facing * this.w * 0.2, this.gY + 9);
-        }
       }
       if (this.landSquash > 0) this.landSquash -= dt;
     }
     draw() {
       const w = this.w, h = this.h;
+      const def = DOG_DEFS.find(d => d.name === this.data.name);
+      const carColor = def ? def.color : '#888';
 
       // Animation transforms
       let tilt = 0, sx = 1, sy = 1, bY = 0;
       switch (this.state) {
         case 'run':
-          bY   = Math.sin(this.runT * 0.38) * 4;
-          tilt = Math.sin(this.runT * 0.22) * 0.07 + 0.10;
+          bY   = Math.sin(this.runT * 0.38) * 2.5;
+          tilt = Math.sin(this.runT * 0.22) * 0.04;
           break;
         case 'jump':
-          tilt = 0.12 * this.facing;
-          if (this.vy < 0) { sx = 0.84; sy = 1.16; } else { sx = 1.12; sy = 0.90; }
+          tilt = 0.08 * this.facing;
+          if (this.vy < 0) { sx = 0.90; sy = 1.10; } else { sx = 1.10; sy = 0.92; }
           break;
         case 'celebrate':
-          bY   = Math.sin(bgTick * 0.3) * 10;
-          tilt = Math.sin(bgTick * 0.25) * 0.25;
-          sx   = 1 + Math.abs(Math.sin(bgTick * 0.3)) * 0.12; sy = sx;
+          bY   = Math.sin(bgTick * 0.3) * 8;
+          tilt = Math.sin(bgTick * 0.25) * 0.18;
+          sx   = 1 + Math.abs(Math.sin(bgTick * 0.3)) * 0.10; sy = sx;
           break;
         case 'ouch':
-          tilt = -0.5 * this.facing; sx = 1.2; sy = 0.8;
+          tilt = -0.35 * this.facing; sx = 1.15; sy = 0.85;
           break;
         default: break;
       }
       if (this.landSquash > 0) {
-        const q = this.landSquash / (9 / 60); sx = 1 + q * 0.28; sy = 1 - q * 0.22; bY = q * 4;
+        const q = this.landSquash / (9 / 60); sx = 1 + q * 0.22; sy = 1 - q * 0.18; bY = q * 3;
       }
+
+      const wheelR   = h * 0.22;
+      const bodyH    = h * 0.42;
+      const cabH     = h - wheelR * 2 - bodyH;
+      const bodyX    = -w / 2;
+      const bodyYBot = -wheelR * 1.2;
+      const bodyYTop = bodyYBot - bodyH;
+      const cabW     = w * 0.60;
+      const cabX     = bodyX + w * 0.25;
+      const cabYBot  = bodyYTop;
+      const cabYTop  = cabYBot - cabH;
 
       // Shadow
       const airH = Math.max(0, this.gY - this.y);
       const shSc = lerp(1, 0.35, airH / 220);
       ctx.save();
-      ctx.translate(this.x, this.gY + 12); ctx.scale(shSc, 0.28);
-      ctx.beginPath(); ctx.ellipse(0, 0, w * 0.52, w * 0.52, 0, 0, Math.PI * 2);
+      ctx.translate(this.x, this.gY + 10); ctx.scale(shSc, 0.22);
+      ctx.beginPath(); ctx.ellipse(0, 0, w * 0.60, w * 0.60, 0, 0, Math.PI * 2);
       ctx.fillStyle = `rgba(0,0,0,${0.22 * shSc})`; ctx.fill();
       ctx.restore();
 
-      // Body with poster image
       ctx.save();
       ctx.translate(this.x, this.y);
       ctx.scale(this.facing, 1);
@@ -330,31 +359,73 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
       ctx.scale(sx, sy);
       ctx.translate(0, bY);
 
+      // Rear wheel (behind body)
+      ctx.save();
+      ctx.translate(bodyX + w * 0.22, -wheelR);
+      drawCarWheel(ctx, wheelR, this.runT, carColor);
+      ctx.restore();
+
+      // Car body
+      const bodyGrad = ctx.createLinearGradient(0, bodyYTop, 0, bodyYBot);
+      bodyGrad.addColorStop(0, lightenColor(carColor, 20));
+      bodyGrad.addColorStop(1, carColor);
+      ctx.fillStyle = bodyGrad;
+      ctx.beginPath(); ctx.roundRect(bodyX, bodyYTop, w, bodyH, [2, 8, 8, 2]); ctx.fill();
+
+      // Cab / roof
+      const cabGrad = ctx.createLinearGradient(0, cabYTop, 0, cabYBot);
+      cabGrad.addColorStop(0, lightenColor(carColor, -10));
+      cabGrad.addColorStop(1, lightenColor(carColor, 15));
+      ctx.fillStyle = cabGrad;
+      ctx.beginPath(); ctx.roundRect(cabX, cabYTop, cabW, cabH, [10, 10, 0, 0]); ctx.fill();
+
+      // Window — shows character face
+      const winPad = 4;
+      const winX = cabX + winPad;
+      const winY = cabYTop + winPad;
+      const winW = cabW - winPad * 2;
+      const winH = cabH - winPad;
+      ctx.save();
+      ctx.beginPath(); ctx.roundRect(winX, winY, winW, winH, 4); ctx.clip();
       const img = dogImages[this.data.name];
       if (img) {
-        ctx.save();
-        ctx.beginPath(); ctx.roundRect(-w / 2, -h, w, h, 12); ctx.clip();
-        ctx.drawImage(img, -w / 2, -h, w, h);
-        ctx.restore();
-        // White border ring
-        ctx.beginPath(); ctx.roundRect(-w / 2, -h, w, h, 12);
-        ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 2.5; ctx.stroke();
+        // Show the top 60% of the poster (face / upper body)
+        const srcH = img.naturalHeight * 0.60;
+        ctx.drawImage(img, 0, 0, img.naturalWidth, srcH, winX, winY, winW, winH);
       } else {
-        // Fallback: colored card
-        const def = DOG_DEFS.find(d => d.name === this.data.name);
-        ctx.fillStyle = def ? def.color : '#888';
-        ctx.beginPath(); ctx.roundRect(-w / 2, -h, w, h, 12); ctx.fill();
-        ctx.fillStyle = 'white'; ctx.font = `bold ${w * 0.35}px Arial`;
+        ctx.fillStyle = 'rgba(180,220,255,0.90)';
+        ctx.fillRect(winX, winY, winW, winH);
+        ctx.fillStyle = 'white'; ctx.font = `bold ${winW * 0.45}px Arial`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(this.data.name.charAt(0), 0, -h / 2);
+        ctx.fillText(this.data.name.charAt(0), winX + winW / 2, winY + winH / 2);
       }
+      ctx.restore();
+      // Window frame
+      ctx.strokeStyle = 'rgba(255,255,255,0.80)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(winX, winY, winW, winH, 4); ctx.stroke();
 
-      // Speed lines behind character
+      // Body outline
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(bodyX, bodyYTop, w, bodyH, [2, 8, 8, 2]); ctx.stroke();
+
+      // Headlight (front = right side when facing right)
+      ctx.fillStyle = '#FFF59D';
+      ctx.shadowColor = '#FFE082'; ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.ellipse(bodyX + w - 4, bodyYTop + bodyH * 0.38, 5, 8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+
+      // Front wheel (overlaps body, drawn last)
+      ctx.save();
+      ctx.translate(bodyX + w * 0.80, -wheelR);
+      drawCarWheel(ctx, wheelR, this.runT, carColor);
+      ctx.restore();
+
+      // Speed lines (behind car = left side)
       if (Math.abs(this.vx) > 3.5 && this.onGround) {
-        ctx.save(); ctx.globalAlpha = 0.35; ctx.strokeStyle = 'white'; ctx.lineWidth = 2.5;
+        ctx.save(); ctx.globalAlpha = 0.40; ctx.strokeStyle = 'white'; ctx.lineWidth = 2;
         for (let i = 0; i < 3; i++) {
-          const ly = -h * (0.45 + i * 0.13);
-          ctx.beginPath(); ctx.moveTo(-w * 0.2, ly); ctx.lineTo(-w * (0.6 + i * 0.12), ly); ctx.stroke();
+          const ly = bodyYTop + bodyH * (0.20 + i * 0.25);
+          ctx.beginPath(); ctx.moveTo(bodyX + 4, ly); ctx.lineTo(bodyX - 18 - i * 8, ly); ctx.stroke();
         }
         ctx.restore();
       }
@@ -362,8 +433,10 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
       ctx.restore();
     }
     bounds() {
-      return { left: this.x - this.w * 0.38, right: this.x + this.w * 0.38,
-               top:  this.y - this.h * 0.95, bottom: this.y + 15 };
+      return { left:   this.x - this.w * 0.44,
+               right:  this.x + this.w * 0.44,
+               top:    this.y - this.h * 0.98,
+               bottom: this.y + 4 };
     }
   }
 
