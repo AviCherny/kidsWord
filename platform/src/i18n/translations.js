@@ -33,8 +33,6 @@ export const T = {
     picturePuzzleDesc: 'בנה את התמונה',
     bubblePopName: 'פוצץ בועות',
     bubblePopDesc: 'פוצץ את הבועות הנכונות!',
-    pizzaPartyName: 'מסיבת פיצה',
-    pizzaPartyDesc: 'מרדדים בצק, בוחרים רוטב אחד, מוסיפים תוספות, חותכים ומתאימים משולשים',
     // Character games
     rescueDogName: 'כלב חילוץ',
     rescueDogDesc: 'בוחרים כלב חילוץ, דרגת קושי ומוצאים חפצים נסתרים בנמל, בג׳ונגל ובשלג!',
@@ -141,8 +139,6 @@ export const T = {
     picturePuzzleDesc: 'Build the picture!',
     bubblePopName: 'Bubble Pop',
     bubblePopDesc: 'Pop the right bubbles!',
-    pizzaPartyName: 'Pizza Party',
-    pizzaPartyDesc: 'Roll dough, choose one sauce, add toppings, cut, and match slices',
     // Character games
     rescueDogName: 'Rescue Dog',
     rescueDogDesc: 'Pick a rescue pup, choose a difficulty, and find hidden items in the harbor, jungle, and snow!',

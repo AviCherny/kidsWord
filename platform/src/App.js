@@ -22,7 +22,6 @@ import RescueDog from './games/RescueDog';
 import SpiderMan from './games/SpiderMan';
 import PJMasks from './games/PJMasks';
 import Sonic from './games/Sonic';
-import PizzaParty from './games/PizzaParty';
 import PawPatrol from './games/PawPatrol';
 import ColorBook from './games/ColorBook';
 import { getEarnedStickers, earnSticker, migrateLegacyStickers, getEarnedCandy, earnCandy } from './lib/storage';
@@ -48,7 +47,6 @@ const GAME_COMPONENTS = {
   spiderman: SpiderMan,
   pjmasks: PJMasks,
   sonic: Sonic,
-  pizzaparty: PizzaParty,
   pawpatrol: PawPatrol,
   colorbook: ColorBook,
 };

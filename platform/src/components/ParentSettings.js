@@ -7,7 +7,6 @@ const GAME_LABELS = {
   memory:      { emoji: '🧠',     he: 'משחק זיכרון',         en: 'Memory Game'     },
   social:      { emoji: '💬',     he: 'מיומנויות חברתיות',   en: 'Social Skills'   },
   shooter:     { emoji: '🦸',     he: 'יורה מילים',           en: 'Word Shooter'    },
-  pizzaparty:  { emoji: '🍕',     he: 'מסיבת פיצה',          en: 'Pizza Party'     },
   pattern:     { emoji: '⭐🔴⭐', he: 'מציאת דפוסים',        en: 'Pattern Finder'  },
   numbertrain: { emoji: '🚂',     he: 'רכבת המספרים',        en: 'Number Train'    },
   shapesorter: { emoji: '🔺⬜🔴', he: 'ממיין הצורות',        en: 'Shape Sorter'    },
