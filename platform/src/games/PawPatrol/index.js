@@ -233,7 +233,7 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
       this.stateT = 0; this.landSquash = 0;
       this.invincibleT = 0;
       this.w = clamp(canvas.width * 0.22, 120, 165);
-      this.h = this.w * 0.60;
+      this.h = this.w * 0.72;
       this.resetGround();
     }
     resetGround() {
@@ -304,8 +304,12 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
     }
     draw() {
       const w = this.w, h = this.h;
-      const def = DOG_DEFS.find(d => d.name === this.data.name);
+      const name = this.data.name;
+      const def = DOG_DEFS.find(d => d.name === name);
       const carColor = def ? def.color : '#888';
+      const isChase    = name === 'Chase';
+      const isMarshall = name === 'Marshall';
+      const isRubble   = name === 'Rubble';
 
       // Animation transforms
       let tilt = 0, sx = 1, sy = 1, bY = 0;
@@ -332,14 +336,16 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
         const q = this.landSquash / (9 / 60); sx = 1 + q * 0.22; sy = 1 - q * 0.18; bY = q * 3;
       }
 
-      const wheelR   = h * 0.22;
-      const bodyH    = h * 0.42;
-      const cabH     = h - wheelR * 2 - bodyH;
+      // Proportions — wheelR small so cab gets plenty of height for the character window
+      const wheelR   = h * 0.16;
+      const bodyH    = h * 0.28;
+      const cabH     = h - wheelR * 2 - bodyH;          // ~40% of h → big window
       const bodyX    = -w / 2;
-      const bodyYBot = -wheelR * 1.2;
+      const bodyYBot = -wheelR * 1.1;
       const bodyYTop = bodyYBot - bodyH;
-      const cabW     = w * 0.60;
-      const cabX     = bodyX + w * 0.25;
+      // Rubble cab sits more to the rear (blade takes front space)
+      const cabW     = w * 0.62;
+      const cabX     = isRubble ? bodyX + w * 0.10 : bodyX + w * 0.24;
       const cabYBot  = bodyYTop;
       const cabYTop  = cabYBot - cabH;
 
@@ -359,72 +365,205 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
       ctx.scale(sx, sy);
       ctx.translate(0, bY);
 
-      // Rear wheel (behind body)
+      // ── Rear wheel (behind body) ──────────────────
       ctx.save();
-      ctx.translate(bodyX + w * 0.22, -wheelR);
+      ctx.translate(bodyX + w * 0.20, -wheelR);
       drawCarWheel(ctx, wheelR, this.runT, carColor);
       ctx.restore();
 
-      // Car body
+      // ── Car body ──────────────────────────────────
       const bodyGrad = ctx.createLinearGradient(0, bodyYTop, 0, bodyYBot);
-      bodyGrad.addColorStop(0, lightenColor(carColor, 20));
+      bodyGrad.addColorStop(0, lightenColor(carColor, 22));
       bodyGrad.addColorStop(1, carColor);
       ctx.fillStyle = bodyGrad;
       ctx.beginPath(); ctx.roundRect(bodyX, bodyYTop, w, bodyH, [2, 8, 8, 2]); ctx.fill();
 
-      // Cab / roof
+      // ── Chase: white side stripe ──────────────────
+      if (isChase) {
+        ctx.fillStyle = 'rgba(255,255,255,0.32)';
+        ctx.fillRect(bodyX + 8, bodyYTop + bodyH * 0.38, w - 16, bodyH * 0.22);
+        // Police badge on door
+        ctx.font = `${bodyH * 0.55}px serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.globalAlpha = 0.80;
+        ctx.fillText('⭐', bodyX + w * 0.55, bodyYTop + bodyH * 0.55);
+        ctx.globalAlpha = 1;
+      }
+
+      // ── Marshall: reflective stripe + hose reel ───
+      if (isMarshall) {
+        // Yellow reflective band
+        ctx.fillStyle = 'rgba(255,213,79,0.55)';
+        ctx.fillRect(bodyX + 6, bodyYTop + bodyH * 0.58, w - 12, bodyH * 0.18);
+        // Side ladder — horizontal rails with rungs along the body
+        const ladY1 = bodyYTop + bodyH * 0.12;
+        const ladY2 = bodyYTop + bodyH * 0.50;
+        const ladX1 = bodyX + w * 0.10;
+        const ladX2 = bodyX + w * 0.88;
+        ctx.strokeStyle = '#FFD54F'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.moveTo(ladX1, ladY1); ctx.lineTo(ladX2, ladY1); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(ladX1, ladY2); ctx.lineTo(ladX2, ladY2); ctx.stroke();
+        ctx.lineWidth = 2;
+        for (let i = 0; i <= 7; i++) {
+          const rx = ladX1 + ((ladX2 - ladX1) / 7) * i;
+          ctx.beginPath(); ctx.moveTo(rx, ladY1); ctx.lineTo(rx, ladY2); ctx.stroke();
+        }
+      }
+
+      // ── Rubble: caution stripes on body ───────────
+      if (isRubble) {
+        ctx.save();
+        const stripeW = 13;
+        ctx.beginPath(); ctx.rect(bodyX + 2, bodyYTop + bodyH * 0.60, w - 4, bodyH * 0.28); ctx.clip();
+        for (let i = 0; i < Math.ceil(w / stripeW); i++) {
+          ctx.fillStyle = i % 2 === 0 ? 'rgba(0,0,0,0.28)' : 'rgba(255,213,79,0.45)';
+          ctx.fillRect(bodyX + 2 + i * stripeW, bodyYTop + bodyH * 0.60, stripeW, bodyH * 0.28);
+        }
+        ctx.restore();
+      }
+
+      // Body outline
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(bodyX, bodyYTop, w, bodyH, [2, 8, 8, 2]); ctx.stroke();
+
+      // ── Cab / roof ────────────────────────────────
       const cabGrad = ctx.createLinearGradient(0, cabYTop, 0, cabYBot);
-      cabGrad.addColorStop(0, lightenColor(carColor, -10));
-      cabGrad.addColorStop(1, lightenColor(carColor, 15));
+      cabGrad.addColorStop(0, lightenColor(carColor, -8));
+      cabGrad.addColorStop(1, lightenColor(carColor, 18));
       ctx.fillStyle = cabGrad;
       ctx.beginPath(); ctx.roundRect(cabX, cabYTop, cabW, cabH, [10, 10, 0, 0]); ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.30)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(cabX, cabYTop, cabW, cabH, [10, 10, 0, 0]); ctx.stroke();
 
-      // Window — shows character face
-      const winPad = 4;
+      // ── Window — character face ───────────────────
+      const winPad = 3;
       const winX = cabX + winPad;
       const winY = cabYTop + winPad;
       const winW = cabW - winPad * 2;
-      const winH = cabH - winPad;
+      const winH = cabH - winPad * 2;
       ctx.save();
-      ctx.beginPath(); ctx.roundRect(winX, winY, winW, winH, 4); ctx.clip();
-      const img = dogImages[this.data.name];
+      ctx.beginPath(); ctx.roundRect(winX, winY, winW, winH, 5); ctx.clip();
+      const img = dogImages[name];
       if (img) {
-        // Show the top 60% of the poster (face / upper body)
-        const srcH = img.naturalHeight * 0.60;
+        // Crop to top 55% of poster = face & upper body
+        const srcH = img.naturalHeight * 0.55;
         ctx.drawImage(img, 0, 0, img.naturalWidth, srcH, winX, winY, winW, winH);
       } else {
         ctx.fillStyle = 'rgba(180,220,255,0.90)';
         ctx.fillRect(winX, winY, winW, winH);
         ctx.fillStyle = 'white'; ctx.font = `bold ${winW * 0.45}px Arial`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(this.data.name.charAt(0), winX + winW / 2, winY + winH / 2);
+        ctx.fillText(name.charAt(0), winX + winW / 2, winY + winH / 2);
       }
       ctx.restore();
       // Window frame
-      ctx.strokeStyle = 'rgba(255,255,255,0.80)'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.roundRect(winX, winY, winW, winH, 4); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.roundRect(winX, winY, winW, winH, 5); ctx.stroke();
 
-      // Body outline
-      ctx.strokeStyle = 'rgba(255,255,255,0.35)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.roundRect(bodyX, bodyYTop, w, bodyH, [2, 8, 8, 2]); ctx.stroke();
-
-      // Headlight (front = right side when facing right)
+      // ── Headlight ─────────────────────────────────
       ctx.fillStyle = '#FFF59D';
-      ctx.shadowColor = '#FFE082'; ctx.shadowBlur = 6;
-      ctx.beginPath(); ctx.ellipse(bodyX + w - 4, bodyYTop + bodyH * 0.38, 5, 8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowColor = '#FFE082'; ctx.shadowBlur = 7;
+      ctx.beginPath(); ctx.ellipse(bodyX + w - 4, bodyYTop + bodyH * 0.35, 5, 8, 0, 0, Math.PI * 2); ctx.fill();
       ctx.shadowBlur = 0;
 
-      // Front wheel (overlaps body, drawn last)
+      // ── Front wheel ───────────────────────────────
       ctx.save();
-      ctx.translate(bodyX + w * 0.80, -wheelR);
+      ctx.translate(bodyX + w * 0.82, -wheelR);
       drawCarWheel(ctx, wheelR, this.runT, carColor);
       ctx.restore();
 
-      // Speed lines (behind car = left side)
+      // ── Rubble: bulldozer blade (front attachment) ─
+      if (isRubble) {
+        const bladeW = w * 0.16;
+        const bladeH = bodyH + cabH * 0.45;
+        const bladeX = bodyX + w - 2;
+        const bladeY = bodyYTop - cabH * 0.15;
+        // Hydraulic arm from cab base to blade
+        ctx.strokeStyle = '#777'; ctx.lineWidth = 5;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(cabX + cabW * 0.80, cabYBot);
+        ctx.lineTo(bladeX + bladeW * 0.3, bladeY + bladeH * 0.4);
+        ctx.stroke();
+        ctx.lineCap = 'butt';
+        // Blade body
+        const blGrad = ctx.createLinearGradient(bladeX, 0, bladeX + bladeW, 0);
+        blGrad.addColorStop(0, '#bbb');
+        blGrad.addColorStop(0.45, '#efefef');
+        blGrad.addColorStop(1, '#888');
+        ctx.fillStyle = blGrad;
+        ctx.beginPath(); ctx.roundRect(bladeX, bladeY, bladeW, bladeH, [0, 5, 8, 5]); ctx.fill();
+        ctx.strokeStyle = '#666'; ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.roundRect(bladeX, bladeY, bladeW, bladeH, [0, 5, 8, 5]); ctx.stroke();
+        // Cutting edge
+        ctx.fillStyle = '#999';
+        ctx.fillRect(bladeX + bladeW - 5, bladeY + bladeH * 0.08, 5, bladeH * 0.84);
+      }
+
+      // ── Chase: police light bar on roof ───────────
+      if (isChase) {
+        const barW = cabW * 0.72;
+        const barH = 8;
+        const barX = cabX + (cabW - barW) / 2;
+        const barY = cabYTop - barH - 2;
+        // Bar housing
+        ctx.fillStyle = '#111';
+        ctx.beginPath(); ctx.roundRect(barX, barY, barW, barH, 3); ctx.fill();
+        // Flashing lights — alternate red/blue every ~12 frames
+        const flashPhase = Math.floor(bgTick / 10) % 2;
+        const glow = 0.65 + Math.sin(bgTick * 0.5) * 0.35;
+        const leftC  = flashPhase === 0 ? `rgba(255,40,40,${0.90 + glow*0.10})`
+                                        : `rgba(40,80,255,${0.90 + glow*0.10})`;
+        const rightC = flashPhase === 0 ? `rgba(40,80,255,${0.90 + glow*0.10})`
+                                        : `rgba(255,40,40,${0.90 + glow*0.10})`;
+        ctx.shadowBlur = 10 * glow;
+        ctx.shadowColor = leftC;
+        ctx.fillStyle = leftC;
+        ctx.beginPath(); ctx.roundRect(barX + 3, barY + 1.5, barW * 0.44, barH - 3, 2); ctx.fill();
+        ctx.shadowColor = rightC;
+        ctx.fillStyle = rightC;
+        ctx.beginPath(); ctx.roundRect(barX + barW * 0.53, barY + 1.5, barW * 0.44, barH - 3, 2); ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // ── Marshall: siren dome on cab roof ──────────
+      if (isMarshall) {
+        const sX = cabX + cabW * 0.50;
+        const sY = cabYTop - 2;
+        const sR = Math.max(7, cabH * 0.18);
+        const sirenPulse = 0.55 + Math.sin(bgTick * 0.55) * 0.45;
+        ctx.shadowColor = `rgba(255,60,0,${sirenPulse})`;
+        ctx.shadowBlur = 14 * sirenPulse;
+        ctx.fillStyle = '#FF2200';
+        ctx.beginPath(); ctx.arc(sX, sY, sR, Math.PI, 0); ctx.fill();
+        ctx.fillStyle = '#FF7700';
+        ctx.beginPath(); ctx.arc(sX, sY, sR * 0.55, Math.PI, 0); ctx.fill();
+        ctx.shadowBlur = 0;
+        // Siren base
+        ctx.fillStyle = '#111';
+        ctx.fillRect(sX - sR, sY - 2, sR * 2, 4);
+      }
+
+      // ── Rubble: amber construction beacon on roof ─
+      if (isRubble) {
+        const bX = cabX + cabW * 0.50;
+        const bY = cabYTop - 3;
+        const bR = 7;
+        const bPulse = 0.5 + Math.sin(bgTick * 0.4) * 0.5;
+        ctx.shadowColor = `rgba(255,140,0,${bPulse})`;
+        ctx.shadowBlur = 12 * bPulse;
+        ctx.fillStyle = '#FF8C00';
+        ctx.beginPath(); ctx.arc(bX, bY, bR, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath(); ctx.arc(bX, bY, bR * 0.50, 0, Math.PI * 2); ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+
+      // ── Speed lines (behind car) ───────────────────
       if (Math.abs(this.vx) > 3.5 && this.onGround) {
         ctx.save(); ctx.globalAlpha = 0.40; ctx.strokeStyle = 'white'; ctx.lineWidth = 2;
         for (let i = 0; i < 3; i++) {
-          const ly = bodyYTop + bodyH * (0.20 + i * 0.25);
+          const ly = bodyYTop + bodyH * (0.20 + i * 0.26);
           ctx.beginPath(); ctx.moveTo(bodyX + 4, ly); ctx.lineTo(bodyX - 18 - i * 8, ly); ctx.stroke();
         }
         ctx.restore();
