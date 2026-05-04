@@ -552,7 +552,7 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
 
   // ── Game state ───────────────────────────────
   const ST = { MENU: 'menu', PLAY: 'play', OVER: 'over', WIN: 'win' };
-  const WIN_TARGET = 10; // items to collect for a win
+  let winTarget = 10; // updated in resetGame based on difficulty
   let state = ST.MENU;
 
   let score = 0;
@@ -660,7 +660,7 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
           else if (combo === 8) { setComboPopup('⭐ Incredible! ×8'); speak('Incredible!', 'en'); }
           else if (combo > 8 && combo % 5 === 0) { setComboPopup(`🌟 ×${combo} streak!`); }
           // Win when enough items collected
-          if (catchCount >= WIN_TARGET) {
+          if (catchCount >= winTarget) {
             state = ST.WIN; dog.celebrate();
             speak('You win! Amazing job!', 'en');
           }
@@ -746,7 +746,7 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
     ctx.beginPath(); ctx.roundRect(progX, py, progW, progH, 12); ctx.fill();
     ctx.fillStyle = '#FFD700'; ctx.font = 'bold 16px "Arial Black", Arial';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(`🐾 ${catchCount} / ${WIN_TARGET}`, canvas.width / 2, py + 19);
+    ctx.fillText(`🐾 ${catchCount} / ${winTarget}`, canvas.width / 2, py + 19);
 
     // Danger label when 1 life
     if (lives === 1) {
@@ -974,6 +974,7 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
     updateCamera(true);
     // Apply difficulty
     speedMult = menuDifficulty === 1 ? 0.75 : menuDifficulty === 3 ? 1.35 : 1.0;
+    winTarget = menuDifficulty === 3 ? 20 : 10;
     score = 0;
     lives = menuDifficulty === 1 ? 7 : menuDifficulty === 3 ? 3 : 5;
     combo = 0; catchCount = 0;
