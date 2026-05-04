@@ -663,6 +663,7 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
           if (catchCount >= winTarget) {
             state = ST.WIN; dog.celebrate();
             speak('You win! Amazing job!', 'en');
+            if (onSuccess) onSuccess();
           }
           break;
         }
