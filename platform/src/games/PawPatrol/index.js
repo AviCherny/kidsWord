@@ -1053,7 +1053,7 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
     lives = menuDifficulty === 1 ? 7 : menuDifficulty === 3 ? 3 : 5;
     combo = 0; catchCount = 0;
     gameTick = 0; gameSpeedRamp = 1; comboPopup = null; wordPopup = null;
-    particles = []; pawPrints = []; items = []; obstacles = [];
+    particles = []; items = []; obstacles = [];
     obsTimer = 220; itemSpawnTimer = 60;
     initBg();
     state = ST.PLAY;
