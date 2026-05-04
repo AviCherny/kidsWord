@@ -7,28 +7,28 @@ import { speak } from '../../speak';
 // ─────────────────────────────────────────────
 const DOG_ITEMS = {
   Marshall: [
-    { emoji: '💧', word: 'WATER',    sentence: "Water!"      },
-    { emoji: '🪣', word: 'BUCKET',   sentence: "Bucket!"     },
-    { emoji: '🧊', word: 'ICE',      sentence: "Ice!"        },
-    { emoji: '🏊', word: 'SWIM',     sentence: "Swim!"       },
-    { emoji: '🍎', word: 'APPLE',    sentence: "Apple!"      },
-    { emoji: '🦺', word: 'VEST',     sentence: "Vest!"       },
+    { emoji: '💧', word: 'WATER',  sentence: "Water!"  },
+    { emoji: '🍎', word: 'APPLE',  sentence: "Apple!"  },
+    { emoji: '🥚', word: 'EGG',    sentence: "Egg!"    },
+    { emoji: '🐟', word: 'FISH',   sentence: "Fish!"   },
+    { emoji: '☀️', word: 'SUN',    sentence: "Sun!"    },
+    { emoji: '☕', word: 'CUP',    sentence: "Cup!"    },
   ],
   Chase: [
-    { emoji: '🍌', word: 'BANANA',   sentence: "Banana!"     },
-    { emoji: '🦴', word: 'BONE',     sentence: "Bone!"       },
-    { emoji: '🍕', word: 'PIZZA',    sentence: "Pizza!"      },
-    { emoji: '🍩', word: 'DONUT',    sentence: "Donut!"      },
-    { emoji: '🎾', word: 'BALL',     sentence: "Ball!"       },
-    { emoji: '⭐', word: 'STAR',     sentence: "Star!"       },
+    { emoji: '🦴', word: 'BONE',   sentence: "Bone!"   },
+    { emoji: '⭐', word: 'STAR',   sentence: "Star!"   },
+    { emoji: '🏀', word: 'BALL',   sentence: "Ball!"   },
+    { emoji: '🚗', word: 'CAR',    sentence: "Car!"    },
+    { emoji: '🐱', word: 'CAT',    sentence: "Cat!"    },
+    { emoji: '🐶', word: 'DOG',    sentence: "Dog!"    },
   ],
   Rubble: [
-    { emoji: '🔧', word: 'WRENCH',   sentence: "Wrench!"     },
-    { emoji: '⚙️', word: 'GEAR',     sentence: "Gear!"       },
-    { emoji: '🍪', word: 'COOKIE',   sentence: "Cookie!"     },
-    { emoji: '🥪', word: 'SANDWICH', sentence: "Sandwich!"   },
-    { emoji: '🍦', word: 'ICE CREAM',sentence: "Ice cream!"  },
-    { emoji: '🧱', word: 'BRICK',    sentence: "Brick!"      },
+    { emoji: '🧱', word: 'BRICK',  sentence: "Brick!"  },
+    { emoji: '🎂', word: 'CAKE',   sentence: "Cake!"   },
+    { emoji: '🌙', word: 'MOON',   sentence: "Moon!"   },
+    { emoji: '🦆', word: 'DUCK',   sentence: "Duck!"   },
+    { emoji: '🚌', word: 'BUS',    sentence: "Bus!"    },
+    { emoji: '🎩', word: 'HAT',    sentence: "Hat!"    },
   ],
 };
 
@@ -55,7 +55,7 @@ const POSTER_PATHS = {
 // ─────────────────────────────────────────────
 function runGame(canvas, { onSuccess, onExit, difficulty }) {
   const ctx = canvas.getContext('2d');
-  const speedMult = 1 + (difficulty - 1) * 0.18;
+  let speedMult = 1; // updated in resetGame based on chosen difficulty
 
   // ── Image loading ────────────────────────────
   const dogImages = {};
@@ -220,7 +220,7 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
       if (this.x === undefined) this.x = canvas.width / 2;
     }
     jump() {
-      if (this.onGround && this.state !== 'celebrate' && this.state !== 'ouch') {
+      if (this.onGround && this.state !== 'ouch') {
         this.vy = JUMP_VY; this.onGround = false; this.state = 'jump';
       }
     }
@@ -242,7 +242,7 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
         if (this.stateT <= 0 && (this.state === 'celebrate' || this.state === 'ouch'))
           this.state = this.onGround ? 'idle' : 'jump';
       }
-      const locked = this.state === 'celebrate' || this.state === 'ouch';
+      const locked = this.state === 'ouch'; // celebrate no longer freezes movement
       if (!locked) {
         const moveIntent = (this.rightHeld ? 1 : 0) - (this.leftHeld ? 1 : 0);
         if (moveIntent !== 0) {
@@ -793,6 +793,8 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
 
 
   // ── Menu ─────────────────────────────────────
+  let menuDifficulty = 2; // 1=Easy 2=Normal 3=Hard
+  let diffBtns = [];
   let hoverDog = -1;
   let menuCards = [];
 
@@ -820,13 +822,37 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
 
     ctx.font = `${Math.min(20, canvas.width * 0.05)}px Arial`;
     ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.fillText('Pick your pup!', canvas.width / 2, canvas.height * 0.28);
+    ctx.fillText('Pick your pup!', canvas.width / 2, canvas.height * 0.26);
+
+    // Difficulty selector
+    const diffLabels = ['EASY', 'NORMAL', 'HARD'];
+    const diffColors = ['#43A047', '#1976D2', '#C62828'];
+    const dbW = clamp(canvas.width * 0.22, 72, 100);
+    const dbH = 34, dbGap = 10;
+    const totalDbW = dbW * 3 + dbGap * 2;
+    const dbStartX = canvas.width / 2 - totalDbW / 2;
+    const dbY = canvas.height * 0.33;
+
+    diffBtns = [];
+    diffLabels.forEach((label, i) => {
+      const bx = dbStartX + i * (dbW + dbGap);
+      const active = menuDifficulty === i + 1;
+      ctx.fillStyle = active ? diffColors[i] : 'rgba(255,255,255,0.12)';
+      ctx.strokeStyle = active ? 'white' : 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = active ? 2.5 : 1.5;
+      ctx.beginPath(); ctx.roundRect(bx, dbY, dbW, dbH, 10); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = active ? 'white' : 'rgba(255,255,255,0.55)';
+      ctx.font = `bold ${Math.min(13, canvas.width * 0.032)}px "Arial Black", Arial`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(label, bx + dbW / 2, dbY + dbH / 2);
+      diffBtns[i] = { x: bx, y: dbY, w: dbW, h: dbH };
+    });
 
     const cW = clamp(canvas.width * 0.26, 90, 145);
     const cH = cW * 1.52, gap = 18;
     const totalW = cW * 3 + gap * 2;
     const startX = canvas.width / 2 - totalW / 2;
-    const cardY  = canvas.height * 0.33;
+    const cardY  = canvas.height * 0.42;
     menuCards = [];
 
     DOG_DEFS.forEach((d, i) => {
@@ -945,8 +971,12 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
   function resetGame(dogData) {
     dog = new Dog(dogData);
     cameraX = 0;
-    updateCamera(true); // snap camera to initial dog position
-    score = 0; lives = 5; combo = 0; catchCount = 0;
+    updateCamera(true);
+    // Apply difficulty
+    speedMult = menuDifficulty === 1 ? 0.75 : menuDifficulty === 3 ? 1.35 : 1.0;
+    score = 0;
+    lives = menuDifficulty === 1 ? 7 : menuDifficulty === 3 ? 3 : 5;
+    combo = 0; catchCount = 0;
     gameTick = 0; gameSpeedRamp = 1; comboPopup = null; wordPopup = null;
     particles = []; pawPrints = []; items = []; obstacles = [];
     obsTimer = 220; itemSpawnTimer = 60;
@@ -956,6 +986,16 @@ function runGame(canvas, { onSuccess, onExit, difficulty }) {
 
   // ── Input ────────────────────────────────────
   function handleMenuClick(x, y) {
+    // Difficulty buttons — just select, don't start game
+    let hitDiff = false;
+    diffBtns.forEach((b, i) => {
+      if (b && x >= b.x && x <= b.x+b.w && y >= b.y && y <= b.y+b.h) {
+        menuDifficulty = i + 1;
+        hitDiff = true;
+      }
+    });
+    if (hitDiff) return;
+    // Dog cards — start game
     menuCards.forEach((c, i) => {
       if (c && x >= c.x && x <= c.x+c.w && y >= c.y && y <= c.y+c.h) resetGame(DOG_DEFS[i]);
     });
