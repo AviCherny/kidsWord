@@ -4,36 +4,36 @@ import { useLanguage } from '../../context/LanguageContext';
 import { speak } from '../../speak';
 
 const WORD_POOL = [
-  { word: 'Apple',   heWord: 'תפוח',      emoji: '🍎' },
-  { word: 'Dog',     heWord: 'כלב',        emoji: '🐶' },
-  { word: 'Car',     heWord: 'מכונית',     emoji: '🚗' },
-  { word: 'Ball',    heWord: 'כדור',       emoji: '⚽' },
-  { word: 'Hat',     heWord: 'כובע',       emoji: '🎩' },
-  { word: 'Cup',     heWord: 'כוס',        emoji: '☕' },
-  { word: 'Pig',     heWord: 'חזיר',       emoji: '🐷' },
-  { word: 'Sun',     heWord: 'שמש',        heSpeech: 'שֶׁמֶשׁ',   emoji: '☀️' },
-  { word: 'Fish',    heWord: 'דג',         emoji: '🐟' },
-  { word: 'Bird',    heWord: 'ציפור',      heSpeech: 'צִיפּוֹר',  emoji: '🐦' },
-  { word: 'Tree',    heWord: 'עץ',         emoji: '🌳' },
-  { word: 'Book',    heWord: 'ספר',        emoji: '📚' },
-  { word: 'Cake',    heWord: 'עוגה',       emoji: '🎂' },
-  { word: 'Duck',    heWord: 'ברווז',      heSpeech: 'בַּרְוָז',  emoji: '🦆' },
-  { word: 'Bear',    heWord: 'דוב',        emoji: '🐻' },
-  { word: 'Cat',     heWord: 'חתול',       emoji: '🐱' },
-  { word: 'Bee',     heWord: 'דבורה',      heSpeech: 'דְּבוֹרָה', emoji: '🐝' },
-  { word: 'Cow',     heWord: 'פרה',        heSpeech: 'פָּרָה',    emoji: '🐮' },
-  { word: 'Star',    heWord: 'כוכב',       heSpeech: 'כּוֹכָב',   emoji: '⭐' },
-  { word: 'Moon',    heWord: 'ירח',        heSpeech: 'יָרֵחַ',    emoji: '🌙' },
-  { word: 'Egg',     heWord: 'ביצה',       heSpeech: 'בֵּיצָה',   emoji: '🥚' },
-  { word: 'Milk',    heWord: 'חלב',        heSpeech: 'חָלָב',     emoji: '🥛' },
-  { word: 'Key',     heWord: 'מפתח',       heSpeech: 'מַפְתֵּחַ', emoji: '🔑' },
-  { word: 'Bus',     heWord: 'אוטובוס',    emoji: '🚌' },
-  { word: 'Ship',    heWord: 'ספינה',      emoji: '🚢' },
-  { word: 'Frog',    heWord: 'צפרדע',      emoji: '🐸' },
-  { word: 'Rabbit',  heWord: 'ארנב',       emoji: '🐰' },
-  { word: 'Hen',     heWord: 'תרנגולת',    emoji: '🐔' },
-  { word: 'Corn',    heWord: 'תירס',       emoji: '🌽' },
-  { word: 'Bed',     heWord: 'מיטה',       emoji: '🛏️' },
+  { word: 'Apple',   heWord: 'תפוח',      emoji: '🍎', cat: 'food' },
+  { word: 'Dog',     heWord: 'כלב',        emoji: '🐶', cat: 'animals' },
+  { word: 'Car',     heWord: 'מכונית',     emoji: '🚗', cat: 'vehicles' },
+  { word: 'Ball',    heWord: 'כדור',       emoji: '⚽', cat: 'objects' },
+  { word: 'Hat',     heWord: 'כובע',       emoji: '🎩', cat: 'objects' },
+  { word: 'Cup',     heWord: 'כוס',        emoji: '☕', cat: 'objects' },
+  { word: 'Pig',     heWord: 'חזיר',       emoji: '🐷', cat: 'animals' },
+  { word: 'Sun',     heWord: 'שמש',        heSpeech: 'שֶׁמֶשׁ',   emoji: '☀️', cat: 'nature' },
+  { word: 'Fish',    heWord: 'דג',         emoji: '🐟', cat: 'animals' },
+  { word: 'Bird',    heWord: 'ציפור',      heSpeech: 'צִיפּוֹר',  emoji: '🐦', cat: 'animals' },
+  { word: 'Tree',    heWord: 'עץ',         emoji: '🌳', cat: 'nature' },
+  { word: 'Book',    heWord: 'ספר',        emoji: '📚', cat: 'objects' },
+  { word: 'Cake',    heWord: 'עוגה',       emoji: '🎂', cat: 'food' },
+  { word: 'Duck',    heWord: 'ברווז',      heSpeech: 'בַּרְוָז',  emoji: '🦆', cat: 'animals' },
+  { word: 'Bear',    heWord: 'דוב',        emoji: '🐻', cat: 'animals' },
+  { word: 'Cat',     heWord: 'חתול',       emoji: '🐱', cat: 'animals' },
+  { word: 'Bee',     heWord: 'דבורה',      heSpeech: 'דְּבוֹרָה', emoji: '🐝', cat: 'animals' },
+  { word: 'Cow',     heWord: 'פרה',        heSpeech: 'פָּרָה',    emoji: '🐮', cat: 'animals' },
+  { word: 'Star',    heWord: 'כוכב',       heSpeech: 'כּוֹכָב',   emoji: '⭐', cat: 'nature' },
+  { word: 'Moon',    heWord: 'ירח',        heSpeech: 'יָרֵחַ',    emoji: '🌙', cat: 'nature' },
+  { word: 'Egg',     heWord: 'ביצה',       heSpeech: 'בֵּיצָה',   emoji: '🥚', cat: 'food' },
+  { word: 'Milk',    heWord: 'חלב',        heSpeech: 'חָלָב',     emoji: '🥛', cat: 'food' },
+  { word: 'Key',     heWord: 'מפתח',       heSpeech: 'מַפְתֵּחַ', emoji: '🔑', cat: 'objects' },
+  { word: 'Bus',     heWord: 'אוטובוס',    emoji: '🚌', cat: 'vehicles' },
+  { word: 'Ship',    heWord: 'ספינה',      emoji: '🚢', cat: 'vehicles' },
+  { word: 'Frog',    heWord: 'צפרדע',      emoji: '🐸', cat: 'animals' },
+  { word: 'Rabbit',  heWord: 'ארנב',       emoji: '🐰', cat: 'animals' },
+  { word: 'Hen',     heWord: 'תרנגולת',    emoji: '🐔', cat: 'animals' },
+  { word: 'Corn',    heWord: 'תירס',       emoji: '🌽', cat: 'food' },
+  { word: 'Bed',     heWord: 'מיטה',       emoji: '🛏️', cat: 'objects' },
 ];
 
 const WINS_TO_WIN = 5;
@@ -47,16 +47,20 @@ function shuffle(arr) {
   return a;
 }
 
+// ── Sounds ───────────────────────────────────────────────────────────────────
+
+// 3 ascending chomps instead of 2 flat beeps
 function playNomSound() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [0, 0.2].forEach(offset => {
+    [0, 0.18, 0.36].forEach((offset, i) => {
+      const freq = [550, 650, 780][i];
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(550, ctx.currentTime + offset);
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + offset);
       osc.frequency.exponentialRampToValueAtTime(90, ctx.currentTime + offset + 0.14);
       gain.gain.setValueAtTime(0.55, ctx.currentTime + offset);
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + 0.14);
@@ -83,17 +87,23 @@ function playBlehSound() {
   } catch (e) {}
 }
 
-function playFeedMeVoice() {
+// Monster's personality voice — always English TTS, low funny pitch
+// Used for sentences ("I want the Apple!"), not the learning word itself
+function speakMonsterVoice(text, onEnd) {
+  if (!text) { if (onEnd) onEnd(); return; }
   try {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
-      const utter = new SpeechSynthesisUtterance('Feed me!');
-      utter.pitch = 0.1;
-      utter.rate = 0.55;
-      utter.volume = 1;
-      window.speechSynthesis.speak(utter);
-    }
-  } catch (e) {}
+      const u = new SpeechSynthesisUtterance(text);
+      u.pitch = 0.4;
+      u.rate = 0.72;
+      u.volume = 1;
+      u.lang = 'en-US';
+      if (onEnd) u.onend = onEnd;
+      u.onerror = () => { if (onEnd) onEnd(); };
+      window.speechSynthesis.speak(u);
+    } else if (onEnd) onEnd();
+  } catch (e) { if (onEnd) onEnd(); }
 }
 
 export default function FeedTheMonster({ onSuccess }) {
@@ -106,16 +116,18 @@ export default function FeedTheMonster({ onSuccess }) {
   const [wrongCardId, setWrongCardId] = useState(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  // drag state: { card, x, y } or null
   const [dragState, setDragState] = useState(null);
   const [isOverMonster, setIsOverMonster] = useState(false);
+  // 'yummy' | 'burp' | 'celebrate' | null — overlaid on top of the feedme bubble
+  const [extraBubble, setExtraBubble] = useState(null);
+  const [starEyes, setStarEyes] = useState(false);
 
   const deckRef = useRef(shuffle([...WORD_POOL]));
   const deckIndexRef = useRef(0);
   const lastTargetRef = useRef(null);
-  const dragStateRef = useRef(null);      // mirrors dragState for use inside effects
+  const dragStateRef = useRef(null);
   const monsterAreaRef = useRef(null);
-  const handleCardDropRef = useRef(null); // always-fresh ref to handleCardDrop
+  const handleCardDropRef = useRef(null);
   const feedMeTimerRef = useRef(null);
   const phaseRef = useRef('idle');
 
@@ -135,20 +147,27 @@ export default function FeedTheMonster({ onSuccess }) {
     return word;
   }, []);
 
+  // Same-category foils first; falls back to cross-category if category is too small
+  const getFoils = useCallback((tgt) => {
+    const sameCat = WORD_POOL.filter(w => w.cat === tgt.cat && w.word !== tgt.word);
+    if (sameCat.length >= 3) return shuffle(sameCat).slice(0, 3);
+    const crossCat = WORD_POOL.filter(w => w.cat !== tgt.cat && w.word !== tgt.word);
+    return [...shuffle(sameCat), ...shuffle(crossCat)].slice(0, 3);
+  }, []);
+
   const scheduleFeedMe = useCallback(() => {
     clearTimeout(feedMeTimerRef.current);
     feedMeTimerRef.current = setTimeout(() => {
       if (phaseRef.current !== 'asking') return;
       setMonsterState('feedme');
-      playFeedMeVoice();
+      speakMonsterVoice('Feed me!');
       feedMeTimerRef.current = setTimeout(() => {
         if (phaseRef.current === 'asking') {
           setMonsterState('asking');
-          // repeat after a pause
           feedMeTimerRef.current = setTimeout(() => {
             if (phaseRef.current === 'asking') {
               setMonsterState('feedme');
-              playFeedMeVoice();
+              speakMonsterVoice('Feed me!');
               feedMeTimerRef.current = setTimeout(() => {
                 if (phaseRef.current === 'asking') setMonsterState('asking');
               }, 2500);
@@ -162,25 +181,41 @@ export default function FeedTheMonster({ onSuccess }) {
   const startRound = useCallback(() => {
     clearTimeout(feedMeTimerRef.current);
     const newTarget = getNextWord();
-    const foils = shuffle(WORD_POOL.filter(w => w.word !== newTarget.word)).slice(0, 3);
+    const foils = getFoils(newTarget);
     const roundCards = shuffle([newTarget, ...foils]).map((w, i) => ({ ...w, id: i }));
 
     setTarget(newTarget);
     setCards(roundCards);
     setFlyingCardId(null);
     setWrongCardId(null);
-    setMonsterState('asking');
-    setPhase('asking');
-    setIsSpeaking(true);
+    setExtraBubble(null);
+    setStarEyes(false);
+    // thinking phase blocks dragging for 0.4s — creates anticipation
+    setMonsterState('thinking');
+    setPhase('thinking');
+    setIsSpeaking(false);
 
     setTimeout(() => {
-      const text = lang === 'he' ? (newTarget.heSpeech || newTarget.heWord) : newTarget.word;
-      speak(text, lang, () => {
-        setIsSpeaking(false);
-        scheduleFeedMe();
-      });
-    }, 350);
-  }, [lang, getNextWord, scheduleFeedMe]);
+      setMonsterState('asking');
+      setPhase('asking');
+      setIsSpeaking(true);
+
+      if (lang === 'he') {
+        // Hebrew: just the word — uses custom audio for correct pronunciation
+        const text = newTarget.heSpeech || newTarget.heWord;
+        speak(text, lang, () => {
+          setIsSpeaking(false);
+          scheduleFeedMe();
+        });
+      } else {
+        // English: monster speaks a full sentence; the word is embedded and emphasized
+        speakMonsterVoice(`I want the ${newTarget.word}!`, () => {
+          setIsSpeaking(false);
+          scheduleFeedMe();
+        });
+      }
+    }, 400);
+  }, [lang, getNextWord, getFoils, scheduleFeedMe]);
 
   useEffect(() => {
     const t = setTimeout(startRound, 600);
@@ -200,15 +235,35 @@ export default function FeedTheMonster({ onSuccess }) {
       setIsSpeaking(false);
       playNomSound();
 
+      // Yummy bubble appears immediately on correct drop
+      setExtraBubble('yummy');
+      setTimeout(() => setExtraBubble(null), 1100);
+
+      const newCount = correctCount + 1;
+
       setTimeout(() => {
         const text = lang === 'he' ? (target.heSpeech || target.heWord) : target.word;
         setIsSpeaking(true);
+        // Speak the word cleanly (custom audio fires here for Hebrew)
         speak(text, lang, () => {
           setIsSpeaking(false);
-          const newCount = correctCount + 1;
           setCorrectCount(newCount);
+
           if (newCount >= WINS_TO_WIN) {
-            onSuccess();
+            // Full celebration before handing off
+            setMonsterState('celebrating');
+            setStarEyes(true);
+            setExtraBubble('celebrate');
+            speakMonsterVoice("Yay! I'm full! Thank you!", () => {
+              setTimeout(onSuccess, 500);
+            });
+          } else if (Math.random() < 0.15) {
+            // Burp micro-event (~1 in 7 correct answers)
+            setExtraBubble('burp');
+            speakMonsterVoice('Burp! Excuse me!', () => {
+              setExtraBubble(null);
+              setTimeout(startRound, 300);
+            });
           } else {
             setTimeout(startRound, 350);
           }
@@ -237,7 +292,6 @@ export default function FeedTheMonster({ onSuccess }) {
   // Keep handleCardDrop ref fresh every render
   handleCardDropRef.current = handleCardDrop;
 
-  // Drag start — pointerdown on a card
   const handlePointerDown = useCallback((e, card) => {
     if (phaseRef.current !== 'asking') return;
     e.preventDefault();
@@ -248,7 +302,7 @@ export default function FeedTheMonster({ onSuccess }) {
     const state = { card, x: point.clientX, y: point.clientY };
     dragStateRef.current = state;
     setDragState(state);
-    setMonsterState('asking'); // snap out of feedme if active
+    setMonsterState('asking');
   }, []);
 
   // Global drag listeners — attach only while dragging
@@ -289,9 +343,7 @@ export default function FeedTheMonster({ onSuccess }) {
         const hit =
           clientX >= rect.left && clientX <= rect.right &&
           clientY >= rect.top  && clientY <= rect.bottom;
-        if (hit) {
-          handleCardDropRef.current?.(card);
-        }
+        if (hit) handleCardDropRef.current?.(card);
       }
     };
 
@@ -319,15 +371,28 @@ export default function FeedTheMonster({ onSuccess }) {
 
   const labelFor = (w) => lang === 'he' ? w.heWord : w.word;
 
+  // When a card hovers over the monster during asking, monster reacts with surprise
+  const effectiveMonsterState =
+    (phase === 'asking' && isOverMonster) ? 'surprised' : monsterState;
+
   const mouthState =
-    isSpeaking                       ? 'talking'  :
-    monsterState === 'asking'        ? 'open'     :
-    monsterState === 'feedme'        ? 'open'     :
-    monsterState === 'eating'        ? 'chomp'    :
-    monsterState === 'rejecting'     ? 'bleh'     : 'closed';
+    isSpeaking                                      ? 'talking'  :
+    effectiveMonsterState === 'thinking'            ? 'closed'   :
+    effectiveMonsterState === 'surprised'           ? 'open'     :
+    effectiveMonsterState === 'asking'              ? 'open'     :
+    effectiveMonsterState === 'feedme'              ? 'open'     :
+    effectiveMonsterState === 'celebrating'         ? 'open'     :
+    effectiveMonsterState === 'eating'              ? 'chomp'    :
+    effectiveMonsterState === 'rejecting'           ? 'bleh'     : 'closed';
 
   const grabbing = dragState !== null;
   const grabbedCardId = dragState?.card?.id;
+
+  const BUBBLE_TEXT = {
+    yummy:     'Yummy! 😋',
+    burp:      'Burp! 🤭',
+    celebrate: 'Yay! 🎉',
+  };
 
   return (
     <div className="ftm-root">
@@ -343,15 +408,23 @@ export default function FeedTheMonster({ onSuccess }) {
         className={`ftm-monster-area${isOverMonster ? ' ftm-monster-area--target' : ''}`}
         ref={monsterAreaRef}
       >
-        <div className={`ftm-monster ftm-monster--${monsterState}`}>
+        <div className={`ftm-monster ftm-monster--${effectiveMonsterState}`}>
           <div className="ftm-horns">
             <div className="ftm-horn ftm-horn--left" />
             <div className="ftm-horn ftm-horn--right" />
           </div>
           <div className="ftm-body">
             <div className="ftm-eyes">
-              <div className="ftm-eye"><div className="ftm-pupil" /></div>
-              <div className="ftm-eye"><div className="ftm-pupil" /></div>
+              <div className="ftm-eye">
+                {starEyes
+                  ? <span className="ftm-star-eye">⭐</span>
+                  : <div className="ftm-pupil" />}
+              </div>
+              <div className="ftm-eye">
+                {starEyes
+                  ? <span className="ftm-star-eye">⭐</span>
+                  : <div className="ftm-pupil" />}
+              </div>
             </div>
             <div className={`ftm-mouth ftm-mouth--${mouthState}`}>
               {(mouthState === 'open' || mouthState === 'chomp' || mouthState === 'talking') && (
@@ -368,7 +441,13 @@ export default function FeedTheMonster({ onSuccess }) {
             <div className="ftm-arm ftm-arm--left" />
             <div className="ftm-arm ftm-arm--right" />
           </div>
-          {monsterState === 'feedme' && (
+
+          {/* Extra bubbles (yummy, burp, celebrate) take priority over feedme */}
+          {extraBubble ? (
+            <div className={`ftm-speech-bubble ftm-speech-bubble--${extraBubble}`}>
+              {BUBBLE_TEXT[extraBubble]}
+            </div>
+          ) : monsterState === 'feedme' && (
             <div className="ftm-speech-bubble">Feed me!</div>
           )}
         </div>

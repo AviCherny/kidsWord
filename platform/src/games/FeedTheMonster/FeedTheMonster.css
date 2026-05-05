@@ -527,3 +527,117 @@
   from { transform: translate(-50%, -50%) scale(0.85) rotate(-4deg); opacity: 0.5; }
   to   { transform: translate(-50%, -50%) scale(1.12) rotate(-4deg); opacity: 0.92; }
 }
+
+/* ── Thinking state ─────────────────────────────────────────────────────────
+   Monster pauses 0.4s before speaking — creates "what does it want?" moment */
+
+@keyframes ftm-think {
+  0%, 100% { transform: rotate(0deg); }
+  50%       { transform: rotate(-3deg); }
+}
+
+.ftm-monster--thinking {
+  animation: ftm-think 1.2s ease-in-out infinite;
+}
+
+/* Left arm raises like thinking pose; right stays neutral */
+.ftm-monster--thinking .ftm-arm--left {
+  animation: none;
+  transform: rotate(-65deg) translateY(-28px);
+  transition: transform 0.25s ease;
+}
+.ftm-monster--thinking .ftm-arm--right {
+  animation: none;
+  transform: rotate(-20deg) translateY(-10px);
+  transition: transform 0.25s ease;
+}
+
+/* Eyes look up-left while thinking */
+.ftm-monster--thinking .ftm-pupil {
+  transform: translate(-3px, -4px);
+  transition: transform 0.25s ease;
+}
+
+/* ── Surprised state ─────────────────────────────────────────────────────────
+   Triggers when a dragged card hovers over the monster */
+
+@keyframes ftm-surprise-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.12); }
+  100% { transform: scale(1.05); }
+}
+
+.ftm-monster--surprised {
+  animation: ftm-surprise-pop 0.25s ease-out forwards;
+}
+
+/* Eyes widen */
+.ftm-monster--surprised .ftm-eye {
+  transform: scale(1.35);
+  transition: transform 0.15s ease;
+}
+
+/* Arms reach fast — hungry for it! (reuses existing reach keyframes at 0.4s) */
+.ftm-monster--surprised .ftm-arm--left  { animation: ftm-reach-left  0.4s ease-in-out infinite; }
+.ftm-monster--surprised .ftm-arm--right { animation: ftm-reach-right 0.4s ease-in-out infinite; }
+
+/* ── Celebrating state ───────────────────────────────────────────────────────
+   Plays on the final correct answer before onSuccess() */
+
+@keyframes ftm-celebrate {
+  0%, 100% { transform: translateY(0)   scale(1)    rotate(0deg); }
+  20%       { transform: translateY(-18px) scale(1.12) rotate(-6deg); }
+  40%       { transform: translateY(0)   scale(1)    rotate(0deg); }
+  60%       { transform: translateY(-12px) scale(1.09) rotate(6deg); }
+  80%       { transform: translateY(0)   scale(1)    rotate(0deg); }
+}
+
+.ftm-monster--celebrating {
+  animation: ftm-celebrate 0.55s ease-in-out infinite;
+}
+
+/* Arms wave at double speed */
+.ftm-monster--celebrating .ftm-arm--left  { animation: ftm-wave-left  0.4s ease-in-out infinite; }
+.ftm-monster--celebrating .ftm-arm--right { animation: ftm-wave-right 0.4s ease-in-out infinite; }
+
+/* ── Star eyes ──────────────────────────────────────────────────────────────
+   Shown in place of the pupil div during celebration */
+
+.ftm-star-eye {
+  font-size: 22px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Speech bubble variants ─────────────────────────────────────────────────
+   Base style stays on .ftm-speech-bubble; color overrides per type */
+
+.ftm-speech-bubble--yummy {
+  border-color: #e65100;
+  color: #bf360c;
+  background: #fff3e0;
+  animation: ftm-bubble-pop 0.2s ease-out;
+}
+.ftm-speech-bubble--yummy::before { border-right-color: #e65100; }
+.ftm-speech-bubble--yummy::after  { border-right-color: #fff3e0; }
+
+.ftm-speech-bubble--burp {
+  border-color: #f9a825;
+  color: #e65100;
+  background: #fffde7;
+  animation: ftm-bubble-pop 0.2s ease-out;
+}
+.ftm-speech-bubble--burp::before { border-right-color: #f9a825; }
+.ftm-speech-bubble--burp::after  { border-right-color: #fffde7; }
+
+.ftm-speech-bubble--celebrate {
+  border-color: #fdd835;
+  color: #e65100;
+  background: #fffde7;
+  font-size: 18px;
+  animation: ftm-bubble-pop 0.2s ease-out;
+}
+.ftm-speech-bubble--celebrate::before { border-right-color: #fdd835; }
+.ftm-speech-bubble--celebrate::after  { border-right-color: #fffde7; }
