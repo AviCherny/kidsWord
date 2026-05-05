@@ -56,14 +56,6 @@ const CATEGORIES = [
         bg: 'linear-gradient(145deg, #2e7d32, #66bb6a)',
         glow: 'rgba(46,125,50,0.4)',
       },
-      {
-        id: 'wordrace',
-        emoji: '🏎️',
-        nameKey: 'wordRaceName',
-        descKey: 'wordRaceDesc',
-        bg: 'linear-gradient(145deg, #1a237e, #5c6bc0)',
-        glow: 'rgba(26,35,126,0.4)',
-      },
     ],
   },
   {

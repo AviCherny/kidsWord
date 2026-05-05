@@ -15,7 +15,6 @@ import NumberTrain from './games/NumberTrain';
 import ShapeSorter from './games/ShapeSorter';
 import LegoBuilder from './games/LegoBuilder';
 import LetterMatch from './games/LetterMatch';
-import WordRace from './games/WordRace';
 import PicturePuzzle from './games/PicturePuzzle';
 import BubblePop from './games/BubblePop';
 import RescueDog from './games/RescueDog';
@@ -36,7 +35,6 @@ const GAME_COMPONENTS = {
   social: SocialSkills,
   shooter: WordShooter,
   lettermatch: LetterMatch,
-  wordrace: WordRace,
   picturepuzzle: PicturePuzzle,
   bubblepop: BubblePop,
   pattern: PatternGame,
@@ -106,10 +104,6 @@ const SHARED_DIFFICULTY_GAMES = {
   },
   pattern: {
     settingsKey: 'pattern',
-    ...createDifficultyConfig(),
-  },
-  wordrace: {
-    settingsKey: 'wordrace',
     ...createDifficultyConfig(),
   },
   picturepuzzle: {

@@ -101,27 +101,6 @@ const CUSTOM_AUDIO = {
   'מחבת':    'Pan.m4a',
   'עט':      'Pen.m4a',
 
-  // English words used by WordRace
-  elephant: 'Elephant.m4a',
-  dog: 'Dog.m4a',
-  cat: 'Cat.m4a',
-  fish: 'Fish.m4a',
-  duck: 'Duck.m4a',
-  bear: 'Bear.m4a',
-  frog: 'Frog.m4a',
-  tiger: 'Tiger.m4a',
-  rabbit: 'Rabbit.m4a',
-  monkey: 'Monkey.m4a',
-  turtle: 'Turtle.m4a',
-  apple: 'Apple.m4a',
-  cake: 'Cake.m4a',
-  rocket: 'Rocket.m4a',
-  train: 'Train.m4a',
-  ball: 'Ball.m4a',
-  drum: 'Drum.m4a',
-  hat: 'Hat.m4a',
-  bird: 'Bird.m4a',
-  cow: 'Cow.m4a',
 };
 
 // Track the currently playing audio element so we can stop it
