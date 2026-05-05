@@ -2,33 +2,39 @@ import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { STICKERS, TOTAL_STICKERS } from '../data/stickers';
 import { CANDY, TOTAL_CANDY } from '../data/candy';
+import { TOYS, TOTAL_TOYS } from '../data/toys';
 
-export default function StickerCollection({ earnedIds, earnedCandyIds = [], onBack }) {
+export default function StickerCollection({ earnedIds, earnedCandyIds = [], earnedToyIds = [], onBack }) {
   const { lang } = useLanguage();
   const dir = lang === 'he' ? 'rtl' : 'ltr';
   const [tab, setTab] = useState('stickers');
 
-  const earnedCount = earnedIds.filter(id => STICKERS.some(s => s.id === id)).length;
+  const earnedCount     = earnedIds.filter(id => STICKERS.some(s => s.id === id)).length;
   const earnedCandyCount = earnedCandyIds.filter(id => CANDY.some(c => c.id === id)).length;
+  const earnedToyCount  = earnedToyIds.filter(id => TOYS.some(t => t.id === id)).length;
 
   const backBtn  = lang === 'he' ? '→ חזרה' : '← Back';
   const title    = lang === 'he' ? '⭐ האוסף שלי' : '⭐ My Collection';
 
   const stickerTabLabel = lang === 'he' ? '🌿 מדבקות' : '🌿 Stickers';
   const candyTabLabel   = lang === 'he' ? '🍭 ממתקים' : '🍭 Candy';
+  const toysTabLabel    = lang === 'he' ? '🚗 צעצועים' : '🚗 Toys';
   const motivate = lang === 'he' ? '🎁 פריט חדש מחכה לך אחרי כל משחק!' : '🎁 A new item waits after every game!';
 
-  const isStickers = tab === 'stickers';
-  const items       = isStickers ? STICKERS : CANDY;
-  const earnedList  = isStickers ? earnedIds : earnedCandyIds;
-  const total       = isStickers ? TOTAL_STICKERS : TOTAL_CANDY;
-  const earned      = isStickers ? earnedCount : earnedCandyCount;
-  const progress    = isStickers
+  const items      = tab === 'stickers' ? STICKERS : tab === 'candy' ? CANDY : TOYS;
+  const earnedList = tab === 'stickers' ? earnedIds : tab === 'candy' ? earnedCandyIds : earnedToyIds;
+  const total      = tab === 'stickers' ? TOTAL_STICKERS : tab === 'candy' ? TOTAL_CANDY : TOTAL_TOYS;
+  const earned     = tab === 'stickers' ? earnedCount : tab === 'candy' ? earnedCandyCount : earnedToyCount;
+  const progress   = tab === 'stickers'
     ? (lang === 'he' ? `${earned} / ${total} מדבקות יער` : `${earned} / ${total} forest stickers`)
-    : (lang === 'he' ? `${earned} / ${total} ממתקים`     : `${earned} / ${total} candies`);
-  const complete    = isStickers
+    : tab === 'candy'
+    ? (lang === 'he' ? `${earned} / ${total} ממתקים`     : `${earned} / ${total} candies`)
+    : (lang === 'he' ? `${earned} / ${total} צעצועים`    : `${earned} / ${total} toys`);
+  const complete   = tab === 'stickers'
     ? (lang === 'he' ? '🎉 אספת את כל המדבקות!' : '🎉 You collected them all!')
-    : (lang === 'he' ? '🎉 אספת את כל הממתקים!' : '🎉 You collected all the candy!');
+    : tab === 'candy'
+    ? (lang === 'he' ? '🎉 אספת את כל הממתקים!' : '🎉 You collected all the candy!')
+    : (lang === 'he' ? '🎉 אספת את כל הצעצועים!' : '🎉 You collected all the toys!');
 
   return (
     <div className="sticker-collection" dir={dir}>
@@ -52,6 +58,12 @@ export default function StickerCollection({ earnedIds, earnedCandyIds = [], onBa
           onClick={() => setTab('candy')}
         >
           {candyTabLabel}
+        </button>
+        <button
+          className={`sticker-collection-tab${tab === 'toys' ? ' sticker-collection-tab--active' : ''}`}
+          onClick={() => setTab('toys')}
+        >
+          {toysTabLabel}
         </button>
       </div>
 

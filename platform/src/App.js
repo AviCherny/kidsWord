@@ -24,9 +24,10 @@ import Sonic from './games/Sonic';
 import PawPatrol from './games/PawPatrol';
 import ColorBook from './games/ColorBook';
 import FeedTheMonster from './games/FeedTheMonster';
-import { getEarnedStickers, earnSticker, migrateLegacyStickers, getEarnedCandy, earnCandy } from './lib/storage';
+import { getEarnedStickers, earnSticker, migrateLegacyStickers, getEarnedCandy, earnCandy, getEarnedToys, earnToy } from './lib/storage';
 import { getNextSticker } from './data/stickers';
 import { getNextCandy } from './data/candy';
+import { getNextToy } from './data/toys';
 import { getSettings, getGameDifficulty, saveGameDifficulty } from './lib/settings';
 import { stopSpeaking } from './speak';
 
@@ -143,6 +144,7 @@ export default function App() {
   const [stickerReveal, setStickerReveal] = useState(null);
   const [earnedIds, setEarnedIds] = useState([]);
   const [earnedCandyIds, setEarnedCandyIds] = useState([]);
+  const [earnedToyIds, setEarnedToyIds] = useState([]);
   const [appSettings, setAppSettings] = useState(getSettings);
   const [showDifficultyMenu, setShowDifficultyMenu] = useState(false);
   // Track total wins to alternate sticker / candy
@@ -152,10 +154,12 @@ export default function App() {
     migrateLegacyStickers();
     const stickers = getEarnedStickers();
     const candy = getEarnedCandy();
+    const toys = getEarnedToys();
     setEarnedIds(stickers);
     setEarnedCandyIds(candy);
-    // Restore win parity from saved counts
-    totalWinsRef.current = stickers.length + candy.length;
+    setEarnedToyIds(toys);
+    // Restore win count from saved totals
+    totalWinsRef.current = stickers.length + candy.length + toys.length;
   }, []);
 
   useEffect(() => {
@@ -164,9 +168,9 @@ export default function App() {
 
   const handleSuccess = useCallback(() => {
     totalWinsRef.current += 1;
-    const isCandy = totalWinsRef.current % 2 === 0;
+    const cycle = totalWinsRef.current % 3; // 1→sticker, 2→candy, 0→toy
 
-    if (isCandy) {
+    if (cycle === 2) {
       const current = getEarnedCandy();
       const item = getNextCandy(current);
       const isNew = !current.includes(item.id);
@@ -174,6 +178,14 @@ export default function App() {
       const updated = getEarnedCandy();
       setEarnedCandyIds(updated);
       setStickerReveal({ sticker: item, earnedCount: updated.length, isNew, type: 'candy' });
+    } else if (cycle === 0) {
+      const current = getEarnedToys();
+      const item = getNextToy(current);
+      const isNew = !current.includes(item.id);
+      earnToy(item.id);
+      const updated = getEarnedToys();
+      setEarnedToyIds(updated);
+      setStickerReveal({ sticker: item, earnedCount: updated.length, isNew, type: 'toy' });
     } else {
       const current = getEarnedStickers();
       const sticker = getNextSticker(current);
@@ -224,6 +236,7 @@ export default function App() {
         <StickerCollection
           earnedIds={earnedIds}
           earnedCandyIds={earnedCandyIds}
+          earnedToyIds={earnedToyIds}
           onBack={() => setShowCollection(false)}
         />
       </div>

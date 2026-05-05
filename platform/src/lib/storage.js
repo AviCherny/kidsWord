@@ -1,5 +1,6 @@
 const KEY = 'kids-stickers-earned';
 const CANDY_KEY = 'kids-candy-earned';
+const TOYS_KEY = 'kids-toys-earned';
 
 export function getEarnedStickers() {
   try {
@@ -28,6 +29,21 @@ export function earnCandy(id) {
   const current = getEarnedCandy();
   if (!current.includes(id)) {
     localStorage.setItem(CANDY_KEY, JSON.stringify([...current, id]));
+  }
+}
+
+export function getEarnedToys() {
+  try {
+    return JSON.parse(localStorage.getItem(TOYS_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+export function earnToy(id) {
+  const current = getEarnedToys();
+  if (!current.includes(id)) {
+    localStorage.setItem(TOYS_KEY, JSON.stringify([...current, id]));
   }
 }
 
