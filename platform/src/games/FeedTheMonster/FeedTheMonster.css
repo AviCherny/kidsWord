@@ -46,6 +46,10 @@
   padding: 12px 24px 16px;
   border-radius: 28px;
   transition: background 0.2s, box-shadow 0.2s;
+  /* Fixed height so the bobbing monster never shifts the cards below */
+  min-height: 260px;
+  justify-content: center;
+  overflow: visible;
 }
 
 /* Highlighted when a card is dragged over it */
@@ -62,13 +66,15 @@
   position: relative;
 }
 
+/* ── Monster-level animations (whole monster moves as one unit) ── */
+
 /* Idle: nothing; Asking: gentle bob */
 @keyframes ftm-bob {
   0%, 100% { transform: translateY(0); }
   50%       { transform: translateY(-7px); }
 }
 
-.ftm-monster--asking .ftm-body {
+.ftm-monster--asking {
   animation: ftm-bob 1.3s ease-in-out infinite;
 }
 
@@ -80,7 +86,7 @@
   100% { transform: scale(1) rotate(0deg); }
 }
 
-.ftm-monster--eating .ftm-body {
+.ftm-monster--eating {
   animation: ftm-eat-bounce 0.45s ease forwards;
 }
 
@@ -93,12 +99,12 @@
   75%       { transform: translateX(9px) rotate(2deg); }
 }
 
-.ftm-monster--rejecting .ftm-body {
+.ftm-monster--rejecting {
   animation: ftm-shake-head 0.65s ease;
 }
 
-/* Feed me: excited shake/jump */
-@keyframes ftm-feedme-body {
+/* Feed me: excited jump */
+@keyframes ftm-feedme-bounce {
   0%, 100% { transform: translateY(0) scale(1); }
   20%       { transform: translateY(-10px) scale(1.05); }
   40%       { transform: translateY(0) scale(1); }
@@ -106,8 +112,8 @@
   80%       { transform: translateY(0) scale(1); }
 }
 
-.ftm-monster--feedme .ftm-body {
-  animation: ftm-feedme-body 1.0s ease-in-out infinite;
+.ftm-monster--feedme {
+  animation: ftm-feedme-bounce 1.0s ease-in-out infinite;
 }
 
 /* Horns */
@@ -309,7 +315,7 @@
   width: 210px;
   margin-top: -30px;
   position: relative;
-  z-index: -1;
+  z-index: 0;
 }
 
 .ftm-arm {
@@ -323,7 +329,7 @@
 .ftm-arm--left  { transform: rotate(20deg) translateY(-10px); }
 .ftm-arm--right { transform: rotate(-20deg) translateY(-10px); }
 
-/* Asking: arms wave */
+/* Asking: arms wave (independent of monster bob) */
 @keyframes ftm-wave-left {
   0%, 100% { transform: rotate(20deg) translateY(-10px); }
   50%       { transform: rotate(40deg) translateY(-16px); }
@@ -337,15 +343,15 @@
 .ftm-monster--asking .ftm-arm--left  { animation: ftm-wave-left  1.3s ease-in-out infinite; }
 .ftm-monster--asking .ftm-arm--right { animation: ftm-wave-right 1.3s ease-in-out infinite; }
 
-/* Feed me: arms reach way out and down toward the cards (begging) */
+/* Feed me: arms reach out and down toward cards (begging) */
 @keyframes ftm-reach-left {
   0%, 100% { transform: rotate(55deg) translateY(10px) scaleY(1.2); }
-  50%       { transform: rotate(70deg) translateY(18px) scaleY(1.3); }
+  50%       { transform: rotate(72deg) translateY(20px) scaleY(1.35); }
 }
 
 @keyframes ftm-reach-right {
   0%, 100% { transform: rotate(-55deg) translateY(10px) scaleY(1.2); }
-  50%       { transform: rotate(-70deg) translateY(18px) scaleY(1.3); }
+  50%       { transform: rotate(-72deg) translateY(20px) scaleY(1.35); }
 }
 
 .ftm-monster--feedme .ftm-arm--left  { animation: ftm-reach-left  0.7s ease-in-out infinite; }
