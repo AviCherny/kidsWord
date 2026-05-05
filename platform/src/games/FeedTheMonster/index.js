@@ -83,6 +83,19 @@ function playBlehSound() {
   } catch (e) {}
 }
 
+function playFeedMeVoice() {
+  try {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance('Feed me!');
+      utter.pitch = 0.1;
+      utter.rate = 0.55;
+      utter.volume = 1;
+      window.speechSynthesis.speak(utter);
+    }
+  } catch (e) {}
+}
+
 export default function FeedTheMonster({ onSuccess }) {
   const { lang } = useLanguage();
   const [phase, setPhase] = useState('idle');
@@ -92,14 +105,24 @@ export default function FeedTheMonster({ onSuccess }) {
   const [flyingCardId, setFlyingCardId] = useState(null);
   const [wrongCardId, setWrongCardId] = useState(null);
   const [correctCount, setCorrectCount] = useState(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  // drag state: { card, x, y } or null
+  const [dragState, setDragState] = useState(null);
+  const [isOverMonster, setIsOverMonster] = useState(false);
 
   const deckRef = useRef(shuffle([...WORD_POOL]));
   const deckIndexRef = useRef(0);
   const lastTargetRef = useRef(null);
+  const dragStateRef = useRef(null);      // mirrors dragState for use inside effects
+  const monsterAreaRef = useRef(null);
+  const handleCardDropRef = useRef(null); // always-fresh ref to handleCardDrop
+  const feedMeTimerRef = useRef(null);
+  const phaseRef = useRef('idle');
+
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   const getNextWord = useCallback(() => {
-    let word;
-    let tries = 0;
+    let word, tries = 0;
     do {
       if (deckIndexRef.current >= deckRef.current.length) {
         deckRef.current = shuffle([...WORD_POOL]);
@@ -112,7 +135,32 @@ export default function FeedTheMonster({ onSuccess }) {
     return word;
   }, []);
 
+  const scheduleFeedMe = useCallback(() => {
+    clearTimeout(feedMeTimerRef.current);
+    feedMeTimerRef.current = setTimeout(() => {
+      if (phaseRef.current !== 'asking') return;
+      setMonsterState('feedme');
+      playFeedMeVoice();
+      feedMeTimerRef.current = setTimeout(() => {
+        if (phaseRef.current === 'asking') {
+          setMonsterState('asking');
+          // repeat after a pause
+          feedMeTimerRef.current = setTimeout(() => {
+            if (phaseRef.current === 'asking') {
+              setMonsterState('feedme');
+              playFeedMeVoice();
+              feedMeTimerRef.current = setTimeout(() => {
+                if (phaseRef.current === 'asking') setMonsterState('asking');
+              }, 2500);
+            }
+          }, 3000);
+        }
+      }, 2500);
+    }, 3500);
+  }, []);
+
   const startRound = useCallback(() => {
+    clearTimeout(feedMeTimerRef.current);
     const newTarget = getNextWord();
     const foils = shuffle(WORD_POOL.filter(w => w.word !== newTarget.word)).slice(0, 3);
     const roundCards = shuffle([newTarget, ...foils]).map((w, i) => ({ ...w, id: i }));
@@ -123,12 +171,16 @@ export default function FeedTheMonster({ onSuccess }) {
     setWrongCardId(null);
     setMonsterState('asking');
     setPhase('asking');
+    setIsSpeaking(true);
 
     setTimeout(() => {
       const text = lang === 'he' ? (newTarget.heSpeech || newTarget.heWord) : newTarget.word;
-      speak(text, lang);
+      speak(text, lang, () => {
+        setIsSpeaking(false);
+        scheduleFeedMe();
+      });
     }, 350);
-  }, [lang, getNextWord]);
+  }, [lang, getNextWord, scheduleFeedMe]);
 
   useEffect(() => {
     const t = setTimeout(startRound, 600);
@@ -136,18 +188,23 @@ export default function FeedTheMonster({ onSuccess }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleCardTap = useCallback((card) => {
+  const handleCardDrop = useCallback((card) => {
     if (phase !== 'asking') return;
+    clearTimeout(feedMeTimerRef.current);
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 
     if (card.word === target.word) {
       setFlyingCardId(card.id);
       setMonsterState('eating');
       setPhase('correct');
+      setIsSpeaking(false);
       playNomSound();
 
       setTimeout(() => {
         const text = lang === 'he' ? (target.heSpeech || target.heWord) : target.word;
+        setIsSpeaking(true);
         speak(text, lang, () => {
+          setIsSpeaking(false);
           const newCount = correctCount + 1;
           setCorrectCount(newCount);
           if (newCount >= WINS_TO_WIN) {
@@ -168,23 +225,109 @@ export default function FeedTheMonster({ onSuccess }) {
         setMonsterState('asking');
         setPhase('asking');
         const text = lang === 'he' ? (target.heSpeech || target.heWord) : target.word;
-        speak(text, lang);
+        setIsSpeaking(true);
+        speak(text, lang, () => {
+          setIsSpeaking(false);
+          scheduleFeedMe();
+        });
       }, 950);
     }
-  }, [phase, target, lang, correctCount, onSuccess, startRound]);
+  }, [phase, target, lang, correctCount, onSuccess, startRound, scheduleFeedMe]);
+
+  // Keep handleCardDrop ref fresh every render
+  handleCardDropRef.current = handleCardDrop;
+
+  // Drag start — pointerdown on a card
+  const handlePointerDown = useCallback((e, card) => {
+    if (phaseRef.current !== 'asking') return;
+    e.preventDefault();
+    clearTimeout(feedMeTimerRef.current);
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+    const point = e.touches ? e.touches[0] : e;
+    const state = { card, x: point.clientX, y: point.clientY };
+    dragStateRef.current = state;
+    setDragState(state);
+    setMonsterState('asking'); // snap out of feedme if active
+  }, []);
+
+  // Global drag listeners — attach only while dragging
+  const isDragging = dragState !== null;
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const onMove = (e) => {
+      if (e.cancelable) e.preventDefault();
+      const point = e.touches ? e.touches[0] : e;
+      const { clientX, clientY } = point;
+
+      dragStateRef.current = dragStateRef.current
+        ? { ...dragStateRef.current, x: clientX, y: clientY }
+        : null;
+      setDragState(s => s ? { ...s, x: clientX, y: clientY } : null);
+
+      if (monsterAreaRef.current) {
+        const rect = monsterAreaRef.current.getBoundingClientRect();
+        setIsOverMonster(
+          clientX >= rect.left && clientX <= rect.right &&
+          clientY >= rect.top  && clientY <= rect.bottom
+        );
+      }
+    };
+
+    const onUp = (e) => {
+      const point = e.changedTouches ? e.changedTouches[0] : e;
+      const { clientX, clientY } = point;
+      const card = dragStateRef.current?.card;
+
+      dragStateRef.current = null;
+      setDragState(null);
+      setIsOverMonster(false);
+
+      if (card && monsterAreaRef.current) {
+        const rect = monsterAreaRef.current.getBoundingClientRect();
+        const hit =
+          clientX >= rect.left && clientX <= rect.right &&
+          clientY >= rect.top  && clientY <= rect.bottom;
+        if (hit) {
+          handleCardDropRef.current?.(card);
+        }
+      }
+    };
+
+    window.addEventListener('mousemove', onMove, { passive: false });
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchend', onUp);
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchend', onUp);
+    };
+  }, [isDragging]);
 
   const handleRepeat = useCallback(() => {
     if (!target || phase !== 'asking') return;
     const text = lang === 'he' ? (target.heSpeech || target.heWord) : target.word;
-    speak(text, lang);
-  }, [target, lang, phase]);
+    setIsSpeaking(true);
+    speak(text, lang, () => {
+      setIsSpeaking(false);
+      scheduleFeedMe();
+    });
+  }, [target, lang, phase, scheduleFeedMe]);
 
   const labelFor = (w) => lang === 'he' ? w.heWord : w.word;
 
   const mouthState =
-    monsterState === 'asking'    ? 'open'    :
-    monsterState === 'eating'    ? 'chomp'   :
-    monsterState === 'rejecting' ? 'bleh'    : 'closed';
+    isSpeaking                       ? 'talking'  :
+    monsterState === 'asking'        ? 'open'     :
+    monsterState === 'feedme'        ? 'open'     :
+    monsterState === 'eating'        ? 'chomp'    :
+    monsterState === 'rejecting'     ? 'bleh'     : 'closed';
+
+  const grabbing = dragState !== null;
+  const grabbedCardId = dragState?.card?.id;
 
   return (
     <div className="ftm-root">
@@ -196,7 +339,10 @@ export default function FeedTheMonster({ onSuccess }) {
       </div>
 
       {/* Monster */}
-      <div className="ftm-monster-area">
+      <div
+        className={`ftm-monster-area${isOverMonster ? ' ftm-monster-area--target' : ''}`}
+        ref={monsterAreaRef}
+      >
         <div className={`ftm-monster ftm-monster--${monsterState}`}>
           <div className="ftm-horns">
             <div className="ftm-horn ftm-horn--left" />
@@ -208,7 +354,7 @@ export default function FeedTheMonster({ onSuccess }) {
               <div className="ftm-eye"><div className="ftm-pupil" /></div>
             </div>
             <div className={`ftm-mouth ftm-mouth--${mouthState}`}>
-              {(mouthState === 'open' || mouthState === 'chomp') && (
+              {(mouthState === 'open' || mouthState === 'chomp' || mouthState === 'talking') && (
                 <div className="ftm-teeth">
                   <span className="ftm-tooth" />
                   <span className="ftm-tooth" />
@@ -222,6 +368,9 @@ export default function FeedTheMonster({ onSuccess }) {
             <div className="ftm-arm ftm-arm--left" />
             <div className="ftm-arm ftm-arm--right" />
           </div>
+          {monsterState === 'feedme' && (
+            <div className="ftm-speech-bubble">Feed me!</div>
+          )}
         </div>
 
         <button className="ftm-repeat-btn" onClick={handleRepeat} type="button" aria-label="Repeat word">
@@ -232,18 +381,34 @@ export default function FeedTheMonster({ onSuccess }) {
       {/* Cards */}
       <div className="ftm-cards">
         {cards.map(card => (
-          <button
+          <div
             key={card.id}
-            className={`ftm-card${flyingCardId === card.id ? ' ftm-card--flying' : ''}${wrongCardId === card.id ? ' ftm-card--wrong' : ''}`}
-            onClick={() => handleCardTap(card)}
-            disabled={phase !== 'asking'}
-            type="button"
+            className={[
+              'ftm-card',
+              flyingCardId === card.id  ? 'ftm-card--flying'   : '',
+              wrongCardId  === card.id  ? 'ftm-card--wrong'    : '',
+              grabbedCardId === card.id ? 'ftm-card--grabbed'  : '',
+            ].filter(Boolean).join(' ')}
+            onMouseDown={(e) => handlePointerDown(e, card)}
+            onTouchStart={(e) => handlePointerDown(e, card)}
+            style={{ cursor: grabbing && grabbedCardId === card.id ? 'grabbing' : 'grab' }}
           >
             <span className="ftm-card-emoji">{card.emoji}</span>
             <span className="ftm-card-label">{labelFor(card)}</span>
-          </button>
+          </div>
         ))}
       </div>
+
+      {/* Ghost card — follows finger/cursor while dragging */}
+      {dragState && (
+        <div
+          className="ftm-ghost-card"
+          style={{ left: dragState.x, top: dragState.y }}
+        >
+          <span className="ftm-card-emoji">{dragState.card.emoji}</span>
+          <span className="ftm-card-label">{labelFor(dragState.card)}</span>
+        </div>
+      )}
     </div>
   );
 }
