@@ -44,6 +44,8 @@ export const T = {
     pawPatrolDesc: 'בחר גור, רוץ וקפוץ כדי לתפוס את המילה הנכונה!',
     colorBookName: 'חוברת צביעה',
     colorBookDesc: 'בחר צבע וצבע את הציור',
+    feedMonsterName: 'האכל את המפלצת',
+    feedMonsterDesc: 'שמע מילה והאכל את המפלצת הרעבה!',
     // Category labels
     catLanguage: 'שפה ומילים',
     catLogic: 'חשיבה והיגיון',
@@ -148,6 +150,8 @@ export const T = {
     pawPatrolDesc: 'Pick a pup, run & jump to catch the right word!',
     colorBookName: 'Coloring Book',
     colorBookDesc: 'Pick a color and paint!',
+    feedMonsterName: 'Feed the Monster',
+    feedMonsterDesc: 'Hear a word and feed the hungry monster!',
     // Category labels
     catLanguage: 'Language & Words',
     catLogic: 'Logic & Thinking',

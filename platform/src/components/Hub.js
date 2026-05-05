@@ -56,6 +56,14 @@ const CATEGORIES = [
         bg: 'linear-gradient(145deg, #2e7d32, #66bb6a)',
         glow: 'rgba(46,125,50,0.4)',
       },
+      {
+        id: 'feedmonster',
+        emoji: '👾',
+        nameKey: 'feedMonsterName',
+        descKey: 'feedMonsterDesc',
+        bg: 'linear-gradient(145deg, #388e3c, #81c784)',
+        glow: 'rgba(56,142,60,0.4)',
+      },
     ],
   },
   {

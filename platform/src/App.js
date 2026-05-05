@@ -23,6 +23,7 @@ import PJMasks from './games/PJMasks';
 import Sonic from './games/Sonic';
 import PawPatrol from './games/PawPatrol';
 import ColorBook from './games/ColorBook';
+import FeedTheMonster from './games/FeedTheMonster';
 import { getEarnedStickers, earnSticker, migrateLegacyStickers, getEarnedCandy, earnCandy } from './lib/storage';
 import { getNextSticker } from './data/stickers';
 import { getNextCandy } from './data/candy';
@@ -47,6 +48,7 @@ const GAME_COMPONENTS = {
   sonic: Sonic,
   pawpatrol: PawPatrol,
   colorbook: ColorBook,
+  feedmonster: FeedTheMonster,
 };
 
 function createDifficultyConfig(title = 'Difficulty') {

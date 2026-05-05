@@ -1,0 +1,395 @@
+.ftm-root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100%;
+  padding: 16px 12px 20px;
+  background: linear-gradient(160deg, #c8f7c5 0%, #a8e6cf 40%, #dcedc8 100%);
+  box-sizing: border-box;
+  gap: 12px;
+  overflow: hidden;
+}
+
+/* ── Score ─────────────────────────────── */
+.ftm-score {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ftm-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: 3px solid rgba(255, 255, 255, 0.7);
+  transition: background 0.3s, transform 0.3s, box-shadow 0.3s;
+}
+
+.ftm-dot--filled {
+  background: #ffd600;
+  border-color: #f9a825;
+  box-shadow: 0 0 12px rgba(255, 214, 0, 0.7);
+  transform: scale(1.15);
+}
+
+/* ── Monster area ───────────────────────── */
+.ftm-monster-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* ── Monster ────────────────────────────── */
+.ftm-monster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Idle: nothing; Asking: gentle bob */
+@keyframes ftm-bob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-7px); }
+}
+
+.ftm-monster--asking .ftm-body {
+  animation: ftm-bob 1.3s ease-in-out infinite;
+}
+
+/* Eating: happy bounce */
+@keyframes ftm-eat-bounce {
+  0%   { transform: scale(1) rotate(0deg); }
+  25%  { transform: scale(1.13) rotate(-4deg); }
+  55%  { transform: scale(1.09) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+.ftm-monster--eating .ftm-body {
+  animation: ftm-eat-bounce 0.45s ease forwards;
+}
+
+/* Rejecting: head shake */
+@keyframes ftm-shake-head {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  15%       { transform: translateX(-14px) rotate(-4deg); }
+  35%       { transform: translateX(14px) rotate(4deg); }
+  55%       { transform: translateX(-9px) rotate(-2deg); }
+  75%       { transform: translateX(9px) rotate(2deg); }
+}
+
+.ftm-monster--rejecting .ftm-body {
+  animation: ftm-shake-head 0.65s ease;
+}
+
+/* Horns */
+.ftm-horns {
+  display: flex;
+  gap: 60px;
+  margin-bottom: -6px;
+  position: relative;
+  z-index: 1;
+}
+
+.ftm-horn {
+  width: 0;
+  height: 0;
+  border-left: 13px solid transparent;
+  border-right: 13px solid transparent;
+  border-bottom: 28px solid #2e7d32;
+  filter: drop-shadow(0 -2px 3px rgba(0,0,0,0.15));
+}
+
+/* Body */
+.ftm-body {
+  width: 175px;
+  background: linear-gradient(145deg, #66bb6a, #388e3c);
+  border-radius: 38px 38px 50px 50px;
+  box-shadow: 0 8px 28px rgba(56,142,60,0.45), inset 0 -5px 12px rgba(0,0,0,0.15), inset 0 3px 8px rgba(255,255,255,0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 0 20px;
+  gap: 14px;
+  position: relative;
+}
+
+/* Eyes */
+.ftm-eyes {
+  display: flex;
+  gap: 26px;
+}
+
+.ftm-eye {
+  width: 38px;
+  height: 38px;
+  background: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+}
+
+.ftm-pupil {
+  width: 17px;
+  height: 17px;
+  background: #1a1a1a;
+  border-radius: 50%;
+  position: relative;
+}
+
+.ftm-pupil::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 5px;
+  height: 5px;
+  background: white;
+  border-radius: 50%;
+}
+
+/* Rejecting: eyes become X */
+.ftm-monster--rejecting .ftm-pupil {
+  background: transparent;
+}
+
+.ftm-monster--rejecting .ftm-pupil::before,
+.ftm-monster--rejecting .ftm-pupil::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 3px;
+  background: #c62828;
+  border-radius: 2px;
+}
+
+.ftm-monster--rejecting .ftm-pupil::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.ftm-monster--rejecting .ftm-pupil::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 3px;
+}
+
+/* Mouth */
+.ftm-mouth {
+  width: 110px;
+  transition: height 0.12s ease, border-radius 0.12s ease;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.ftm-mouth--closed {
+  height: 14px;
+  background: #2d5016;
+  border-radius: 8px;
+}
+
+.ftm-mouth--open {
+  height: 50px;
+  background: #1a1a2e;
+  border-radius: 4px 4px 40px 40px;
+  border: 3px solid #2d5016;
+}
+
+/* Chomp: mouth rapidly slams shut */
+@keyframes ftm-chomp {
+  0%, 100% { height: 50px; border-radius: 4px 4px 40px 40px; }
+  40%       { height: 6px;  border-radius: 4px; }
+  70%       { height: 40px; border-radius: 4px 4px 35px 35px; }
+}
+
+.ftm-mouth--chomp {
+  height: 50px;
+  background: #1a1a2e;
+  border-radius: 4px 4px 40px 40px;
+  border: 3px solid #2d5016;
+  animation: ftm-chomp 0.14s ease-in-out 3 forwards;
+}
+
+.ftm-mouth--bleh {
+  height: 22px;
+  background: #b71c1c;
+  border-radius: 10px 10px 0 0;
+  border: 2px solid #7f0000;
+  overflow: visible;
+  align-items: center;
+}
+
+/* Teeth */
+.ftm-teeth {
+  display: flex;
+  gap: 4px;
+  padding-top: 0;
+  align-items: flex-start;
+}
+
+.ftm-tooth {
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 16px solid white;
+  filter: drop-shadow(0 2px 1px rgba(0,0,0,0.15));
+}
+
+/* Tongue */
+.ftm-tongue {
+  width: 36px;
+  height: 22px;
+  background: #e91e63;
+  border-radius: 0 0 20px 20px;
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+}
+
+/* Arms */
+.ftm-arms {
+  display: flex;
+  justify-content: space-between;
+  width: 210px;
+  margin-top: -30px;
+  position: relative;
+  z-index: -1;
+}
+
+.ftm-arm {
+  width: 28px;
+  height: 55px;
+  background: linear-gradient(145deg, #66bb6a, #388e3c);
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(56,142,60,0.35);
+}
+
+.ftm-arm--left  { transform: rotate(20deg) translateY(-10px); }
+.ftm-arm--right { transform: rotate(-20deg) translateY(-10px); }
+
+/* Asking: arms wave */
+@keyframes ftm-wave-left {
+  0%, 100% { transform: rotate(20deg) translateY(-10px); }
+  50%       { transform: rotate(40deg) translateY(-16px); }
+}
+
+@keyframes ftm-wave-right {
+  0%, 100% { transform: rotate(-20deg) translateY(-10px); }
+  50%       { transform: rotate(-40deg) translateY(-16px); }
+}
+
+.ftm-monster--asking .ftm-arm--left  { animation: ftm-wave-left  1.3s ease-in-out infinite; }
+.ftm-monster--asking .ftm-arm--right { animation: ftm-wave-right 1.3s ease-in-out infinite; }
+
+/* ── Repeat button ───────────────────── */
+.ftm-repeat-btn {
+  background: rgba(255,255,255,0.7);
+  border: none;
+  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ftm-repeat-btn:active { transform: scale(0.9); }
+
+/* ── Cards grid ─────────────────────── */
+.ftm-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  width: 100%;
+  max-width: 440px;
+  flex: 1;
+}
+
+.ftm-card {
+  background: white;
+  border: 3px solid #e0e0e0;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 8px;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s, border-color 0.12s;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  min-height: 110px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ftm-card:not(:disabled):active {
+  transform: scale(0.93);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.ftm-card:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.ftm-card-emoji {
+  font-size: 52px;
+  line-height: 1;
+  display: block;
+}
+
+.ftm-card-label {
+  font-size: 17px;
+  font-weight: 700;
+  color: #333;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+/* Card: flying to monster */
+@keyframes ftm-fly-up {
+  0%   { transform: scale(1) translateY(0);    opacity: 1; }
+  40%  { transform: scale(1.18) translateY(-70px);  opacity: 1; }
+  100% { transform: scale(0.1) translateY(-320px);  opacity: 0; }
+}
+
+.ftm-card--flying {
+  animation: ftm-fly-up 0.52s ease-in forwards;
+  pointer-events: none;
+  border-color: #66bb6a !important;
+}
+
+/* Card: wrong answer */
+@keyframes ftm-card-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  15%       { transform: translateX(-12px) rotate(-2deg); }
+  35%       { transform: translateX(12px)  rotate(2deg); }
+  55%       { transform: translateX(-8px)  rotate(-1deg); }
+  75%       { transform: translateX(8px)   rotate(1deg); }
+}
+
+.ftm-card--wrong {
+  animation: ftm-card-shake 0.55s ease;
+  border-color: #ef5350 !important;
+  background: #ffebee !important;
+}
