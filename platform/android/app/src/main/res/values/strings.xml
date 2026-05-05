@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Kids Word</string>
+    <string name="title_activity_main">Kids Word</string>
+    <string name="package_name">com.aviapp.kidsword</string>
+    <string name="custom_url_scheme">com.aviapp.kidsword</string>
+</resources>
