@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './FeedTheMonster.css';
 import { useLanguage } from '../../context/LanguageContext';
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { speak } from '../../speak';
+
+function isNative() {
+  try { return window.Capacitor && window.Capacitor.isNativePlatform(); } catch (e) { return false; }
+}
 
 const WORD_POOL = [
   { word: 'Apple',   heWord: 'תפוח',      emoji: '🍎', cat: 'food' },
@@ -91,6 +96,16 @@ function playBlehSound() {
 // Used for sentences ("I want the Apple!"), not the learning word itself
 function speakMonsterVoice(text, onEnd) {
   if (!text) { if (onEnd) onEnd(); return; }
+  if (isNative()) {
+    (async () => {
+      try { await TextToSpeech.stop(); } catch (e) {}
+      try {
+        await TextToSpeech.speak({ text, lang: 'en-US', rate: 0.72, pitch: 0.4, volume: 1.0 });
+      } catch (e) {}
+      if (onEnd) onEnd();
+    })();
+    return;
+  }
   try {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();

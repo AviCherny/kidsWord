@@ -1,3 +1,5 @@
+import { TextToSpeech } from '@capacitor-community/text-to-speech';
+
 // Custom audio overrides for words where recorded pronunciation is preferred over TTS
 // Key: the exact text passed to speak(), Value: filename in /audio/
 const CUSTOM_AUDIO = {
@@ -151,20 +153,13 @@ export function stopSpeaking() {
     try { window.speechSynthesis.cancel(); } catch (e) {}
   }
   // Stop Capacitor native TTS (used in APK builds)
-  try {
-    const tts = getCapacitorTTS();
-    if (tts) tts.stop().catch(() => {});
-  } catch (e) {}
+  if (isNative()) {
+    try { TextToSpeech.stop().catch(() => {}); } catch (e) {}
+  }
 }
 
-// Detect if running inside a Capacitor native app (APK/IPA)
-function getCapacitorTTS() {
-  try {
-    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
-      return window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech;
-    }
-  } catch (e) {}
-  return null;
+function isNative() {
+  try { return window.Capacitor && window.Capacitor.isNativePlatform(); } catch (e) { return false; }
 }
 
 // Shared TTS — language-aware, uses Capacitor native TTS in APK, Web Speech API in browser
@@ -173,13 +168,12 @@ export function speak(text, lang, onEnd) {
 
   const ttsLang = lang === 'he' ? 'he-IL' : 'en-US';
 
-  // On Capacitor (APK/IPA), always use native TTS — more reliable than new Audio() in WebView
-  const nativeTTS = getCapacitorTTS();
-  if (nativeTTS) {
+  // On Capacitor (APK), use native TTS — Web Speech API not available in Android WebView
+  if (isNative()) {
     (async () => {
-      try { await nativeTTS.stop(); } catch (e) {}
+      try { await TextToSpeech.stop(); } catch (e) {}
       try {
-        await nativeTTS.speak({ text, lang: ttsLang, rate: 0.82, pitch: 1.9, volume: 1.0 });
+        await TextToSpeech.speak({ text, lang: ttsLang, rate: 0.82, pitch: 1.9, volume: 1.0 });
       } catch (e) {}
       if (onEnd) onEnd();
     })();
