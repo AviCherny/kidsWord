@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './FeedTheMonster.css';
+import { LEVELS } from './levels';
 import { useLanguage } from '../../context/LanguageContext';
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
 import { speak } from '../../speak';
@@ -7,41 +8,6 @@ import { speak } from '../../speak';
 function isNative() {
   try { return window.Capacitor && window.Capacitor.isNativePlatform(); } catch (e) { return false; }
 }
-
-const WORD_POOL = [
-  { word: 'Apple',   heWord: 'תפוח',      emoji: '🍎', cat: 'food' },
-  { word: 'Dog',     heWord: 'כלב',        emoji: '🐶', cat: 'animals' },
-  { word: 'Car',     heWord: 'מכונית',     emoji: '🚗', cat: 'vehicles' },
-  { word: 'Ball',    heWord: 'כדור',       emoji: '⚽', cat: 'objects' },
-  { word: 'Hat',     heWord: 'כובע',       emoji: '🎩', cat: 'objects' },
-  { word: 'Cup',     heWord: 'כוס',        emoji: '☕', cat: 'objects' },
-  { word: 'Pig',     heWord: 'חזיר',       emoji: '🐷', cat: 'animals' },
-  { word: 'Sun',     heWord: 'שמש',        heSpeech: 'שֶׁמֶשׁ',   emoji: '☀️', cat: 'nature' },
-  { word: 'Fish',    heWord: 'דג',         emoji: '🐟', cat: 'animals' },
-  { word: 'Bird',    heWord: 'ציפור',      heSpeech: 'צִיפּוֹר',  emoji: '🐦', cat: 'animals' },
-  { word: 'Tree',    heWord: 'עץ',         emoji: '🌳', cat: 'nature' },
-  { word: 'Book',    heWord: 'ספר',        emoji: '📚', cat: 'objects' },
-  { word: 'Cake',    heWord: 'עוגה',       emoji: '🎂', cat: 'food' },
-  { word: 'Duck',    heWord: 'ברווז',      heSpeech: 'בַּרְוָז',  emoji: '🦆', cat: 'animals' },
-  { word: 'Bear',    heWord: 'דוב',        emoji: '🐻', cat: 'animals' },
-  { word: 'Cat',     heWord: 'חתול',       emoji: '🐱', cat: 'animals' },
-  { word: 'Bee',     heWord: 'דבורה',      heSpeech: 'דְּבוֹרָה', emoji: '🐝', cat: 'animals' },
-  { word: 'Cow',     heWord: 'פרה',        heSpeech: 'פָּרָה',    emoji: '🐮', cat: 'animals' },
-  { word: 'Star',    heWord: 'כוכב',       heSpeech: 'כּוֹכָב',   emoji: '⭐', cat: 'nature' },
-  { word: 'Moon',    heWord: 'ירח',        heSpeech: 'יָרֵחַ',    emoji: '🌙', cat: 'nature' },
-  { word: 'Egg',     heWord: 'ביצה',       heSpeech: 'בֵּיצָה',   emoji: '🥚', cat: 'food' },
-  { word: 'Milk',    heWord: 'חלב',        heSpeech: 'חָלָב',     emoji: '🥛', cat: 'food' },
-  { word: 'Key',     heWord: 'מפתח',       heSpeech: 'מַפְתֵּחַ', emoji: '🔑', cat: 'objects' },
-  { word: 'Bus',     heWord: 'אוטובוס',    emoji: '🚌', cat: 'vehicles' },
-  { word: 'Ship',    heWord: 'ספינה',      emoji: '🚢', cat: 'vehicles' },
-  { word: 'Frog',    heWord: 'צפרדע',      emoji: '🐸', cat: 'animals' },
-  { word: 'Rabbit',  heWord: 'ארנב',       emoji: '🐰', cat: 'animals' },
-  { word: 'Hen',     heWord: 'תרנגולת',    emoji: '🐔', cat: 'animals' },
-  { word: 'Corn',    heWord: 'תירס',       emoji: '🌽', cat: 'food' },
-  { word: 'Bed',     heWord: 'מיטה',       emoji: '🛏️', cat: 'objects' },
-];
-
-const WINS_TO_WIN = 5;
 
 function shuffle(arr) {
   const a = [...arr];
@@ -121,8 +87,9 @@ function speakMonsterVoice(text, onEnd) {
   } catch (e) { if (onEnd) onEnd(); }
 }
 
-export default function FeedTheMonster({ onSuccess }) {
+export default function FeedTheMonster({ onSuccess, sharedDifficulty = 1 }) {
   const { lang } = useLanguage();
+  const level = LEVELS[Math.max(0, Math.min(sharedDifficulty - 1, LEVELS.length - 1))];
   const [phase, setPhase] = useState('idle');
   const [monsterState, setMonsterState] = useState('idle');
   const [target, setTarget] = useState(null);
@@ -137,7 +104,7 @@ export default function FeedTheMonster({ onSuccess }) {
   const [extraBubble, setExtraBubble] = useState(null);
   const [starEyes, setStarEyes] = useState(false);
 
-  const deckRef = useRef(shuffle([...WORD_POOL]));
+  const deckRef = useRef(shuffle([...level.wordPool]));
   const deckIndexRef = useRef(0);
   const lastTargetRef = useRef(null);
   const dragStateRef = useRef(null);
@@ -152,7 +119,7 @@ export default function FeedTheMonster({ onSuccess }) {
     let word, tries = 0;
     do {
       if (deckIndexRef.current >= deckRef.current.length) {
-        deckRef.current = shuffle([...WORD_POOL]);
+        deckRef.current = shuffle([...level.wordPool]);
         deckIndexRef.current = 0;
       }
       word = deckRef.current[deckIndexRef.current++];
@@ -160,15 +127,16 @@ export default function FeedTheMonster({ onSuccess }) {
     } while (word.word === lastTargetRef.current?.word && tries < 4);
     lastTargetRef.current = word;
     return word;
-  }, []);
+  }, [level]);
 
   // Same-category foils first; falls back to cross-category if category is too small
   const getFoils = useCallback((tgt) => {
-    const sameCat = WORD_POOL.filter(w => w.cat === tgt.cat && w.word !== tgt.word);
-    if (sameCat.length >= 3) return shuffle(sameCat).slice(0, 3);
-    const crossCat = WORD_POOL.filter(w => w.cat !== tgt.cat && w.word !== tgt.word);
-    return [...shuffle(sameCat), ...shuffle(crossCat)].slice(0, 3);
-  }, []);
+    const foilCount = level.cardCount - 1;
+    const sameCat = level.wordPool.filter(w => w.cat === tgt.cat && w.word !== tgt.word);
+    if (sameCat.length >= foilCount) return shuffle(sameCat).slice(0, foilCount);
+    const crossCat = level.wordPool.filter(w => w.cat !== tgt.cat && w.word !== tgt.word);
+    return [...shuffle(sameCat), ...shuffle(crossCat)].slice(0, foilCount);
+  }, [level]);
 
   const scheduleFeedMe = useCallback(() => {
     clearTimeout(feedMeTimerRef.current);
@@ -264,7 +232,7 @@ export default function FeedTheMonster({ onSuccess }) {
           setIsSpeaking(false);
           setCorrectCount(newCount);
 
-          if (newCount >= WINS_TO_WIN) {
+          if (newCount >= level.winsToWin) {
             // Full celebration before handing off
             setMonsterState('celebrating');
             setStarEyes(true);
@@ -302,7 +270,7 @@ export default function FeedTheMonster({ onSuccess }) {
         });
       }, 950);
     }
-  }, [phase, target, lang, correctCount, onSuccess, startRound, scheduleFeedMe]);
+  }, [phase, target, lang, level, correctCount, onSuccess, startRound, scheduleFeedMe]);
 
   // Keep handleCardDrop ref fresh every render
   handleCardDropRef.current = handleCardDrop;
@@ -413,7 +381,7 @@ export default function FeedTheMonster({ onSuccess }) {
     <div className="ftm-root">
       {/* Score dots */}
       <div className="ftm-score">
-        {Array.from({ length: WINS_TO_WIN }).map((_, i) => (
+        {Array.from({ length: level.winsToWin }).map((_, i) => (
           <div key={i} className={`ftm-dot${i < correctCount ? ' ftm-dot--filled' : ''}`} />
         ))}
       </div>

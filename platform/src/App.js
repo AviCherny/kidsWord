@@ -134,6 +134,16 @@ const SHARED_DIFFICULTY_GAMES = {
       3: { en: 'Hard (3 stages)', he: 'קשה (3 שלבים)' },
     },
   },
+  feedmonster: {
+    settingsKey: 'feedmonster',
+    title: { en: 'Level', he: 'רמה' },
+    levels: {
+      1: { en: 'Level 1', he: 'שלב 1' },
+      2: { en: 'Level 2', he: 'שלב 2' },
+      3: { en: 'Level 3', he: 'שלב 3' },
+      4: { en: 'Level 4', he: 'שלב 4' },
+    },
+  },
 };
 
 export default function App() {
