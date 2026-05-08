@@ -93,6 +93,7 @@ export const T = {
     level2: 'שלב 2',
     level3: 'שלב 3',
     level4: 'שלב 4',
+    level5: 'שלב 5',
     readyForNext: 'מוכן לשלב הבא?',
     totalStars: 'כוכבים!',
     // Creature phrases
@@ -199,6 +200,7 @@ export const T = {
     level2: 'Level 2',
     level3: 'Level 3',
     level4: 'Level 4',
+    level5: 'Level 5',
     readyForNext: 'Ready for the next level?',
     totalStars: 'stars!',
     // Creature phrases
